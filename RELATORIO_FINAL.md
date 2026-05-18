@@ -210,3 +210,118 @@ até 16/08/2026
 - Nginx validado com `nginx -t`.
 - SSL emitido com Certbot para `sine.jacarezinho.cloud`.
 - Diretórios de upload e logs criados.
+
+## 11. Estado atual em 18/05/2026
+
+URL pública:
+
+```text
+https://sine.jacarezinho.cloud
+```
+
+Repositório GitHub:
+
+```text
+https://github.com/lucasbecker1983/sine-conecta-jacarezinho
+```
+
+Branch publicado:
+
+```text
+main
+```
+
+Último commit funcional registrado neste estado:
+
+```text
+a63dc52 Require job selection before worker resume submission
+```
+
+### Login e perfis
+
+Foram criados usuários temporários para teste dos três perfis públicos/internos:
+
+- Empresa: `empresa@sine.jacarezinho.cloud`
+- Candidato: `candidato@sine.jacarezinho.cloud`
+- Colaborador: `colaborador@sine.jacarezinho.cloud`
+
+As senhas temporárias foram informadas no terminal/conversa e não devem ser preservadas em arquivo versionado. Para recriar senhas, usar script administrativo ou reset manual com hash bcrypt.
+
+### Tela de login
+
+A tela de login foi redesenhada com:
+
+- entrada por perfil: Empresa, Trabalhador e Colaborador;
+- Canvas visual institucional;
+- logotipo oficial do SINE tratado em PNG com fundo removido;
+- rodapé discreto com marca JMB Tecnologia;
+- responsividade reforçada para monitores com pouca altura;
+- build de produção validado.
+
+### Portal do Trabalhador
+
+O fluxo correto atual é:
+
+1. O trabalhador entra no portal.
+2. No dashboard, ele é orientado a escolher uma vaga primeiro.
+3. Em `Vagas abertas`, seleciona uma vaga publicada/aberta.
+4. O sistema leva para `Meu Currículo` com a vaga selecionada.
+5. Com a vaga obrigatoriamente selecionada, o trabalhador escolhe uma das opções:
+   - preencher currículo no portal;
+   - enviar currículo em PDF.
+6. Ao salvar ou enviar PDF, o sistema registra a candidatura vinculada à vaga em `referrals` com status `candidatura_trabalhador`.
+
+Rotas backend envolvidas:
+
+- `GET /api/worker-portal/profile`
+- `PUT /api/worker-portal/profile?job_id=...`
+- `GET /api/worker-portal/open-jobs`
+- `GET /api/worker-portal/resumes`
+- `POST /api/worker-portal/resume-pdf` com `job_id` no formulário
+- `GET /api/worker-portal/applications`
+
+O envio de PDF:
+
+- exige trabalhador autenticado;
+- exige currículo/cadastro salvo;
+- exige aceite LGPD;
+- exige `job_id`;
+- aceita apenas PDF;
+- salva em `/opt/saas_sine/uploads/resumes`;
+- extrai texto;
+- roda análise local;
+- registra log LGPD/data access;
+- vincula a candidatura à vaga selecionada.
+
+### Portal da Empresa
+
+O login de empresa existe e leva para painel próprio inicial. Ainda precisa evoluir para CRUD completo de solicitação de vaga, responsáveis, candidatos encaminhados e feedback operacional.
+
+### Portal do Colaborador
+
+O colaborador acessa o painel operacional com módulos administrativos iniciais:
+
+- empresas;
+- trabalhadores;
+- currículos;
+- vagas;
+- encaminhamentos;
+- relatórios;
+- white label conforme permissões.
+
+### Estado operacional
+
+- Backend rodando via `saas-sine-backend`.
+- Nginx servindo frontend buildado e proxy `/api`.
+- SSL ativo com Certbot.
+- PostgreSQL usando banco `saas_sine_db`.
+- `.env`, uploads, logs, venv, `node_modules` e `dist` estão fora do Git por `.gitignore`.
+
+### Próximos pontos prioritários
+
+- Criar formulário completo de criação/publicação de vagas pelo colaborador e/ou empresa.
+- Criar tela administrativa para aprovar vagas e mudar status para `publicada`.
+- Exibir candidatos inscritos por vaga no painel do colaborador.
+- Implementar visualização detalhada do currículo enviado em PDF com log de acesso.
+- Criar fluxo completo da empresa para ver apenas candidatos vinculados às suas vagas.
+- Criar testes automatizados para o fluxo trabalhador -> vaga -> currículo -> candidatura.
