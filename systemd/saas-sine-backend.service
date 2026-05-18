@@ -1,0 +1,18 @@
+[Unit]
+Description=SINE Conecta Jacarezinho Backend
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/saas_sine/backend
+EnvironmentFile=/opt/saas_sine/.env
+ExecStart=/bin/bash -lc 'exec /opt/saas_sine/backend/.venv/bin/uvicorn app.main:app --host "$BACKEND_HOST" --port "$BACKEND_PORT"'
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
