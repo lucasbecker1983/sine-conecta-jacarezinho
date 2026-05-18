@@ -224,6 +224,39 @@ def worker_open_jobs(db: Session = Depends(get_db), user: User = Depends(get_cur
     return db.scalars(select(Job).where(Job.tenant_id == tenant_id, Job.deleted_at.is_(None), Job.status.in_(open_statuses)).order_by(Job.created_at.desc())).all()
 
 
+@router.get("/worker-portal/resumes", response_model=list[ResumeOut])
+def worker_resumes(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_worker_user(user)
+    tenant_id = tenant_scope(user, db)
+    worker = current_worker(db, user)
+    if not worker:
+        return []
+    return db.scalars(select(Resume).where(Resume.tenant_id == tenant_id, Resume.worker_id == worker.id).order_by(Resume.created_at.desc())).all()
+
+
+@router.post("/worker-portal/resume-pdf", response_model=ResumeOut)
+async def worker_upload_resume_pdf(file: UploadFile, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_worker_user(user)
+    tenant_id = tenant_scope(user, db)
+    worker = current_worker(db, user)
+    if not worker:
+        raise HTTPException(status_code=400, detail="Salve o curriculo preenchido antes de enviar o PDF")
+    if not worker.lgpd_accepted:
+        raise HTTPException(status_code=400, detail="Aceite LGPD obrigatorio para enviar curriculo")
+    tenant = db.get(Tenant, tenant_id)
+    stored, path, size = await save_pdf_resume(file, tenant.slug)
+    text = extract_pdf_text(path)
+    analysis = get_ai_provider().analyze_resume(text).__dict__
+    resume = Resume(tenant_id=tenant_id, worker_id=worker.id, original_filename=file.filename, stored_filename=stored, file_path=str(path), mime_type="application/pdf", size_bytes=size, extracted_text=text, analysis=analysis, status="analisado")
+    db.add(resume)
+    db.flush()
+    log_resume_access(db, tenant_id, user.id, worker.id, resume.id, "worker_upload_and_analyze", "Upload de curriculo PDF pelo trabalhador", request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "worker.resume_pdf.upload", "Resume", resume.id, {"original_filename": file.filename}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(resume)
+    return resume
+
+
 @router.post("/worker-portal/apply/{job_id}")
 def worker_apply(job_id: UUID, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     require_worker_user(user)
