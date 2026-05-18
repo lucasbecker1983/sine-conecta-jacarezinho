@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, Form, HTTPException, Request, UploadFile
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -36,6 +36,26 @@ def require_worker_user(user: User) -> None:
 def current_worker(db: Session, user: User) -> Worker | None:
     tenant_id = tenant_scope(user, db)
     return db.scalar(select(Worker).where(Worker.tenant_id == tenant_id, Worker.email == user.email, Worker.deleted_at.is_(None)))
+
+
+def get_worker_open_job(db: Session, tenant_id: UUID, job_id: UUID) -> Job:
+    job = db.get(Job, job_id)
+    if not job or job.tenant_id != tenant_id or job.deleted_at is not None or job.status not in ["aprovada", "publicada", "em_triagem", "encaminhando_candidatos"]:
+        raise HTTPException(status_code=404, detail="Selecione uma vaga aberta antes de enviar o curriculo")
+    return job
+
+
+def create_or_update_worker_application(db: Session, tenant_id: UUID, user: User, worker: Worker, job: Job, request: Request, resume: Resume | None = None) -> Referral:
+    referral = db.scalar(select(Referral).where(Referral.tenant_id == tenant_id, Referral.job_id == job.id, Referral.worker_id == worker.id, Referral.status == "candidatura_trabalhador"))
+    if referral:
+        if resume:
+            referral.resume_id = resume.id
+        return referral
+    referral = Referral(tenant_id=tenant_id, job_id=job.id, worker_id=worker.id, resume_id=resume.id if resume else None, referred_by_user_id=user.id, status="candidatura_trabalhador", notes="Candidatura realizada pelo Portal do Trabalhador")
+    db.add(referral)
+    db.flush()
+    audit(db, tenant_id, user.id, "worker.apply_job", "Referral", referral.id, {"job_id": str(job.id), "worker_id": str(worker.id), "resume_id": str(resume.id) if resume else None}, request.client.host if request.client else None)
+    return referral
 
 
 @router.get("/companies", response_model=list[CompanyOut], dependencies=[Depends(require_permissions("companies:manage"))])
@@ -193,9 +213,10 @@ def worker_profile(db: Session = Depends(get_db), user: User = Depends(get_curre
 
 
 @router.put("/worker-portal/profile", response_model=WorkerOut)
-def save_worker_profile(payload: WorkerProfileIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def save_worker_profile(payload: WorkerProfileIn, request: Request, job_id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     require_worker_user(user)
     tenant_id = tenant_scope(user, db)
+    job = get_worker_open_job(db, tenant_id, job_id)
     data = payload.model_dump()
     data["email"] = user.email
     worker = current_worker(db, user)
@@ -211,6 +232,7 @@ def save_worker_profile(payload: WorkerProfileIn, request: Request, db: Session 
         db.add(LGPDConsent(tenant_id=tenant_id, worker_id=worker.id, consent_type="portal_trabalhador", consent_text="Consentimento para tratamento de dados e candidatura a vagas pelo portal do trabalhador.", ip_address=request.client.host if request.client else None, user_agent=request.headers.get("user-agent"), version="2026-05-18"))
     db.flush()
     audit(db, tenant_id, user.id, "worker.self_profile.save", "Worker", worker.id, {"source": "worker_portal"}, request.client.host if request.client else None)
+    create_or_update_worker_application(db, tenant_id, user, worker, job, request)
     db.commit()
     db.refresh(worker)
     return worker
@@ -235,9 +257,10 @@ def worker_resumes(db: Session = Depends(get_db), user: User = Depends(get_curre
 
 
 @router.post("/worker-portal/resume-pdf", response_model=ResumeOut)
-async def worker_upload_resume_pdf(file: UploadFile, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+async def worker_upload_resume_pdf(request: Request, file: UploadFile, job_id: UUID = Form(...), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     require_worker_user(user)
     tenant_id = tenant_scope(user, db)
+    job = get_worker_open_job(db, tenant_id, job_id)
     worker = current_worker(db, user)
     if not worker:
         raise HTTPException(status_code=400, detail="Salve o curriculo preenchido antes de enviar o PDF")
@@ -252,6 +275,7 @@ async def worker_upload_resume_pdf(file: UploadFile, request: Request, db: Sessi
     db.flush()
     log_resume_access(db, tenant_id, user.id, worker.id, resume.id, "worker_upload_and_analyze", "Upload de curriculo PDF pelo trabalhador", request.client.host if request.client else None)
     audit(db, tenant_id, user.id, "worker.resume_pdf.upload", "Resume", resume.id, {"original_filename": file.filename}, request.client.host if request.client else None)
+    create_or_update_worker_application(db, tenant_id, user, worker, job, request, resume)
     db.commit()
     db.refresh(resume)
     return resume
@@ -266,17 +290,9 @@ def worker_apply(job_id: UUID, request: Request, db: Session = Depends(get_db), 
         raise HTTPException(status_code=400, detail="Complete seu curriculo antes de concorrer a uma vaga")
     if not worker.lgpd_accepted:
         raise HTTPException(status_code=400, detail="Aceite LGPD obrigatorio para concorrer a vagas")
-    job = db.get(Job, job_id)
-    if not job or job.tenant_id != tenant_id or job.deleted_at is not None or job.status not in ["aprovada", "publicada", "em_triagem", "encaminhando_candidatos"]:
-        raise HTTPException(status_code=404, detail="Vaga aberta nao encontrada")
-    existing = db.scalar(select(Referral).where(Referral.tenant_id == tenant_id, Referral.job_id == job.id, Referral.worker_id == worker.id, Referral.status == "candidatura_trabalhador"))
-    if existing:
-        return {"status": "already_applied", "referral_id": str(existing.id)}
+    job = get_worker_open_job(db, tenant_id, job_id)
     latest_resume = db.scalar(select(Resume).where(Resume.tenant_id == tenant_id, Resume.worker_id == worker.id).order_by(Resume.created_at.desc()))
-    referral = Referral(tenant_id=tenant_id, job_id=job.id, worker_id=worker.id, resume_id=latest_resume.id if latest_resume else None, referred_by_user_id=user.id, status="candidatura_trabalhador", notes="Candidatura realizada pelo Portal do Trabalhador")
-    db.add(referral)
-    db.flush()
-    audit(db, tenant_id, user.id, "worker.apply_job", "Referral", referral.id, {"job_id": str(job.id), "worker_id": str(worker.id)}, request.client.host if request.client else None)
+    referral = create_or_update_worker_application(db, tenant_id, user, worker, job, request, latest_resume)
     db.commit()
     return {"status": "applied", "referral_id": str(referral.id)}
 

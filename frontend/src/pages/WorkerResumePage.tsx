@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { api } from '../services/api'
 
 type WorkerProfile = {
@@ -32,6 +33,24 @@ type UploadedResume = {
     summary?: string
     skills?: string[]
   }
+}
+
+type Job = {
+  id: string
+  title: string
+  description: string
+  vacancies: number
+  salary_range?: string
+  workplace?: string
+  modality: string
+}
+
+type Application = {
+  id: string
+  job_id: string
+  job_title: string
+  status: string
+  created_at: string
 }
 
 const emptyProfile: WorkerProfile = {
@@ -73,7 +92,11 @@ const fields: Array<[keyof WorkerProfile, string, string]> = [
 ]
 
 export function WorkerResumePage() {
+  const [searchParams] = useSearchParams()
   const [profile, setProfile] = useState<WorkerProfile>(emptyProfile)
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [applications, setApplications] = useState<Application[]>([])
+  const [selectedJobId, setSelectedJobId] = useState(searchParams.get('vaga') ?? '')
   const [resumes, setResumes] = useState<UploadedResume[]>([])
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [saving, setSaving] = useState(false)
@@ -87,10 +110,19 @@ export function WorkerResumePage() {
       setProfile({ ...emptyProfile, ...data, birth_date: data.birth_date ?? '', disability_notes: data.disability_notes ?? '', notes: data.notes ?? '' })
     }).catch(() => undefined)
     loadResumes()
+    loadJobs()
   }, [])
 
   function loadResumes() {
     api.get<UploadedResume[]>('/worker-portal/resumes').then(({ data }) => setResumes(data)).catch(() => setResumes([]))
+  }
+
+  function loadJobs() {
+    api.get<Job[]>('/worker-portal/open-jobs').then(({ data }) => {
+      setJobs(data)
+      setSelectedJobId((current) => current || data[0]?.id || '')
+    }).catch(() => setJobs([]))
+    api.get<Application[]>('/worker-portal/applications').then(({ data }) => setApplications(data)).catch(() => setApplications([]))
   }
 
   function update(key: keyof WorkerProfile, value: string | boolean | null) {
@@ -101,11 +133,17 @@ export function WorkerResumePage() {
     event.preventDefault()
     setSaving(true)
     setMessage('')
+    if (!selectedJobId) {
+      setMessage('Selecione uma vaga aberta antes de salvar e enviar seu currículo.')
+      setSaving(false)
+      return
+    }
     try {
       const payload = { ...profile, birth_date: profile.birth_date || null }
-      const { data } = await api.put('/worker-portal/profile', payload)
+      const { data } = await api.put(`/worker-portal/profile?job_id=${selectedJobId}`, payload)
       setProfile({ ...emptyProfile, ...data, birth_date: data.birth_date ?? '', disability_notes: data.disability_notes ?? '', notes: data.notes ?? '' })
-      setMessage('Currículo salvo com sucesso.')
+      setMessage('Currículo salvo e candidatura vinculada à vaga selecionada.')
+      loadJobs()
     } catch (error: any) {
       setMessage(error?.response?.data?.detail ?? 'Não foi possível salvar seu currículo.')
     } finally {
@@ -119,15 +157,21 @@ export function WorkerResumePage() {
       setUploadMessage('Selecione um arquivo PDF.')
       return
     }
+    if (!selectedJobId) {
+      setUploadMessage('Selecione uma vaga aberta antes de enviar o PDF.')
+      return
+    }
     setUploading(true)
     setUploadMessage('')
     try {
       const form = new FormData()
       form.append('file', selectedFile)
+      form.append('job_id', selectedJobId)
       await api.post('/worker-portal/resume-pdf', form, { headers: { 'Content-Type': 'multipart/form-data' } })
       setSelectedFile(null)
-      setUploadMessage('Currículo em PDF enviado e analisado com sucesso.')
+      setUploadMessage('PDF enviado, analisado e candidatura vinculada à vaga selecionada.')
       loadResumes()
+      loadJobs()
     } catch (error: any) {
       setUploadMessage(error?.response?.data?.detail ?? 'Não foi possível enviar o PDF.')
     } finally {
@@ -138,14 +182,29 @@ export function WorkerResumePage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-slate-950">Meu currículo</h1>
-        <p className="mt-1 text-sm text-slate-600">Preencha seus dados para concorrer às vagas abertas pelo SINE.</p>
+        <h1 className="text-2xl font-bold text-slate-950">Concorrer a uma vaga</h1>
+        <p className="mt-1 text-sm text-slate-600">Primeiro selecione a vaga aberta. Depois escolha preencher o currículo no portal ou enviar o PDF.</p>
       </div>
+
+      <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
+        <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+          <label className="block">
+            <span className="mb-1 block text-sm font-bold text-emerald-900">1. Vaga obrigatória</span>
+            <select className="h-11 w-full rounded-md border border-emerald-300 bg-white px-3 outline-none focus:border-emerald-700" value={selectedJobId} onChange={(event) => setSelectedJobId(event.target.value)} required>
+              {jobs.length === 0 && <option value="">Nenhuma vaga aberta no momento</option>}
+              {jobs.map((job) => <option key={job.id} value={job.id}>{job.title}</option>)}
+            </select>
+          </label>
+          <div className="text-sm leading-6 text-emerald-950">
+            <strong>Fluxo correto:</strong> o currículo só pode ser salvo ou enviado em PDF depois que a vaga for selecionada. Assim o SINE recebe a candidatura já vinculada à oportunidade desejada.
+          </div>
+        </div>
+      </section>
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
       <form onSubmit={submit} className="rounded-md border border-slate-200 bg-white p-5">
         <div className="mb-4">
-          <h2 className="text-lg font-bold text-slate-950">Opção 1: preencher currículo no portal</h2>
+          <h2 className="text-lg font-bold text-slate-950">2A. Preencher currículo no portal</h2>
           <p className="mt-1 text-sm text-slate-600">Use esta opção para manter seus dados atualizados diretamente no sistema.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
@@ -185,13 +244,13 @@ export function WorkerResumePage() {
         {message && <div className="mt-4 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">{message}</div>}
 
         <div className="mt-5 flex justify-end">
-          <button className="tenant-button rounded-md px-5 py-2 text-sm font-semibold disabled:opacity-70" disabled={saving}>{saving ? 'Salvando...' : 'Salvar currículo'}</button>
+          <button className="tenant-button rounded-md px-5 py-2 text-sm font-semibold disabled:opacity-70" disabled={saving || !selectedJobId}>{saving ? 'Salvando...' : 'Salvar e concorrer'}</button>
         </div>
       </form>
 
       <aside className="space-y-5">
         <form onSubmit={uploadPdf} className="rounded-md border border-slate-200 bg-white p-5">
-          <h2 className="text-lg font-bold text-slate-950">Opção 2: enviar currículo em PDF</h2>
+          <h2 className="text-lg font-bold text-slate-950">2B. Enviar currículo em PDF</h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">Envie um arquivo PDF para o SINE analisar. O sistema extrai o texto e gera uma sugestão automática para apoiar o atendimento.</p>
           <label className="mt-4 block">
             <span className="mb-1 block text-sm font-medium text-slate-700">Arquivo PDF</span>
@@ -199,9 +258,22 @@ export function WorkerResumePage() {
           </label>
           {selectedFile && <div className="mt-3 text-sm text-slate-600">{selectedFile.name} · {(selectedFile.size / 1024 / 1024).toFixed(2)} MB</div>}
           {uploadMessage && <div className="mt-4 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">{uploadMessage}</div>}
-          <button className="tenant-button mt-5 w-full rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-70" disabled={uploading}>{uploading ? 'Enviando...' : 'Enviar PDF'}</button>
+          <button className="tenant-button mt-5 w-full rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-70" disabled={uploading || !selectedJobId}>{uploading ? 'Enviando...' : 'Enviar PDF e concorrer'}</button>
           <p className="mt-4 text-xs leading-5 text-slate-500">A análise automática é apenas uma sugestão. A decisão final é do colaborador responsável.</p>
         </form>
+
+        <section className="rounded-md border border-slate-200 bg-white p-5">
+          <h2 className="text-lg font-bold text-slate-950">Minhas candidaturas</h2>
+          <div className="mt-4 divide-y divide-slate-100">
+            {applications.length === 0 && <div className="py-4 text-sm text-slate-500">Nenhuma candidatura registrada ainda.</div>}
+            {applications.map((application) => (
+              <div key={application.id} className="py-3">
+                <div className="font-semibold text-slate-950">{application.job_title}</div>
+                <div className="mt-1 text-sm text-slate-500">{application.status} · {new Date(application.created_at).toLocaleDateString('pt-BR')}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <section className="rounded-md border border-slate-200 bg-white p-5">
           <h2 className="text-lg font-bold text-slate-950">PDFs enviados</h2>

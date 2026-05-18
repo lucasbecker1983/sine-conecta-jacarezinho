@@ -57,13 +57,13 @@ export function Dashboard() {
           <p className="mt-1 text-sm text-slate-600">Atualize seus dados, acompanhe currículo e visualize encaminhamentos do SINE.</p>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
-          <Link to="/meu-curriculo" className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400">
-            <div className="text-sm font-semibold text-emerald-700">Meu currículo</div>
-            <div className="mt-3 text-sm text-slate-600">Preencha seus dados profissionais e aceite LGPD.</div>
-          </Link>
           <Link to="/vagas-abertas" className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400">
-            <div className="text-sm font-semibold text-emerald-700">Vagas abertas</div>
-            <div className="mt-3 text-sm text-slate-600">Escolha uma vaga e confirme sua candidatura.</div>
+            <div className="text-sm font-semibold text-emerald-700">1. Escolher vaga</div>
+            <div className="mt-3 text-sm text-slate-600">A seleção da vaga vem antes do envio do currículo.</div>
+          </Link>
+          <Link to="/meu-curriculo" className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400">
+            <div className="text-sm font-semibold text-emerald-700">2. Enviar currículo</div>
+            <div className="mt-3 text-sm text-slate-600">Preencha no portal ou envie PDF depois de selecionar a vaga.</div>
           </Link>
           <div className="rounded-md border border-slate-200 bg-white p-5">
             <div className="text-sm font-semibold text-emerald-700">Encaminhamentos</div>

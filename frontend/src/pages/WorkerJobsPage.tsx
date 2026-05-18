@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 
 type Job = {
@@ -22,6 +23,7 @@ type Application = {
 }
 
 export function WorkerJobsPage() {
+  const navigate = useNavigate()
   const [jobs, setJobs] = useState<Job[]>([])
   const [applications, setApplications] = useState<Application[]>([])
   const [selectedJobId, setSelectedJobId] = useState('')
@@ -40,23 +42,16 @@ export function WorkerJobsPage() {
     load()
   }, [])
 
-  async function apply() {
+  function continueToResume() {
     if (!selectedJobId) return
-    setMessage('')
-    try {
-      const { data } = await api.post(`/worker-portal/apply/${selectedJobId}`)
-      setMessage(data.status === 'already_applied' ? 'Você já está concorrendo a esta vaga.' : 'Candidatura registrada com sucesso.')
-      load()
-    } catch (error: any) {
-      setMessage(error?.response?.data?.detail ?? 'Não foi possível registrar a candidatura.')
-    }
+    navigate(`/meu-curriculo?vaga=${selectedJobId}`)
   }
 
   return (
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-slate-950">Vagas abertas</h1>
-        <p className="mt-1 text-sm text-slate-600">Escolha uma vaga disponível e confirme sua candidatura.</p>
+        <p className="mt-1 text-sm text-slate-600">Escolha uma vaga disponível. Depois envie ou preencha seu currículo para concluir a candidatura.</p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
@@ -82,7 +77,7 @@ export function WorkerJobsPage() {
             </div>
           )}
           {message && <div className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">{message}</div>}
-          <button className="tenant-button mt-5 w-full rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60" disabled={!selectedJobId} onClick={apply}>Quero concorrer a esta vaga</button>
+          <button className="tenant-button mt-5 w-full rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60" disabled={!selectedJobId} onClick={continueToResume}>Continuar para o currículo</button>
         </section>
 
         <section className="rounded-md border border-slate-200 bg-white p-5">
