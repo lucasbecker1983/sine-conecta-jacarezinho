@@ -3,6 +3,7 @@ import { api } from '../services/api'
 import type { Summary } from '../types'
 import { CandidateMatchCanvas } from '../canvas/CandidateMatchCanvas'
 import { ResumeInsightCanvas } from '../canvas/ResumeInsightCanvas'
+import { useAuthStore } from '../stores/auth'
 
 const labels: Record<string, string> = {
   vagas_solicitadas: 'Vagas solicitadas',
@@ -16,11 +17,56 @@ const labels: Record<string, string> = {
 }
 
 export function Dashboard() {
+  const user = useAuthStore((state) => state.user)
   const [summary, setSummary] = useState<Summary>({})
   const [selected, setSelected] = useState('Clique em um candidato no mapa')
+  const roles = user?.roles ?? []
+  const isCompany = roles.includes('company_user')
+  const isWorker = roles.includes('worker')
+
   useEffect(() => {
+    if (isCompany || isWorker) return
     api.get<Summary>('/reports/summary').then(({ data }) => setSummary(data)).catch(() => setSummary({}))
-  }, [])
+  }, [isCompany, isWorker])
+
+  if (isCompany) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-950">Portal da Empresa</h1>
+          <p className="mt-1 text-sm text-slate-600">Solicite vagas, acompanhe encaminhamentos e registre o retorno dos candidatos.</p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {['Solicitar nova vaga', 'Candidatos encaminhados', 'Retornos pendentes'].map((label) => (
+            <div key={label} className="rounded-md border border-slate-200 bg-white p-5">
+              <div className="text-sm font-semibold text-emerald-700">{label}</div>
+              <div className="mt-3 text-3xl font-bold text-slate-950">0</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (isWorker) {
+    return (
+      <div className="space-y-5">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-950">Portal do Trabalhador</h1>
+          <p className="mt-1 text-sm text-slate-600">Atualize seus dados, acompanhe currículo e visualize encaminhamentos do SINE.</p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {['Meu currículo', 'Encaminhamentos', 'Dados cadastrais'].map((label) => (
+            <div key={label} className="rounded-md border border-slate-200 bg-white p-5">
+              <div className="text-sm font-semibold text-emerald-700">{label}</div>
+              <div className="mt-3 text-sm text-slate-600">Área preparada para o fluxo público do candidato.</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-5">
       <div>

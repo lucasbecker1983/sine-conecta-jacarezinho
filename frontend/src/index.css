@@ -28,3 +28,105 @@ button, input, textarea, select {
   background: var(--tenant-primary);
   color: white;
 }
+
+.login-profile-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+@media (min-width: 1024px) and (max-height: 820px) {
+  .login-page {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  .login-shell {
+    min-height: calc(100vh - 16px);
+  }
+
+  .login-hero {
+    min-height: 500px;
+    padding: 22px;
+  }
+
+  .login-hero-content {
+    min-height: 500px;
+  }
+
+  .login-logo {
+    width: 210px;
+    height: 64px;
+  }
+
+  .login-intro {
+    margin-top: 22px;
+  }
+
+  .login-copy {
+    margin-top: 10px;
+    line-height: 1.55;
+  }
+
+  .login-badges {
+    font-size: 12px;
+  }
+
+  .login-badges > div {
+    padding: 10px;
+  }
+
+  .login-panel {
+    padding: 20px;
+  }
+
+  .login-heading {
+    margin-bottom: 12px;
+  }
+
+  .login-heading h2 {
+    margin-top: 4px;
+    font-size: 22px;
+  }
+
+  .login-profile-grid {
+    margin-bottom: 12px;
+    gap: 8px;
+  }
+
+  .login-profile-card {
+    min-height: 64px;
+    padding: 10px;
+  }
+
+  .login-profile-description {
+    -webkit-line-clamp: 1;
+  }
+
+  .login-form {
+    padding: 14px;
+  }
+
+  .login-lgpd {
+    margin-top: 10px;
+  }
+}
+
+@media (min-width: 1024px) and (max-height: 700px) {
+  .login-hero {
+    min-height: 440px;
+  }
+
+  .login-hero-content {
+    min-height: 440px;
+  }
+
+  .login-badges {
+    display: none;
+  }
+
+  .login-copy {
+    max-width: 460px;
+  }
+}

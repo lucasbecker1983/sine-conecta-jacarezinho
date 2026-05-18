@@ -3,20 +3,22 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/auth'
 
 const items = [
-  { to: '/', label: 'Dashboard', icon: BarChart3 },
-  { to: '/empresas', label: 'Empresas', icon: Building2 },
-  { to: '/trabalhadores', label: 'Trabalhadores', icon: UsersRound },
-  { to: '/curriculos', label: 'Curriculos', icon: FileText },
-  { to: '/vagas', label: 'Vagas', icon: BriefcaseBusiness },
-  { to: '/encaminhamentos', label: 'Encaminhamentos', icon: UserRoundSearch },
-  { to: '/relatorios', label: 'Relatorios', icon: BarChart3 },
-  { to: '/admin', label: 'White label', icon: Settings },
-  { to: '/master', label: 'Master SaaS', icon: ShieldCheck }
+  { to: '/', label: 'Dashboard', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user', 'worker'] },
+  { to: '/empresas', label: 'Empresas', icon: Building2, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
+  { to: '/trabalhadores', label: 'Trabalhadores', icon: UsersRound, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
+  { to: '/curriculos', label: 'Curriculos', icon: FileText, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'worker'] },
+  { to: '/vagas', label: 'Vagas', icon: BriefcaseBusiness, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user'] },
+  { to: '/encaminhamentos', label: 'Encaminhamentos', icon: UserRoundSearch, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user', 'worker'] },
+  { to: '/relatorios', label: 'Relatorios', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },
+  { to: '/admin', label: 'White label', icon: Settings, roles: ['super_admin', 'tenant_admin'] },
+  { to: '/master', label: 'Master SaaS', icon: ShieldCheck, roles: ['super_admin'] }
 ]
 
 export function AppLayout() {
   const { user, tenant, logout } = useAuthStore()
   const navigate = useNavigate()
+  const userRoles = user?.roles ?? []
+  const visibleItems = items.filter((item) => item.roles.some((role) => userRoles.includes(role)))
   return (
     <div className="min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-slate-200 bg-white px-4 py-5 lg:block">
@@ -25,7 +27,7 @@ export function AppLayout() {
           <div className="mt-1 text-xl font-bold text-slate-950">{tenant?.name ?? 'SINE Jacarezinho'}</div>
         </div>
         <nav className="space-y-1">
-          {items.map((item) => {
+          {visibleItems.map((item) => {
             const Icon = item.icon
             return (
               <NavLink key={item.to} to={item.to} className={({ isActive }) => `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? 'bg-emerald-50 text-emerald-900' : 'text-slate-600 hover:bg-slate-100'}`}>
