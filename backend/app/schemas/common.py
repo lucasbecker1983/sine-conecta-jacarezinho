@@ -94,6 +94,27 @@ class WorkerOut(WorkerIn):
     created_at: datetime
 
 
+class WorkerProfileIn(BaseModel):
+    cpf: str
+    full_name: str
+    birth_date: date | None = None
+    phone: str | None = None
+    whatsapp: str | None = None
+    address: str | None = None
+    district: str | None = None
+    city: str | None = "Jacarezinho"
+    state: str | None = "PR"
+    education_level: str | None = None
+    desired_role: str | None = None
+    desired_salary: str | None = None
+    availability: str | None = None
+    cnh: str | None = None
+    has_disability: bool | None = None
+    disability_notes: str | None = None
+    notes: str | None = None
+    lgpd_accepted: bool = False
+
+
 class JobIn(BaseModel):
     company_id: UUID
     title: str

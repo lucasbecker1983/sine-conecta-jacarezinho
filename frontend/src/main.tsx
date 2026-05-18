@@ -7,6 +7,8 @@ import { AppLayout } from './layouts/AppLayout'
 import { Dashboard } from './pages/Dashboard'
 import { EntityPage } from './pages/EntityPage'
 import { Login } from './pages/Login'
+import { WorkerJobsPage } from './pages/WorkerJobsPage'
+import { WorkerResumePage } from './pages/WorkerResumePage'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -18,6 +20,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route index element={<Dashboard />} />
             <Route path="empresas" element={<EntityPage title="Empresas" description="Cadastro e gestão das empresas solicitantes." endpoint="/companies" actionLabel="Cadastrar empresa" />} />
             <Route path="trabalhadores" element={<EntityPage title="Trabalhadores" description="Cadastro, LGPD, histórico e busca de candidatos." endpoint="/workers" actionLabel="Cadastrar trabalhador" />} />
+            <Route path="meu-curriculo" element={<WorkerResumePage />} />
+            <Route path="vagas-abertas" element={<WorkerJobsPage />} />
             <Route path="curriculos" element={<EntityPage title="Currículos" description="Upload, análise local de IA e auditoria de acessos." actionLabel="Enviar PDF" />} />
             <Route path="vagas" element={<EntityPage title="Vagas" description="Solicitações, aprovação, publicação e triagem." endpoint="/jobs" actionLabel="Criar vaga" />} />
             <Route path="encaminhamentos" element={<EntityPage title="Encaminhamentos" description="Candidatos formalmente enviados para empresas." actionLabel="Encaminhar candidato" />} />

@@ -10,7 +10,7 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.permissions import get_current_user, require_permissions
 from app.models import Company, CompanyFeedback, DataAccessLog, Job, Referral, Resume, Tenant, User, Worker, LGPDConsent
-from app.schemas.common import CompanyIn, CompanyOut, FeedbackIn, JobIn, JobOut, ReferralIn, ReferralOut, ResumeOut, WorkerIn, WorkerOut
+from app.schemas.common import CompanyIn, CompanyOut, FeedbackIn, JobIn, JobOut, ReferralIn, ReferralOut, ResumeOut, WorkerIn, WorkerOut, WorkerProfileIn
 from app.services.audit import audit, log_resume_access
 from app.services.resumes import extract_pdf_text, save_pdf_resume
 
@@ -26,6 +26,16 @@ def tenant_scope(user: User, db: Session) -> UUID:
             raise HTTPException(status_code=404, detail="Tenant padrao nao encontrado")
         return tenant.id
     return user.tenant_id
+
+
+def require_worker_user(user: User) -> None:
+    if "worker" not in {role.name for role in user.roles}:
+        raise HTTPException(status_code=403, detail="Acesso exclusivo do trabalhador")
+
+
+def current_worker(db: Session, user: User) -> Worker | None:
+    tenant_id = tenant_scope(user, db)
+    return db.scalar(select(Worker).where(Worker.tenant_id == tenant_id, Worker.email == user.email, Worker.deleted_at.is_(None)))
 
 
 @router.get("/companies", response_model=list[CompanyOut], dependencies=[Depends(require_permissions("companies:manage"))])
@@ -174,3 +184,76 @@ def reports_summary(db: Session = Depends(get_db), user: User = Depends(get_curr
 @router.get("/audit/data-access", dependencies=[Depends(require_permissions("reports:view"))])
 def data_access_logs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return db.scalars(select(DataAccessLog).where(DataAccessLog.tenant_id == tenant_scope(user, db)).order_by(DataAccessLog.created_at.desc()).limit(100)).all()
+
+
+@router.get("/worker-portal/profile", response_model=WorkerOut | None)
+def worker_profile(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_worker_user(user)
+    return current_worker(db, user)
+
+
+@router.put("/worker-portal/profile", response_model=WorkerOut)
+def save_worker_profile(payload: WorkerProfileIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_worker_user(user)
+    tenant_id = tenant_scope(user, db)
+    data = payload.model_dump()
+    data["email"] = user.email
+    worker = current_worker(db, user)
+    if worker:
+        for key, value in data.items():
+            setattr(worker, key, value)
+    else:
+        worker = Worker(tenant_id=tenant_id, **data)
+        db.add(worker)
+    if worker.lgpd_accepted and not worker.lgpd_accepted_at:
+        worker.lgpd_accepted_at = datetime.now(timezone.utc)
+        db.flush()
+        db.add(LGPDConsent(tenant_id=tenant_id, worker_id=worker.id, consent_type="portal_trabalhador", consent_text="Consentimento para tratamento de dados e candidatura a vagas pelo portal do trabalhador.", ip_address=request.client.host if request.client else None, user_agent=request.headers.get("user-agent"), version="2026-05-18"))
+    db.flush()
+    audit(db, tenant_id, user.id, "worker.self_profile.save", "Worker", worker.id, {"source": "worker_portal"}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(worker)
+    return worker
+
+
+@router.get("/worker-portal/open-jobs", response_model=list[JobOut])
+def worker_open_jobs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_worker_user(user)
+    tenant_id = tenant_scope(user, db)
+    open_statuses = ["aprovada", "publicada", "em_triagem", "encaminhando_candidatos"]
+    return db.scalars(select(Job).where(Job.tenant_id == tenant_id, Job.deleted_at.is_(None), Job.status.in_(open_statuses)).order_by(Job.created_at.desc())).all()
+
+
+@router.post("/worker-portal/apply/{job_id}")
+def worker_apply(job_id: UUID, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_worker_user(user)
+    tenant_id = tenant_scope(user, db)
+    worker = current_worker(db, user)
+    if not worker:
+        raise HTTPException(status_code=400, detail="Complete seu curriculo antes de concorrer a uma vaga")
+    if not worker.lgpd_accepted:
+        raise HTTPException(status_code=400, detail="Aceite LGPD obrigatorio para concorrer a vagas")
+    job = db.get(Job, job_id)
+    if not job or job.tenant_id != tenant_id or job.deleted_at is not None or job.status not in ["aprovada", "publicada", "em_triagem", "encaminhando_candidatos"]:
+        raise HTTPException(status_code=404, detail="Vaga aberta nao encontrada")
+    existing = db.scalar(select(Referral).where(Referral.tenant_id == tenant_id, Referral.job_id == job.id, Referral.worker_id == worker.id, Referral.status == "candidatura_trabalhador"))
+    if existing:
+        return {"status": "already_applied", "referral_id": str(existing.id)}
+    latest_resume = db.scalar(select(Resume).where(Resume.tenant_id == tenant_id, Resume.worker_id == worker.id).order_by(Resume.created_at.desc()))
+    referral = Referral(tenant_id=tenant_id, job_id=job.id, worker_id=worker.id, resume_id=latest_resume.id if latest_resume else None, referred_by_user_id=user.id, status="candidatura_trabalhador", notes="Candidatura realizada pelo Portal do Trabalhador")
+    db.add(referral)
+    db.flush()
+    audit(db, tenant_id, user.id, "worker.apply_job", "Referral", referral.id, {"job_id": str(job.id), "worker_id": str(worker.id)}, request.client.host if request.client else None)
+    db.commit()
+    return {"status": "applied", "referral_id": str(referral.id)}
+
+
+@router.get("/worker-portal/applications")
+def worker_applications(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_worker_user(user)
+    tenant_id = tenant_scope(user, db)
+    worker = current_worker(db, user)
+    if not worker:
+        return []
+    rows = db.execute(select(Referral, Job).join(Job, Job.id == Referral.job_id).where(Referral.tenant_id == tenant_id, Referral.worker_id == worker.id).order_by(Referral.created_at.desc())).all()
+    return [{"id": str(referral.id), "job_id": str(job.id), "job_title": job.title, "status": referral.status, "created_at": referral.created_at} for referral, job in rows]
