@@ -722,3 +722,87 @@ O que ainda falta:
 - criar telas completas de aprovação/correção de vaga e triagem por vaga;
 - conectar o Assistente IA a uma lista real de candidatos/currículos por vaga com ações guiadas;
 - criar testes automatizados para fluxo empresa -> vaga -> SINE -> encaminhamento -> feedback.
+
+## 20. Sprint 4 — Triagem por Vaga com IA interna do SINE
+
+Em 19/05/2026, foi criada a triagem real por vaga para uso exclusivo dos colaboradores do SINE, mantendo a IA fora do portal da empresa e preservando a regra de que a empresa só visualiza candidatos oficialmente encaminhados.
+
+Arquivos criados:
+
+- `backend/app/services/job_triage_service.py`;
+- `backend/app/services/matching_service.py`;
+- `backend/app/services/referral_service.py`;
+- `backend/app/migrations/versions/20260519_0005_referral_triage_ai_fields.py`;
+- `frontend/src/pages/SineJobTriagePage.tsx`;
+- `frontend/src/pages/CandidateResumeModal.tsx`;
+- `frontend/src/canvas/JobTriageCanvas.tsx`.
+
+Arquivos alterados:
+
+- `backend/app/models/__init__.py`;
+- `backend/app/routers/jobs.py`;
+- `backend/app/routers/ai_analysis.py`;
+- `backend/app/schemas/common.py`;
+- `frontend/src/main.tsx`;
+- `frontend/src/layouts/AppLayout.tsx`;
+- `frontend/src/pages/Dashboard.tsx`;
+- `frontend/src/types/index.ts`.
+
+Rotas criadas:
+
+- `GET /api/jobs/{job_id}/candidates`;
+- `GET /api/jobs/{job_id}/candidates/{worker_id}/resume`;
+- `POST /api/ai/jobs/{job_id}/analyze-candidates`;
+- `POST /api/jobs/{job_id}/refer-candidates`;
+- frontend protegido em `/sine/triagem` e `/sine/triagem/:jobId`.
+
+Banco e migração:
+
+- adicionados em `referrals`: `match_explanation`, `feedback_status`, `referred_at`, `triage_notes`, `ai_analysis_json` e `last_ai_analyzed_at`;
+- migração `20260519_0005` aplicada com `alembic upgrade head`.
+
+Experiência implementada:
+
+- menu interno do SINE ganhou `Triagem por Vaga`;
+- dashboard do SINE passou a direcionar novas vagas, candidatos pendentes e o Assistente IA para `/sine/triagem`;
+- tela de triagem permite selecionar vaga, revisar requisitos, aprovar/publicar/pedir correção/cancelar, analisar candidatos com IA, filtrar por compatibilidade e encaminhar selecionados;
+- Canvas de matching mostra a vaga no centro, candidatos ao redor e intensidade visual conforme `match_score`;
+- modal de currículo registra acesso sensível e exibe dados do trabalhador, currículo, texto extraído, histórico e logs básicos;
+- pedido de correção de vaga cria conversa com a empresa no tópico `correcao_vaga`;
+- encaminhamento cria/atualiza `referrals`, conversa `feedback_contratacao`, notificação para a empresa, audit log e bloqueio por feedback pendente.
+
+Validações executadas:
+
+- `. .venv/bin/activate && python -m compileall app`;
+- `. .venv/bin/activate && alembic upgrade head`;
+- `npm run build`;
+- `systemctl restart saas-sine-backend`;
+- `systemctl status saas-sine-backend --no-pager` confirmou serviço `active (running)`;
+- `curl http://127.0.0.1:18743/api/health` retornou `200` com `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
+- `curl http://127.0.0.1:18743/api/openapi.json` retornou `200`.
+
+Testes de permissão em `/api/jobs/{job_id}/candidates`:
+
+- empresa: `403`;
+- trabalhador: `403`;
+- colaborador SINE: `200`;
+- gestor SINE: `200`.
+
+Teste de fluxo executado:
+
+- empresa `empresa@sine.jacarezinho.cloud` criou a vaga `Operador de Máquina Sprint 4`;
+- SINE publicou a vaga;
+- trabalhador `candidato@sine.jacarezinho.cloud` se candidatou;
+- SINE executou análise IA da vaga e recebeu score `86`, nível `alta`;
+- SINE encaminhou o candidato oficialmente;
+- empresa recebeu notificação e visualizou o encaminhamento;
+- portal da empresa ficou bloqueado para nova vaga enquanto havia feedback pendente (`pending_returns=1`, `can_open_job=false`);
+- tentativa de nova vaga durante o bloqueio retornou `409`;
+- empresa registrou feedback final `nao_contratado`;
+- bloqueio foi liberado (`pending_returns=0`, `can_open_job=true`).
+
+O que ainda falta:
+
+- trocar o motor heurístico/local por provedor de IA mais robusto quando houver chave operacional configurada;
+- criar testes automatizados para o fluxo completo de triagem e feedback;
+- evoluir a comparação visual para sugerir candidatos compatíveis do banco geral quando essa regra de produto for liberada.

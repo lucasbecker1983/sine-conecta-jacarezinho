@@ -18,6 +18,7 @@ import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { EntityPage } from "./pages/EntityPage";
 import { Login } from "./pages/Login";
 import { ProfilePage } from "./pages/ProfilePage";
+import { SineJobTriagePage } from "./pages/SineJobTriagePage";
 import { WorkerJobsPage } from "./pages/WorkerJobsPage";
 import { WorkerResumePage } from "./pages/WorkerResumePage";
 
@@ -103,6 +104,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                   actionLabel="Criar vaga"
                 />,
               )}
+            />
+            <Route
+              path="sine/triagem"
+              element={only(sineRoles, <SineJobTriagePage />)}
+            />
+            <Route
+              path="sine/triagem/:jobId"
+              element={only(sineRoles, <SineJobTriagePage />)}
             />
             <Route
               path="encaminhamentos"

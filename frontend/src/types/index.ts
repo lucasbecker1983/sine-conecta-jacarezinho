@@ -129,3 +129,57 @@ export type SineCollaborator = User & {
   is_active: boolean;
   last_login_at?: string | null;
 };
+
+export type Resume = {
+  id: string;
+  tenant_id: string;
+  worker_id: string;
+  original_filename: string;
+  size_bytes: number;
+  status: string;
+  analysis?: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type JobCandidate = {
+  worker_id: string;
+  worker_name: string;
+  worker_email?: string | null;
+  worker_phone?: string | null;
+  worker_whatsapp?: string | null;
+  resume_id?: string | null;
+  resume_filename?: string | null;
+  application_status: string;
+  referral_id?: string | null;
+  created_at?: string | null;
+  has_lgpd_consent: boolean;
+  city?: string | null;
+  education?: string | null;
+  desired_role?: string | null;
+  ai_summary?: string | null;
+  match_score?: number | null;
+  match_explanation?: string | null;
+};
+
+export type CandidateAnalysis = {
+  worker_id: string;
+  resume_id?: string | null;
+  worker_name: string;
+  match_score: number;
+  match_level: "alta" | "media" | "baixa";
+  summary: string;
+  skills: string[];
+  strengths: string[];
+  gaps: string[];
+  match_explanation: string;
+  suggested_interview_questions: string[];
+};
+
+export type CandidateResumeDetail = {
+  worker: Record<string, unknown>;
+  resume?: Resume | null;
+  extracted_text?: string | null;
+  applications: Array<Record<string, unknown>>;
+  referrals: Array<Record<string, unknown>>;
+  access_logs: DataAccessLog[];
+};

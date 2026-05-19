@@ -16,6 +16,7 @@ import {
   UserRound,
   UserRoundSearch,
   UsersRound,
+  WandSparkles,
 } from "lucide-react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { api, getCurrentTenant } from "../services/api";
@@ -96,6 +97,12 @@ const items = [
     to: "/vagas",
     label: "Vagas",
     icon: BriefcaseBusiness,
+    roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
+  },
+  {
+    to: "/sine/triagem",
+    label: "Triagem por Vaga",
+    icon: WandSparkles,
     roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
   },
   {

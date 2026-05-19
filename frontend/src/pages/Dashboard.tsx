@@ -156,20 +156,42 @@ export function Dashboard() {
         </div>
       </section>
       <div className="grid gap-3 md:grid-cols-4">
-        {operationalCards.map(([key, label, Icon]) => (
-          <div
-            key={String(key)}
-            className="rounded-md border border-slate-200 bg-white p-4 shadow-sm"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="text-sm text-slate-500">{String(label)}</div>
-              <Icon className="text-emerald-700" size={18} />
+        {operationalCards.map(([key, label, Icon]) => {
+          const route = [
+            "vagas_solicitadas",
+            "curriculos_pendentes",
+            "vagas_ativas",
+          ].includes(String(key))
+            ? "/sine/triagem"
+            : undefined;
+          const content = (
+            <>
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-sm text-slate-500">{String(label)}</div>
+                <Icon className="text-emerald-700" size={18} />
+              </div>
+              <div className="mt-2 text-3xl font-bold text-slate-950">
+                {summary[String(key)] ?? 0}
+              </div>
+            </>
+          );
+          return route ? (
+            <Link
+              key={String(key)}
+              to={route}
+              className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-400"
+            >
+              {content}
+            </Link>
+          ) : (
+            <div
+              key={String(key)}
+              className="rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+            >
+              {content}
             </div>
-            <div className="mt-2 text-3xl font-bold text-slate-950">
-              {summary[String(key)] ?? 0}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <section className="rounded-md border border-emerald-100 bg-white p-5 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
@@ -207,10 +229,14 @@ export function Dashboard() {
               ))}
             </select>
             <Link
-              to="/curriculos"
+              to={
+                selectedAiJobId
+                  ? `/sine/triagem/${selectedAiJobId}`
+                  : "/sine/triagem"
+              }
               className="tenant-button inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold"
             >
-              <Sparkles size={17} /> Analisar currículos
+              <Sparkles size={17} /> Abrir triagem por vaga
             </Link>
           </div>
         </div>
@@ -242,13 +268,13 @@ export function Dashboard() {
               "Alta",
               "Novas vagas",
               `${summary.vagas_solicitadas ?? 0} solicitação(ões) aguardam análise do SINE.`,
-              "/vagas",
+              "/sine/triagem",
             ],
             [
               "Média",
               "Currículos e candidaturas",
               `${summary.curriculos_pendentes ?? 0} currículo(s) ou candidatura(s) aguardam triagem.`,
-              "/curriculos",
+              "/sine/triagem",
             ],
             [
               "Média",
@@ -280,7 +306,7 @@ export function Dashboard() {
                 to={to}
                 className="rounded-md border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 hover:border-emerald-400"
               >
-                Abrir
+                {to === "/sine/triagem" ? "Triar candidatos" : "Abrir"}
               </Link>
             </div>
           ))}

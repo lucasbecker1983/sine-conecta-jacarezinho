@@ -318,6 +318,7 @@ class ReferralOut(ReferralIn):
     id: UUID
     tenant_id: UUID
     status: str
+    match_explanation: str | None = None
     created_at: datetime
 
 
@@ -415,3 +416,73 @@ class NotificationOut(BaseModel):
     message: str
     read_at: datetime | None = None
     created_at: datetime
+
+
+class JobCandidateOut(BaseModel):
+    worker_id: UUID
+    worker_name: str
+    worker_email: EmailStr | None = None
+    worker_phone: str | None = None
+    worker_whatsapp: str | None = None
+    resume_id: UUID | None = None
+    resume_filename: str | None = None
+    application_status: str
+    referral_id: UUID | None = None
+    created_at: datetime | None = None
+    has_lgpd_consent: bool
+    city: str | None = None
+    education: str | None = None
+    desired_role: str | None = None
+    ai_summary: str | None = None
+    match_score: int | None = None
+    match_explanation: str | None = None
+
+
+class CandidateAnalysisOut(BaseModel):
+    worker_id: UUID
+    resume_id: UUID | None = None
+    worker_name: str
+    match_score: int
+    match_level: Literal["alta", "media", "baixa"]
+    summary: str
+    skills: list[str] = []
+    strengths: list[str] = []
+    gaps: list[str] = []
+    match_explanation: str
+    suggested_interview_questions: list[str] = []
+
+
+class JobCandidateAnalysisOut(BaseModel):
+    job_id: UUID
+    job_title: str
+    disclaimer: str = (
+        "A IA é apenas apoio à triagem. A decisão final é do colaborador do SINE."
+    )
+    candidates: list[CandidateAnalysisOut]
+
+
+class ReferCandidateIn(BaseModel):
+    worker_id: UUID
+    resume_id: UUID | None = None
+    match_score: int | None = Field(default=None, ge=0, le=100)
+    match_explanation: str | None = None
+
+
+class ReferCandidatesIn(BaseModel):
+    candidates: list[ReferCandidateIn] = Field(min_length=1)
+    message_to_company: str | None = None
+
+
+class ReferCandidatesOut(BaseModel):
+    status: str
+    referred: int
+    referral_ids: list[UUID]
+
+
+class CandidateResumeDetailOut(BaseModel):
+    worker: WorkerOut
+    resume: ResumeOut | None = None
+    extracted_text: str | None = None
+    applications: list[dict] = []
+    referrals: list[dict] = []
+    access_logs: list[DataAccessLogOut] = []
