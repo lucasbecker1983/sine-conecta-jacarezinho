@@ -806,3 +806,112 @@ O que ainda falta:
 - trocar o motor heurístico/local por provedor de IA mais robusto quando houver chave operacional configurada;
 - criar testes automatizados para o fluxo completo de triagem e feedback;
 - evoluir a comparação visual para sugerir candidatos compatíveis do banco geral quando essa regra de produto for liberada.
+
+## 21. Sprint 5 — Portal Público de Vagas e Jornada do Trabalhador
+
+Em 19/05/2026, foi criada a jornada pública de vagas e candidatura do trabalhador, conectando o Portal Público de Vagas à Triagem por Vaga da Sprint 4 sem expor IA, ranking interno ou candidatos não encaminhados para empresas.
+
+Arquivos criados:
+
+- `backend/app/routers/public.py`;
+- `frontend/src/pages/PublicJobsPage.tsx`;
+- `frontend/src/pages/PublicJobDetailsPage.tsx`;
+- `frontend/src/pages/WorkerRegisterPage.tsx`;
+- `frontend/src/canvas/PublicJobsCanvas.tsx`.
+
+Arquivos alterados:
+
+- `backend/app/main.py`;
+- `backend/app/routers/crud.py`;
+- `backend/app/routers/worker_portal.py`;
+- `backend/app/schemas/common.py`;
+- `backend/app/services/job_triage_service.py`;
+- `frontend/src/main.tsx`;
+- `frontend/src/layouts/AppLayout.tsx`;
+- `frontend/src/pages/Login.tsx`;
+- `frontend/src/pages/Dashboard.tsx`;
+- `frontend/src/pages/WorkerResumePage.tsx`;
+- `frontend/src/pages/SineJobTriagePage.tsx`;
+- `frontend/src/types/index.ts`.
+
+Rotas públicas criadas:
+
+- `GET /api/public/jobs`;
+- `GET /api/public/jobs/{job_id}`;
+- `POST /api/public/workers/register`;
+- frontend público em `/vagas`;
+- frontend público em `/vagas/:jobId`;
+- frontend público em `/trabalhador/cadastro`.
+
+Rotas de candidatura:
+
+- adicionada `POST /api/worker-portal/jobs/{job_id}/apply` com `resume_id` e `confirm_lgpd`;
+- mantida compatibilidade com `POST /api/worker-portal/apply/{job_id}`;
+- candidatura pública gera/atualiza `referrals.status = candidatura_trabalhador`;
+- candidaturas diretas aparecem na triagem com badge `Candidatura direta`.
+
+Segurança e LGPD:
+
+- `/api/public/jobs` expõe apenas vagas com status `publicada`, `em_triagem` e `encaminhando_candidatos`;
+- vagas `solicitada`, `em_analise`, `correcao_solicitada`, `cancelada`, `encerrada` e `aguardando_retorno_empresa` não aparecem no portal público;
+- dados sensíveis da empresa e contatos diretos não são expostos no endpoint público;
+- cadastro público do trabalhador cria usuário `worker`, hash Argon2id, perfil vinculado, `worker`, aceite em `lgpd_consents` e audit log;
+- empresa não visualiza candidaturas diretas antes do encaminhamento oficial do SINE;
+- a listagem do portal da empresa passou a filtrar apenas encaminhamentos oficiais e status finais.
+
+Experiência implementada:
+
+- portal público com header, logo SINE, botões `Entrar`, `Sou empresa` e `Sou trabalhador`;
+- hero com Canvas conectando SINE, trabalhadores, empresas, vagas e atendimento;
+- listagem com filtros por palavra-chave, cidade, cargo, modalidade, escolaridade, salário informado e ordenação por recentes/encerramento;
+- página de detalhe da vaga com salário, jornada, modalidade, escolaridade, experiência, cursos, CNH, benefícios, prazo e orientação LGPD;
+- cadastro simples do trabalhador com campos obrigatórios, senha forte e aceite LGPD;
+- login ganhou links para `Ver vagas abertas`, cadastro de trabalhador e acesso da empresa;
+- dashboard do trabalhador passou a mostrar vagas abertas, candidaturas, currículos, dados faltantes e orientação de que a empresa só vê dados após encaminhamento oficial;
+- tela `WorkerResumePage` ganhou etapa explícita `Confirmar candidatura` usando a nova rota;
+- dashboard do SINE preservou o CTA para `/sine/triagem`.
+
+Validações executadas:
+
+- `. .venv/bin/activate && python -m compileall app`;
+- `. .venv/bin/activate && alembic upgrade head`;
+- `npm run build`;
+- `systemctl restart saas-sine-backend`;
+- `systemctl status saas-sine-backend --no-pager` confirmou `active (running)`;
+- `curl http://127.0.0.1:18743/api/health` retornou `200` com `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
+- `curl http://127.0.0.1:18743/api/openapi.json` retornou `200`;
+- `https://sine.jacarezinho.cloud/vagas` retornou `200`;
+- `https://sine.jacarezinho.cloud/vagas/{job_id}` retornou `200`;
+- `https://sine.jacarezinho.cloud/trabalhador/cadastro?jobId=...` retornou `200`.
+
+Teste de fluxo público:
+
+- empresa criou a vaga `Auxiliar Administrativo Portal Público Sprint 5`;
+- SINE publicou a vaga;
+- `GET /api/public/jobs` retornou a vaga publicada;
+- `GET /api/public/jobs/{job_id}` retornou o detalhe da vaga;
+- trabalhador público foi cadastrado com aceite LGPD e `job_id` preservado;
+- currículo PDF foi enviado;
+- candidatura foi confirmada em `POST /api/worker-portal/jobs/{job_id}/apply`;
+- antes do encaminhamento, `GET /api/company-portal/referrals` não mostrou a candidatura para a empresa;
+- `GET /api/jobs/{job_id}/candidates` mostrou a candidatura na triagem com `source=public_portal`;
+- análise IA interna do SINE retornou 1 candidato com score `100`;
+- SINE encaminhou oficialmente o candidato;
+- após encaminhamento, a empresa visualizou o candidato em `company-portal/referrals`;
+- feedback final de teste foi registrado para liberar a empresa (`pending_returns=0`, `can_open_job=true`);
+- uma vaga `Atendente de Loja Portal Público` ficou publicada para validação contínua do portal público.
+
+Testes de segurança:
+
+- empresa tentando acessar `/api/jobs/{job_id}/candidates`: `403`;
+- trabalhador tentando acessar `/api/jobs/{job_id}/candidates`: `403`;
+- público sem token tentando acessar `/api/jobs/{job_id}/candidates`: `401`;
+- público sem token tentando acessar `/api/ai/jobs/{job_id}/analyze-candidates`: `401`;
+- empresa tentando acessar IA interna: `403`;
+- público acessou somente `/api/public/jobs` e `/api/public/jobs/{job_id}`.
+
+O que ainda falta:
+
+- criar teste automatizado end-to-end para portal público, cadastro, currículo, candidatura e triagem;
+- criar página pública institucional da empresa apenas se houver regra futura de anonimização/visibilidade;
+- evoluir recomendações do trabalhador sem expor ranking ou critérios internos de IA.

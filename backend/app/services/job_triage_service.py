@@ -89,6 +89,15 @@ def list_job_candidates(
                 city=worker.city,
                 education=worker.education_level,
                 desired_role=worker.desired_role,
+                source=(
+                    "public_portal"
+                    if referral.notes and "Portal Público de Vagas" in referral.notes
+                    else (
+                        "worker_portal"
+                        if referral.status == "candidatura_trabalhador"
+                        else "sine"
+                    )
+                ),
                 ai_summary=analysis.get("summary"),
                 match_score=referral.match_score,
                 match_explanation=referral.match_explanation,

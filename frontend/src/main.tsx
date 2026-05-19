@@ -18,8 +18,11 @@ import { ChangePasswordPage } from "./pages/ChangePasswordPage";
 import { EntityPage } from "./pages/EntityPage";
 import { Login } from "./pages/Login";
 import { ProfilePage } from "./pages/ProfilePage";
+import { PublicJobDetailsPage } from "./pages/PublicJobDetailsPage";
+import { PublicJobsPage } from "./pages/PublicJobsPage";
 import { SineJobTriagePage } from "./pages/SineJobTriagePage";
 import { WorkerJobsPage } from "./pages/WorkerJobsPage";
+import { WorkerRegisterPage } from "./pages/WorkerRegisterPage";
 import { WorkerResumePage } from "./pages/WorkerResumePage";
 
 const sineRoles = ["super_admin", "tenant_admin", "sine_manager", "sine_staff"];
@@ -36,6 +39,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
+        <Route path="/vagas" element={<PublicJobsPage />} />
+        <Route path="/vagas/:jobId" element={<PublicJobDetailsPage />} />
+        <Route path="/trabalhador/cadastro" element={<WorkerRegisterPage />} />
         <Route path="/login" element={<Login />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
@@ -94,7 +100,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               )}
             />
             <Route
-              path="vagas"
+              path="sine/vagas"
               element={only(
                 sineRoles,
                 <EntityPage

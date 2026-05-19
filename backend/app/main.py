@@ -13,6 +13,7 @@ from app.routers import (
     jobs,
     notifications,
     profile,
+    public,
     referrals,
     reports,
     resumes,
@@ -46,6 +47,7 @@ def health():
 
 
 app.include_router(auth.router, prefix="/api")
+app.include_router(public.router, prefix="/api")
 app.include_router(tenants.router, prefix="/api")
 app.include_router(profile.router, prefix="/api")
 app.include_router(users.router, prefix="/api")

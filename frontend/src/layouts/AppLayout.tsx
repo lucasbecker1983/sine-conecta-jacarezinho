@@ -94,7 +94,7 @@ const items = [
     roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
   },
   {
-    to: "/vagas",
+    to: "/sine/vagas",
     label: "Vagas",
     icon: BriefcaseBusiness,
     roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],

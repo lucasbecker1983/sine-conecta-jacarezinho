@@ -541,6 +541,11 @@ function CandidateCard({
         <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
           {candidate.application_status}
         </span>
+        {candidate.source === "public_portal" && (
+          <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-900">
+            Candidatura direta
+          </span>
+        )}
       </div>
       <p className="mt-3 text-sm leading-6 text-slate-600">
         {candidate.summary ||

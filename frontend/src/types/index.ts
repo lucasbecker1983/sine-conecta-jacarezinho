@@ -73,6 +73,28 @@ export type Job = {
   created_at: string;
 };
 
+export type PublicJob = {
+  id: string;
+  title: string;
+  company_name: string;
+  city?: string | null;
+  state?: string | null;
+  vacancies: number;
+  salary_range?: string | null;
+  workday?: string | null;
+  modality: string;
+  minimum_education?: string | null;
+  required_experience?: string | null;
+  desired_courses?: string | null;
+  cnh_required?: string | null;
+  description: string;
+  benefits?: string | null;
+  schedule?: string | null;
+  workplace?: string | null;
+  created_at: string;
+  expires_at?: string | null;
+};
+
 export type CommunicationThread = {
   id: string;
   company_id: string;
@@ -156,6 +178,7 @@ export type JobCandidate = {
   city?: string | null;
   education?: string | null;
   desired_role?: string | null;
+  source?: string | null;
   ai_summary?: string | null;
   match_score?: number | null;
   match_explanation?: string | null;

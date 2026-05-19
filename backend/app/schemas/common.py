@@ -134,6 +134,59 @@ class TokenOut(BaseModel):
     tenant: TenantOut | None
 
 
+class PublicWorkerRegisterIn(BaseModel):
+    full_name: str = Field(min_length=3, max_length=180)
+    cpf: str = Field(min_length=11, max_length=14)
+    birth_date: date | None = None
+    phone: str = Field(min_length=8, max_length=30)
+    whatsapp: str = Field(min_length=8, max_length=30)
+    email: EmailStr
+    city: str = "Jacarezinho"
+    state: str = "PR"
+    password: str = Field(min_length=10, max_length=128)
+    confirm_password: str = Field(min_length=10, max_length=128)
+    lgpd_accepted: bool
+    job_id: UUID | None = None
+    education_level: str | None = None
+    desired_role: str | None = None
+    cnh: str | None = None
+    availability: str | None = None
+    notes: str | None = None
+
+    @field_validator("cpf")
+    @classmethod
+    def validate_cpf(cls, value: str) -> str:
+        digits = "".join(char for char in value if char.isdigit())
+        if len(digits) != 11 or len(set(digits)) == 1:
+            raise ValueError("CPF invalido")
+        return digits
+
+    @field_validator("state")
+    @classmethod
+    def validate_worker_state(cls, value: str) -> str:
+        if value.upper() != "PR":
+            raise ValueError("Estado deve ser PR")
+        return value.upper()
+
+    @field_validator("password")
+    @classmethod
+    def validate_worker_password(cls, value: str) -> str:
+        checks = [
+            any(char.islower() for char in value),
+            any(char.isupper() for char in value),
+            any(char.isdigit() for char in value),
+            any(not char.isalnum() for char in value),
+        ]
+        if sum(checks) < 3:
+            raise ValueError("A senha deve combinar letras, numeros e simbolos")
+        return value
+
+
+class PublicWorkerRegisterOut(TokenOut):
+    job_id: UUID | None = None
+    message: str
+
+
 class CompanyIn(BaseModel):
     cnpj: str
     legal_name: str
@@ -255,6 +308,28 @@ class JobOut(JobIn):
     id: UUID
     tenant_id: UUID
     created_at: datetime
+
+
+class PublicJobOut(BaseModel):
+    id: UUID
+    title: str
+    company_name: str
+    city: str | None = "Jacarezinho"
+    state: str | None = "PR"
+    vacancies: int
+    salary_range: str | None = None
+    workday: str | None = None
+    modality: str
+    minimum_education: str | None = None
+    required_experience: str | None = None
+    desired_courses: str | None = None
+    cnh_required: str | None = None
+    description: str
+    benefits: str | None = None
+    schedule: str | None = None
+    workplace: str | None = None
+    created_at: datetime
+    expires_at: date | None = None
 
 
 class CompanyPortalJobIn(BaseModel):
@@ -433,6 +508,7 @@ class JobCandidateOut(BaseModel):
     city: str | None = None
     education: str | None = None
     desired_role: str | None = None
+    source: str | None = None
     ai_summary: str | None = None
     match_score: int | None = None
     match_explanation: str | None = None

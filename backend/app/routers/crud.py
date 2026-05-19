@@ -1003,6 +1003,18 @@ def list_company_portal_referrals(
         .join(Worker, Worker.id == Referral.worker_id)
         .outerjoin(Resume, Resume.id == Referral.resume_id)
         .where(Referral.tenant_id == tenant_id, Job.company_id == company.id)
+        .where(
+            Referral.status.in_(
+                [
+                    "encaminhado",
+                    "entrevista_agendada",
+                    "aguardando_retorno_empresa",
+                    "contratado",
+                    "nao_contratado",
+                    "nao_selecionado",
+                ]
+            )
+        )
         .order_by(Referral.created_at.desc())
     ).all()
     for referral, _job, worker, resume in rows:

@@ -41,6 +41,17 @@ export function Dashboard() {
   const [summary, setSummary] = useState<Summary>({});
   const [companies, setCompanies] = useState<Company[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [workerJobs, setWorkerJobs] = useState<Job[]>([]);
+  const [workerApplications, setWorkerApplications] = useState<
+    Array<{ id: string; job_title: string; status: string; created_at: string }>
+  >([]);
+  const [workerResumes, setWorkerResumes] = useState<
+    Array<{ id: string; original_filename: string; created_at: string }>
+  >([]);
+  const [workerProfile, setWorkerProfile] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [selected, setSelected] = useState("Clique em um candidato no mapa");
   const [selectedAiJobId, setSelectedAiJobId] = useState("");
   const roles = user?.roles ?? [];
@@ -66,6 +77,37 @@ export function Dashboard() {
         setJobs([]);
       });
   }, [isCompany, isWorker]);
+
+  useEffect(() => {
+    if (!isWorker) return;
+    Promise.all([
+      api.get<Job[]>("/worker-portal/open-jobs"),
+      api.get<
+        Array<{
+          id: string;
+          job_title: string;
+          status: string;
+          created_at: string;
+        }>
+      >("/worker-portal/applications"),
+      api.get<
+        Array<{ id: string; original_filename: string; created_at: string }>
+      >("/worker-portal/resumes"),
+      api.get<Record<string, unknown> | null>("/worker-portal/profile"),
+    ])
+      .then(([jobList, applicationList, resumeList, profile]) => {
+        setWorkerJobs(jobList.data);
+        setWorkerApplications(applicationList.data);
+        setWorkerResumes(resumeList.data);
+        setWorkerProfile(profile.data);
+      })
+      .catch(() => {
+        setWorkerJobs([]);
+        setWorkerApplications([]);
+        setWorkerResumes([]);
+        setWorkerProfile(null);
+      });
+  }, [isWorker]);
 
   if (isCompany) {
     return <CompanyDashboard />;
@@ -95,14 +137,14 @@ export function Dashboard() {
         </section>
         <div className="grid gap-3 md:grid-cols-3">
           <Link
-            to="/vagas-abertas"
+            to="/vagas"
             className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
           >
             <div className="text-sm font-semibold text-emerald-700">
-              1. Escolher vaga
+              Ver vagas abertas
             </div>
             <div className="mt-3 text-sm text-slate-600">
-              A seleção da vaga vem antes do envio do currículo.
+              {workerJobs.length} oportunidade(s) publicadas para candidatura.
             </div>
           </Link>
           <Link
@@ -113,18 +155,69 @@ export function Dashboard() {
               2. Enviar currículo
             </div>
             <div className="mt-3 text-sm text-slate-600">
-              Preencha no portal ou envie PDF depois de selecionar a vaga.
+              {workerResumes.length > 0
+                ? `${workerResumes.length} currículo(s) enviado(s).`
+                : "Preencha no portal ou envie PDF depois de selecionar a vaga."}
             </div>
           </Link>
-          <div className="rounded-md border border-slate-200 bg-white p-5">
+          <Link
+            to="/vagas-abertas"
+            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
+          >
             <div className="text-sm font-semibold text-emerald-700">
-              Encaminhamentos
+              Minhas candidaturas
             </div>
             <div className="mt-3 text-sm text-slate-600">
-              Acompanhe o andamento após a análise do SINE.
+              {workerApplications.length} candidatura(s) em acompanhamento.
+            </div>
+          </Link>
+        </div>
+        <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
+          <div className="rounded-md border border-slate-200 bg-white p-5">
+            <h2 className="font-bold text-slate-950">Minhas candidaturas</h2>
+            <div className="mt-4 divide-y divide-slate-100">
+              {workerApplications.length === 0 && (
+                <div className="py-4 text-sm text-slate-500">
+                  Você ainda não se candidatou. Veja as vagas abertas e escolha
+                  uma oportunidade para começar.
+                </div>
+              )}
+              {workerApplications.slice(0, 5).map((application) => (
+                <div key={application.id} className="py-3">
+                  <div className="font-semibold text-slate-950">
+                    {application.job_title}
+                  </div>
+                  <div className="mt-1 text-sm text-slate-500">
+                    {friendlyWorkerStatus(application.status)} ·{" "}
+                    {new Date(application.created_at).toLocaleDateString(
+                      "pt-BR",
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+          <aside className="rounded-md border border-emerald-100 bg-white p-5">
+            <h2 className="font-bold text-slate-950">Orientações do SINE</h2>
+            <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
+              <p>
+                Mantenha telefone, WhatsApp e cidade atualizados para a equipe
+                conseguir falar com você.
+              </p>
+              <p>
+                Dados faltantes:{" "}
+                <strong>
+                  {missingWorkerFields(workerProfile).length ||
+                    "nenhum item essencial"}
+                </strong>
+              </p>
+              <p>
+                A empresa só vê seus dados quando o SINE faz um encaminhamento
+                oficial.
+              </p>
+            </div>
+          </aside>
+        </section>
       </div>
     );
   }
@@ -378,4 +471,30 @@ export function Dashboard() {
       </div>
     </div>
   );
+}
+
+function friendlyWorkerStatus(status: string) {
+  const map: Record<string, string> = {
+    candidatura_trabalhador: "Candidatura enviada ao SINE",
+    em_analise: "Em análise pelo SINE",
+    encaminhado: "Encaminhado para empresa",
+    aguardando_retorno_empresa: "Aguardando retorno da empresa",
+    encerrado: "Processo encerrado",
+    nao_selecionado: "Não selecionado",
+    nao_contratado: "Não selecionado",
+    contratado: "Contratado",
+    banco_talentos: "Banco de talentos",
+  };
+  return map[status] ?? status;
+}
+
+function missingWorkerFields(profile: Record<string, unknown> | null) {
+  if (!profile) return ["cadastro"];
+  return [
+    "phone",
+    "whatsapp",
+    "city",
+    "education_level",
+    "desired_role",
+  ].filter((field) => !profile[field]);
 }
