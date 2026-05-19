@@ -512,3 +512,30 @@ O colaborador acessa o painel operacional com módulos administrativos iniciais:
 - Implementar visualização detalhada do currículo enviado em PDF com log de acesso.
 - Criar fluxo completo da empresa para ver apenas candidatos vinculados às suas vagas.
 - Criar testes automatizados para o fluxo trabalhador -> vaga -> currículo -> candidatura.
+
+## 16. Endurecimento de Roles e isolamento por perfil
+
+Em 19/05/2026, o controle de acesso por perfil foi endurecido para impedir navegação cruzada entre áreas de Empresa, Trabalhador e SINE.
+
+Regras implementadas:
+
+- `company_user` representa o papel Empresa e acessa apenas o Portal da Empresa;
+- `worker` representa o papel Trabalhador e acessa apenas o Portal do Trabalhador;
+- `tenant_admin`, `sine_manager` e `sine_staff` acessam apenas as áreas internas do SINE conforme permissões;
+- `super_admin` permanece como perfil master;
+- usuário de portal com role Empresa ou Trabalhador não pode acessar permissões internas como empresas, trabalhadores, currículos, vagas, encaminhamentos, relatórios ou auditoria;
+- usuário Empresa não pode acessar área de Trabalhador nem área interna do SINE;
+- usuário Trabalhador não pode acessar área de Empresa nem área interna do SINE;
+- criação/vínculo de usuário de empresa via SINE agora exige e-mail exclusivo de portal e rejeita e-mail que já tenha perfil SINE, Trabalhador ou Master;
+- a rota genérica de feedback passou a exigir perfil interno de encaminhamento, enquanto feedback da empresa continua pelo endpoint próprio `/company-portal/referrals/{referral_id}/feedback`;
+- o frontend passou a proteger cada rota por role, além de esconder itens de menu não permitidos.
+
+Validações executadas:
+
+- `.venv/bin/python -m compileall app`;
+- `npm run build`;
+- reinício do serviço `saas-sine-backend`;
+- token real de `empresa@sine.jacarezinho.cloud`: `/api/companies` retornou `403`, `/api/company-portal/status` retornou `200`, `/api/worker-portal/open-jobs` retornou `403`;
+- token real de `candidato@sine.jacarezinho.cloud`: `/api/companies` retornou `403`, `/api/company-portal/status` retornou `403`, `/api/worker-portal/open-jobs` retornou `200`;
+- token real de `colaborador@sine.jacarezinho.cloud`: `/api/companies` retornou `200`, `/api/company-portal/status` retornou `403`, `/api/worker-portal/open-jobs` retornou `403`;
+- tentativa de vincular `colaborador@sine.jacarezinho.cloud` como usuário de empresa retornou `409`, preservando o isolamento do perfil.

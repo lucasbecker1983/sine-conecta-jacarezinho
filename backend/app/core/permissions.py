@@ -27,9 +27,13 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     "tenant_admin": {"tenant:admin", "reports:view", "users:manage", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
     "sine_manager": {"reports:view", "jobs:approve", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
     "sine_staff": {"jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
-    "company_user": {"company:portal", "feedback:create"},
+    "company_user": {"company:portal"},
     "worker": {"worker:portal", "resume:own"},
 }
+
+SINE_ROLES = {"tenant_admin", "sine_manager", "sine_staff"}
+PORTAL_ROLES = {"company_user", "worker"}
+SINE_PERMISSIONS = {"tenant:admin", "reports:view", "users:manage", "jobs:approve", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"}
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
@@ -50,6 +54,8 @@ def require_permissions(*permissions: str):
         names = {role.name for role in user.roles}
         if "super_admin" in names:
             return user
+        if names.intersection(PORTAL_ROLES) and set(permissions).intersection(SINE_PERMISSIONS):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Perfil de portal nao acessa area interna do SINE")
         granted = set().union(*(ROLE_PERMISSIONS.get(name, set()) for name in names))
         if not set(permissions).issubset(granted):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permissao insuficiente")

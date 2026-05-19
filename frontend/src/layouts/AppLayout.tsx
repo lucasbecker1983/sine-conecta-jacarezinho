@@ -19,7 +19,7 @@ const items = [
   { to: '/trabalhadores', label: 'Trabalhadores', icon: UsersRound, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/curriculos', label: 'Curriculos', icon: FileText, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/vagas', label: 'Vagas', icon: BriefcaseBusiness, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
-  { to: '/encaminhamentos', label: 'Encaminhamentos', icon: UserRoundSearch, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'worker'] },
+  { to: '/encaminhamentos', label: 'Encaminhamentos', icon: UserRoundSearch, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/comunicacao', label: 'Comunicação', icon: MessagesSquare, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/auditoria-lgpd', label: 'Auditoria LGPD', icon: LockKeyhole, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },
   { to: '/relatorios', label: 'Relatorios', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },

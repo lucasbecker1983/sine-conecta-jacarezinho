@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app.ai.local_provider import get_ai_provider
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.core.permissions import get_current_user, require_permissions
+from app.core.permissions import PORTAL_ROLES, SINE_ROLES, get_current_user, require_permissions
 from app.core.security import hash_password
 from app.models import Company, CompanyFeedback, CompanyMessage, CompanyMessageThread, CompanyUser, DataAccessLog, Job, Notification, Referral, Resume, Role, Tenant, User, Worker, LGPDConsent
 from app.schemas.common import CommunicationMessageIn, CommunicationMessageOut, CommunicationThreadIn, CommunicationThreadOut, CompanyIn, CompanyOut, CompanyPortalJobIn, CompanyPortalUserIn, CompanyPortalUserOut, CompanyReferralFeedbackIn, CompanyReferralOut, DataAccessLogOut, FeedbackIn, JobIn, JobOut, NotificationOut, ReferralIn, ReferralOut, ResumeOut, WorkerIn, WorkerOut, WorkerProfileIn
@@ -47,13 +47,19 @@ def tenant_scope(user: User, db: Session) -> UUID:
 
 
 def require_worker_user(user: User) -> None:
-    if "worker" not in {role.name for role in user.roles}:
+    names = role_names(user)
+    if "worker" not in names:
         raise HTTPException(status_code=403, detail="Acesso exclusivo do trabalhador")
+    if names.intersection(SINE_ROLES) or "company_user" in names:
+        raise HTTPException(status_code=403, detail="Perfil de trabalhador nao acessa area de empresa ou SINE")
 
 
 def require_company_user(user: User) -> None:
-    if "company_user" not in {role.name for role in user.roles}:
+    names = role_names(user)
+    if "company_user" not in names:
         raise HTTPException(status_code=403, detail="Acesso exclusivo da empresa")
+    if names.intersection(SINE_ROLES) or "worker" in names:
+        raise HTTPException(status_code=403, detail="Perfil de empresa nao acessa area de trabalhador ou SINE")
 
 
 def current_worker(db: Session, user: User) -> Worker | None:
@@ -80,6 +86,14 @@ def role_names(user: User) -> set[str]:
 
 def is_sine_user(user: User) -> bool:
     return bool(role_names(user).intersection({"super_admin", "tenant_admin", "sine_manager", "sine_staff"}))
+
+
+def ensure_portal_role_exclusive(user: User, role: Role) -> None:
+    names = role_names(user)
+    conflicting_roles = (SINE_ROLES | PORTAL_ROLES) - {role.name}
+    if names.intersection(conflicting_roles) or "super_admin" in names:
+        raise HTTPException(status_code=409, detail="Este e-mail ja possui outro perfil de acesso. Use um e-mail exclusivo para a empresa.")
+    user.roles = [role]
 
 
 def notify_sine(db: Session, tenant_id: UUID, title: str, message: str) -> None:
@@ -326,8 +340,7 @@ def create_company_portal_user(company_id: UUID, payload: CompanyPortalUserIn, r
         portal_user = User(tenant_id=tenant_id, email=email, full_name=payload.full_name, password_hash=hash_password(temporary_password), is_active=True)
         db.add(portal_user)
         created = True
-    if role not in portal_user.roles:
-        portal_user.roles.append(role)
+    ensure_portal_role_exclusive(portal_user, role)
     db.flush()
     link = db.scalar(select(CompanyUser).where(CompanyUser.tenant_id == tenant_id, CompanyUser.company_id == company.id, CompanyUser.user_id == portal_user.id))
     if not link:
@@ -602,7 +615,7 @@ def create_referral(payload: ReferralIn, request: Request, db: Session = Depends
     return referral
 
 
-@router.post("/feedback", dependencies=[Depends(require_permissions("feedback:create"))])
+@router.post("/feedback", dependencies=[Depends(require_permissions("referrals:manage"))])
 def create_feedback(payload: FeedbackIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     tenant_id = tenant_scope(user, db)
     referral = db.get(Referral, payload.referral_id)
