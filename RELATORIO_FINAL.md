@@ -387,6 +387,16 @@ Validações executadas:
 - login real do gestor do SINE;
 - refresh real via API retornando novo access token e novo refresh token para o perfil `tenant_admin`.
 
+### Rodapé Institucional dos Dashboards
+
+Em 19/05/2026, todos os dashboards protegidos passaram a exibir um rodapé discreto com o texto `Desenvolvido por` e a logo da JMB Tecnologia importada de `/opt/Imagens/JMB_TECNOLOGIA_LOGOTIPO.png`.
+
+A logo foi adicionada aos assets do frontend e dimensionada em tamanho pequeno. O clique abre nova aba para `https://jmbtenologia.com.br`, conforme solicitado.
+
+Validação executada:
+
+- `npm run build` no frontend.
+
 ### Tela de login
 
 A tela de login foi redesenhada com:

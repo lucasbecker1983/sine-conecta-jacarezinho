@@ -4,6 +4,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, getCurrentTenant } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import type { NotificationItem } from '../types'
+import jmbLogo from '../assets/logos/jmb-tecnologia-logo.png'
 
 const items = [
   { to: '/', label: 'Dashboard', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user', 'worker'] },
@@ -134,6 +135,20 @@ export function AppLayout() {
         <div className="p-5">
           <Outlet />
         </div>
+        <footer className="px-5 pb-6">
+          <div className="flex items-center justify-center border-t border-slate-200/80 pt-4 text-[11px] text-slate-400">
+            <span>Desenvolvido por</span>
+            <a
+              href="https://jmbtenologia.com.br"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Abrir site da JMB Tecnologia"
+              className="ml-2 inline-flex opacity-70 transition hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+            >
+              <img src={jmbLogo} alt="JMB Tecnologia" className="h-5 w-auto object-contain" />
+            </a>
+          </div>
+        </footer>
       </main>
     </div>
   )
