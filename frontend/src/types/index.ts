@@ -83,6 +83,7 @@ export type CommunicationThread = {
   worker_name?: string | null
   resume_id?: string | null
   resume_filename?: string | null
+  topic: string
   subject: string
   status: string
   priority: string

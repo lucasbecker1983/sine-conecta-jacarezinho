@@ -51,7 +51,16 @@ type JobForm = {
 type PortalStatus = {
   profile_complete: boolean
   pending_returns: number
+  pending_feedbacks?: Array<{
+    referral_id: string
+    job_id: string
+    job_title: string
+    worker_name: string
+    status: string
+    created_at?: string | null
+  }>
   can_open_job: boolean
+  blocking_reason?: string | null
   ai_scope: string
 }
 
@@ -245,6 +254,26 @@ export function CompanyDashboard() {
         </Link>
       </div>
 
+      {!status.can_open_job && status.pending_returns > 0 && (
+        <section className="rounded-md border border-amber-200 bg-amber-50 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-bold text-amber-950">Empresa bloqueada para novas vagas</h2>
+              <p className="mt-1 text-sm text-amber-900">{status.blocking_reason ?? 'Registre o feedback final dos encaminhamentos anteriores para liberar novas vagas.'}</p>
+            </div>
+            <Link to="/empresa/encaminhamentos" className="rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white">Resolver feedback</Link>
+          </div>
+          <div className="mt-4 grid gap-2 md:grid-cols-2">
+            {(status.pending_feedbacks ?? []).map((item) => (
+              <div key={item.referral_id} className="rounded-md border border-amber-200 bg-white p-3 text-sm">
+                <div className="font-semibold text-slate-950">{item.worker_name}</div>
+                <div className="mt-1 text-slate-600">{item.job_title} · {item.status}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="grid gap-5 xl:grid-cols-2">
         <section className="rounded-md border border-slate-200 bg-white p-5">
           <h2 className="text-lg font-bold text-slate-950">Vagas recentes</h2>
@@ -328,7 +357,7 @@ export function CompanyJobsPage() {
   const [form, setForm] = useState<JobForm>(emptyJob)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
-  const lockedReason = !status.profile_complete ? 'Complete o cadastro e aceite os termos da LGPD para solicitar vagas.' : status.pending_returns > 0 ? 'Empresa bloqueada: registre se houve contratação, dispensa, não comparecimento, banco futuro ou sem interesse antes de abrir nova vaga.' : ''
+  const lockedReason = !status.profile_complete ? 'Complete o cadastro e aceite os termos da LGPD para solicitar vagas.' : status.pending_returns > 0 ? (status.blocking_reason ?? 'Empresa bloqueada: registre se houve contratação, dispensa, não comparecimento, banco futuro ou sem interesse antes de abrir nova vaga.') : ''
 
   async function createJob(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -357,6 +386,15 @@ export function CompanyJobsPage() {
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <form onSubmit={createJob} className="rounded-md border border-slate-200 bg-white p-5">
           {lockedReason && <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">{lockedReason}</div>}
+          {status.pending_returns > 0 && (
+            <div className="mb-4 space-y-2">
+              {(status.pending_feedbacks ?? []).map((item) => (
+                <div key={item.referral_id} className="rounded-md border border-amber-200 bg-white px-3 py-2 text-sm text-amber-950">
+                  Feedback pendente: <strong>{item.worker_name}</strong> em <strong>{item.job_title}</strong>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="grid gap-3 md:grid-cols-2">
             <label className="text-sm font-medium text-slate-700 md:col-span-2">Cargo<input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2" /></label>
             <label className="text-sm font-medium text-slate-700">Data de início<input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2" /></label>

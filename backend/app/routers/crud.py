@@ -125,6 +125,7 @@ def get_or_create_referral_thread(db: Session, tenant_id: UUID, company_id: UUID
         job_id=job.id if job else referral.job_id,
         referral_id=referral.id,
         created_by_user_id=user_id,
+        topic="feedback_contratacao",
         subject=subject or f"Encaminhamento: {worker.full_name if worker else 'candidato'} para {job.title if job else 'vaga'}",
         status="aberta",
         priority="normal",
@@ -177,6 +178,7 @@ def serialize_thread(thread: CompanyMessageThread, company: Company, job: Job | 
         worker_name=worker.full_name if worker else None,
         resume_id=resume.id if resume else None,
         resume_filename=resume.original_filename if resume else None,
+        topic=thread.topic,
         subject=thread.subject,
         status=thread.status,
         priority=thread.priority,
@@ -201,6 +203,31 @@ def company_pending_return_count(db: Session, tenant_id: UUID, company_id: UUID)
         )
     ) or 0
     return waiting_referrals
+
+
+def company_pending_return_details(db: Session, tenant_id: UUID, company_id: UUID) -> list[dict]:
+    rows = db.execute(
+        select(Referral, Job, Worker)
+        .join(Job, Job.id == Referral.job_id)
+        .join(Worker, Worker.id == Referral.worker_id)
+        .where(
+            Referral.tenant_id == tenant_id,
+            Job.company_id == company_id,
+            Referral.status.in_(COMPANY_PENDING_RETURN_STATUSES),
+        )
+        .order_by(Referral.created_at.desc())
+    ).all()
+    return [
+        {
+            "referral_id": str(referral.id),
+            "job_id": str(job.id),
+            "job_title": job.title,
+            "worker_name": worker.full_name,
+            "status": referral.status,
+            "created_at": referral.created_at.isoformat() if referral.created_at else None,
+        }
+        for referral, job, worker in rows
+    ]
 
 
 def sync_job_return_status(db: Session, tenant_id: UUID, job: Job) -> None:
@@ -391,10 +418,13 @@ def company_portal_status(db: Session = Depends(get_db), user: User = Depends(ge
     tenant_id = tenant_scope(user, db)
     company = current_company(db, user)
     pending_returns = company_pending_return_count(db, tenant_id, company.id) if company else 0
+    pending_feedbacks = company_pending_return_details(db, tenant_id, company.id) if company else []
     return {
         "profile_complete": bool(company and company.lgpd_accepted),
         "pending_returns": pending_returns,
+        "pending_feedbacks": pending_feedbacks,
         "can_open_job": bool(company and company.lgpd_accepted and pending_returns == 0),
+        "blocking_reason": "Registre o feedback final da contratacao ou nao contratacao anterior para liberar novas vagas." if pending_returns else None,
         "ai_scope": "A IA auxilia exclusivamente os colaboradores do SINE na triagem. A empresa registra vagas e retornos, sem decisao automatizada.",
     }
 
@@ -596,13 +626,13 @@ def create_sine_thread(payload: CommunicationThreadIn, request: Request, db: Ses
     if not company or company.tenant_id != tenant_id or company.deleted_at is not None:
         raise HTTPException(status_code=404, detail="Empresa nao encontrada")
     job, referral, worker, resume = validate_thread_context(db, tenant_id, company.id, payload.job_id, payload.referral_id)
-    thread = CompanyMessageThread(tenant_id=tenant_id, company_id=company.id, job_id=job.id if job else None, referral_id=referral.id if referral else None, created_by_user_id=user.id, subject=payload.subject, status="aberta", priority=payload.priority, last_message_at=datetime.now(timezone.utc), sine_last_read_at=datetime.now(timezone.utc))
+    thread = CompanyMessageThread(tenant_id=tenant_id, company_id=company.id, job_id=job.id if job else None, referral_id=referral.id if referral else None, created_by_user_id=user.id, topic=payload.topic, subject=payload.subject, status="aberta", priority=payload.priority, last_message_at=datetime.now(timezone.utc), sine_last_read_at=datetime.now(timezone.utc))
     db.add(thread)
     db.flush()
     add_thread_message(db, thread, user, "sine", payload.body, details={"job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None})
     if referral and resume:
         log_resume_access(db, tenant_id, user.id, worker.id if worker else None, resume.id, "sine_thread_create_referral_context", "SINE abriu conversa vinculada a curriculo encaminhado", request.client.host if request.client else None)
-    audit(db, tenant_id, user.id, "communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None}, request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None, "topic": payload.topic}, request.client.host if request.client else None)
     db.commit()
     db.refresh(thread)
     return serialize_thread(thread, company, job, referral, worker, resume)
@@ -654,13 +684,13 @@ def create_company_thread(payload: CommunicationThreadIn, request: Request, db: 
     if not company:
         raise HTTPException(status_code=400, detail="Cadastro da empresa nao encontrado")
     job, referral, worker, resume = validate_thread_context(db, tenant_id, company.id, payload.job_id, payload.referral_id)
-    thread = CompanyMessageThread(tenant_id=tenant_id, company_id=company.id, job_id=job.id if job else None, referral_id=referral.id if referral else None, created_by_user_id=user.id, subject=payload.subject, status="aberta", priority=payload.priority, last_message_at=datetime.now(timezone.utc), company_last_read_at=datetime.now(timezone.utc))
+    thread = CompanyMessageThread(tenant_id=tenant_id, company_id=company.id, job_id=job.id if job else None, referral_id=referral.id if referral else None, created_by_user_id=user.id, topic=payload.topic, subject=payload.subject, status="aberta", priority=payload.priority, last_message_at=datetime.now(timezone.utc), company_last_read_at=datetime.now(timezone.utc))
     db.add(thread)
     db.flush()
     add_thread_message(db, thread, user, "company", payload.body, details={"job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None})
     if referral and resume:
         log_resume_access(db, tenant_id, user.id, worker.id if worker else None, resume.id, "company_thread_create_referral_context", "Empresa abriu conversa sobre curriculo encaminhado", request.client.host if request.client else None)
-    audit(db, tenant_id, user.id, "company_portal.communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None}, request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "company_portal.communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None, "topic": payload.topic}, request.client.host if request.client else None)
     db.commit()
     db.refresh(thread)
     return serialize_thread(thread, company, job, referral, worker, resume)

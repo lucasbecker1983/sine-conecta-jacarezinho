@@ -19,6 +19,19 @@ const endpoints = {
   }
 }
 
+const communicationTopics = [
+  { value: 'feedback_contratacao', label: 'Feedback de contratação' },
+  { value: 'correcao_vaga', label: 'Correção de vaga' },
+  { value: 'agenda_entrevista', label: 'Agenda de entrevista' },
+  { value: 'duvida_perfil_requisitos', label: 'Dúvida sobre perfil/requisitos' },
+  { value: 'solicitacao_novos_candidatos', label: 'Solicitar novos candidatos' },
+  { value: 'cancelamento_suspensao_vaga', label: 'Cancelamento ou suspensão da vaga' },
+  { value: 'documentos_lgpd', label: 'Documentos e LGPD' },
+  { value: 'comunicacao_interna', label: 'Comunicação interna' }
+]
+
+const topicLabels = Object.fromEntries(communicationTopics.map((topic) => [topic.value, topic.label]))
+
 function formatDate(value?: string | null) {
   return value ? new Date(value).toLocaleString('pt-BR') : 'sem registro'
 }
@@ -31,6 +44,7 @@ export function CommunicationPage({ mode }: Props) {
   const [body, setBody] = useState('')
   const [newSubject, setNewSubject] = useState('')
   const [newBody, setNewBody] = useState('')
+  const [newTopic, setNewTopic] = useState('feedback_contratacao')
   const [companyId, setCompanyId] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -89,10 +103,11 @@ export function CommunicationPage({ mode }: Props) {
     setError('')
     setMessage('')
     try {
-      const payload = isSine ? { company_id: companyId, subject: newSubject, body: newBody } : { subject: newSubject, body: newBody }
+      const payload = isSine ? { company_id: companyId, topic: newTopic, subject: newSubject, body: newBody } : { topic: newTopic, subject: newSubject, body: newBody }
       const { data } = await api.post<CommunicationThread>(apiSet.threads, payload)
       setNewSubject('')
       setNewBody('')
+      setNewTopic('feedback_contratacao')
       setSelectedId(data.id)
       setMessage('Conversa oficial criada com trilha de auditoria.')
       loadThreads()
@@ -120,6 +135,7 @@ export function CommunicationPage({ mode }: Props) {
           <form onSubmit={createThread} className="rounded-md border border-slate-200 bg-white p-4">
             <div className="mb-3 flex items-center gap-2 font-bold text-slate-950"><MessagesSquare size={18} className="text-emerald-700" /> Nova conversa</div>
             {isSine && <label className="mb-3 block text-sm font-medium text-slate-700">Empresa<select required value={companyId} onChange={(event) => setCompanyId(event.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2">{companies.map((company) => <option key={company.id} value={company.id}>{company.trade_name || company.legal_name}</option>)}</select></label>}
+            <label className="mb-3 block text-sm font-medium text-slate-700">Tema<select required value={newTopic} onChange={(event) => setNewTopic(event.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2">{communicationTopics.map((topic) => <option key={topic.value} value={topic.value}>{topic.label}</option>)}</select></label>
             <label className="block text-sm font-medium text-slate-700">Assunto<input required value={newSubject} onChange={(event) => setNewSubject(event.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2" /></label>
             <label className="mt-3 block text-sm font-medium text-slate-700">Mensagem<textarea required value={newBody} onChange={(event) => setNewBody(event.target.value)} rows={3} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2" /></label>
             <button className="tenant-button mt-3 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"><Send size={16} /> Criar</button>
@@ -133,6 +149,7 @@ export function CommunicationPage({ mode }: Props) {
                   <div className="font-semibold text-slate-950">{thread.subject}</div>
                   <div className="mt-1 text-xs text-slate-500">{thread.company_name}</div>
                   <div className="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+                    <span className="rounded-full bg-emerald-50 px-2 py-1 font-semibold text-emerald-800">{topicLabels[thread.topic] ?? thread.topic}</span>
                     {thread.job_title && <span className="rounded-full bg-white px-2 py-1">{thread.job_title}</span>}
                     {thread.worker_name && <span className="rounded-full bg-white px-2 py-1">{thread.worker_name}</span>}
                   </div>
@@ -152,6 +169,7 @@ export function CommunicationPage({ mode }: Props) {
                   <div>
                     <h2 className="text-lg font-bold text-slate-950">{selected.subject}</h2>
                     <p className="mt-1 text-sm text-slate-600">{selected.company_name} {selected.job_title ? `· ${selected.job_title}` : ''}</p>
+                    <div className="mt-2 inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">{topicLabels[selected.topic] ?? selected.topic}</div>
                   </div>
                   <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">{selected.status}</span>
                 </div>

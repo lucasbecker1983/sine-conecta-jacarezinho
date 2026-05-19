@@ -270,6 +270,45 @@ Validações executadas nesta evolução:
 - teste HTTP real de conversa SINE ↔ empresa com resposta da empresa;
 - teste transacional confirmando bloqueio de nova vaga sem feedback final e liberação após feedback final.
 
+## 14. Amadurecimento dos temas de comunicação e bloqueio de feedback
+
+Foi adicionada uma classificação obrigatória por tema na comunicação SINE ↔ empresa. O objetivo é evitar que toda troca vire uma conversa genérica e permitir triagem operacional, auditoria e cobrança de retorno de forma mais clara.
+
+Temas disponíveis no dropdown:
+
+- `feedback_contratacao`: retorno obrigatório sobre contratação ou não contratação dos candidatos encaminhados;
+- `correcao_vaga`: ajuste de cargo, salário, jornada, requisitos, datas ou texto da vaga;
+- `agenda_entrevista`: confirmação de comparecimento, alteração de agenda e organização de entrevistas;
+- `duvida_perfil_requisitos`: negociação do perfil da vaga, requisitos ou aderência dos candidatos;
+- `solicitacao_novos_candidatos`: pedido formal de mais candidatos quando os encaminhados não atenderem;
+- `cancelamento_suspensao_vaga`: suspensão, cancelamento ou encerramento do processo seletivo;
+- `documentos_lgpd`: documentos, consentimentos, tratamento de dados e registros sensíveis;
+- `comunicacao_interna`: comunicação administrativa entre SINE e empresa sem vínculo direto a feedback ou correção.
+
+O bloqueio foi tornado mais explicável:
+
+- `GET /api/company-portal/status` agora retorna `pending_feedbacks` com candidato, vaga, status e encaminhamento que impedem nova vaga;
+- retorna também `blocking_reason`;
+- a tela da empresa mostra quais encaminhamentos precisam de feedback final;
+- a criação de conversa grava o tema em `company_message_threads.topic`;
+- foi criada a migração `20260518_0004_company_thread_topics`.
+
+Pesquisa/justificativa funcional usada para os temas:
+
+- O serviço oficial do SINE para empregadores envolve cadastrar vagas, convocar candidatos para entrevista e monitorar encaminhamentos feitos por unidades do SINE.
+- O manual operacional do SINE orienta contatar empregador para confirmar comparecimento à entrevista, alterar agenda, solicitar posicionamento e comprovar aceite/colocação quando o processo seletivo se encerra.
+- Boas práticas de recrutamento tratam comunicação de status, oferta/contratação, candidatos não selecionados, aprovação/rejeição de vaga e revisão/correção de publicação como fluxos separados.
+
+Validações executadas:
+
+- `python -m compileall app`;
+- `alembic upgrade head`, chegando em `20260518_0004`;
+- `npm run build`;
+- reinício do `saas-sine-backend`;
+- `/api/health`;
+- criação HTTP real de conversa com tema `correcao_vaga`;
+- validação de `GET /api/company-portal/status` retornando `pending_feedbacks` e `blocking_reason`.
+
 Branch publicado:
 
 ```text

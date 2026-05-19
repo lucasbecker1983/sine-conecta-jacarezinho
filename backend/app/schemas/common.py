@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -31,6 +32,17 @@ REGIONAL_PR_CITIES = {
     "Barra do Jacare",
     "Barra do Jacaré",
 }
+
+CommunicationTopic = Literal[
+    "feedback_contratacao",
+    "correcao_vaga",
+    "agenda_entrevista",
+    "duvida_perfil_requisitos",
+    "solicitacao_novos_candidatos",
+    "cancelamento_suspensao_vaga",
+    "documentos_lgpd",
+    "comunicacao_interna",
+]
 
 
 class TenantOut(BaseModel):
@@ -291,6 +303,7 @@ class CommunicationThreadIn(BaseModel):
     company_id: UUID | None = None
     job_id: UUID | None = None
     referral_id: UUID | None = None
+    topic: CommunicationTopic = "comunicacao_interna"
     subject: str = Field(min_length=3, max_length=180)
     body: str = Field(min_length=2, max_length=4000)
     priority: str = "normal"
@@ -310,6 +323,7 @@ class CommunicationThreadOut(BaseModel):
     worker_name: str | None = None
     resume_id: UUID | None = None
     resume_filename: str | None = None
+    topic: str
     subject: str
     status: str
     priority: str

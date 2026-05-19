@@ -252,6 +252,7 @@ class CompanyMessageThread(UUIDMixin, TimestampMixin, Base):
     job_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("jobs.id"), index=True)
     referral_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("referrals.id"), index=True)
     created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    topic: Mapped[str] = mapped_column(String(60), default="comunicacao_interna", nullable=False)
     subject: Mapped[str] = mapped_column(String(180), nullable=False)
     status: Mapped[str] = mapped_column(String(40), default="aberta", index=True, nullable=False)
     priority: Mapped[str] = mapped_column(String(30), default="normal", nullable=False)
