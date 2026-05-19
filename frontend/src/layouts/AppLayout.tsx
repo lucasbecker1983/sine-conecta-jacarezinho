@@ -139,7 +139,7 @@ export function AppLayout() {
           <div className="flex items-center justify-center border-t border-slate-200/80 pt-4 text-[11px] text-slate-400">
             <span>Desenvolvido por</span>
             <a
-              href="https://jmbtenologia.com.br"
+              href="https://jmbtecnologia.com.br"
               target="_blank"
               rel="noreferrer"
               aria-label="Abrir site da JMB Tecnologia"

@@ -391,7 +391,7 @@ Validações executadas:
 
 Em 19/05/2026, todos os dashboards protegidos passaram a exibir um rodapé discreto com o texto `Desenvolvido por` e a logo da JMB Tecnologia importada de `/opt/Imagens/JMB_TECNOLOGIA_LOGOTIPO.png`.
 
-A logo foi adicionada aos assets do frontend e dimensionada em tamanho pequeno. O clique abre nova aba para `https://jmbtenologia.com.br`, conforme solicitado.
+A logo foi adicionada aos assets do frontend e dimensionada em tamanho pequeno. O clique abre nova aba para `https://jmbtecnologia.com.br`, conforme solicitado.
 
 Validação executada:
 
