@@ -569,3 +569,71 @@ Validações executadas:
 - reinício do serviço `saas-sine-backend`;
 - `/api/health` local e HTTPS retornaram `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
 - criado usuário temporário com bcrypt legado, login real em `/api/auth/login` retornou `200`, o banco regravou o hash como `$argon2id$` e o usuário temporário foi removido.
+
+## 18. Sprint de experiência operacional, perfil, colaboradores e organização de routers
+
+Em 19/05/2026, foi executada uma sprint focada em transformar o MVP técnico em uma plataforma mais operacional, clara e útil para empresas, trabalhadores e colaboradores do SINE.
+
+Backend:
+
+- `main.py` deixou de incluir o router monolítico `crud.router` diretamente;
+- foram criados routers específicos preservando as rotas existentes:
+  - `company_portal.py`;
+  - `worker_portal.py`;
+  - `sine_dashboard.py`;
+  - `jobs.py`;
+  - `referrals.py`;
+  - `feedbacks.py`;
+  - `communications.py`;
+  - `resumes.py`;
+  - `ai_analysis.py`;
+  - `users.py`;
+  - `profile.py`;
+- as rotas antigas `/api/companies`, `/api/workers`, `/api/company-portal/*`, `/api/worker-portal/*`, `/api/communication/*`, `/api/resumes/*`, `/api/referrals`, `/api/feedback`, `/api/reports/summary`, `/api/audit/data-access` e `/api/ai/match/*` foram mantidas;
+- foi criada rota `PATCH /api/jobs/{job_id}/status` para aprovar, publicar, pedir correção, cancelar ou encerrar vaga;
+- foram criadas rotas de perfil:
+  - `GET /api/profile/me`;
+  - `PATCH /api/profile/me`;
+  - `POST /api/profile/change-password`;
+- alteração de senha exige senha atual, nova senha forte e confirmação;
+- alteração de senha registra auditoria em `audit_logs`;
+- como os refresh tokens atuais são stateless, a alteração registra a necessidade de renovação de sessão e a invalidação persistente por sessão fica como evolução futura;
+- foram criadas rotas de colaboradores do SINE:
+  - `GET /api/users/sine-collaborators`;
+  - `POST /api/users/sine-collaborators`;
+  - `PATCH /api/users/sine-collaborators/{user_id}`;
+  - `POST /api/users/sine-collaborators/{user_id}/reset-password`;
+- perfis permitidos para colaboradores: `sine_staff`, `sine_manager`, `tenant_admin`;
+- empresa e trabalhador continuam proibidos de criar colaboradores do SINE.
+
+Frontend:
+
+- criado `favicon.ico` com o logotipo do SINE e linkado em `frontend/index.html`;
+- criado menu de perfil no canto superior direito com:
+  - Meu perfil;
+  - Alterar senha;
+  - Dados da conta;
+  - Sair;
+- criada tela `Perfil` com atualização de nome e alteração de senha;
+- criada tela `Colaboradores` para `tenant_admin` e `sine_manager`;
+- adicionada navegação de colaboradores no menu interno do SINE;
+- dashboard da empresa recebeu mensagem institucional: `Bem-vindo ao SINE Conecta Jacarezinho`;
+- dashboard da empresa passou a explicar a parceria entre empresa e SINE, reforçando que a IA é ferramenta interna do SINE;
+- bloqueio de nova vaga por feedback pendente passou a usar texto amigável:
+  - `Para mantermos o fluxo justo com os trabalhadores e eficiente para sua empresa, precisamos do retorno sobre os candidatos já encaminhados antes de abrir uma nova solicitação.`;
+- dashboard do SINE passou a exibir cards operacionais para solicitações, aprovações, currículos, triagem, encaminhamentos, empresas bloqueadas, comunicação e tarefas;
+- adicionada seção `Assistente IA do SINE`, deixando explícito que a IA é apoio à triagem e a decisão final é do colaborador.
+
+Validações executadas:
+
+- `.venv/bin/python -m compileall app`;
+- `npm run build`;
+- reinício do serviço `saas-sine-backend`;
+- `/api/health` local retornou `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
+- `/api/openapi.json` retornou `200`;
+- `POST /api/profile/change-password` com senha atual incorreta retornou `403`;
+- validação por token real:
+  - empresa: perfil `200`, companies `403`, company portal `200`, worker portal `403`, colaboradores `403`;
+  - trabalhador: perfil `200`, companies `403`, company portal `403`, worker portal `200`, colaboradores `403`;
+  - colaborador SINE: perfil `200`, companies `200`, company portal `403`, worker portal `403`, colaboradores `403`;
+  - gestor SINE: perfil `200`, companies `200`, company portal `403`, worker portal `403`, colaboradores `200`.

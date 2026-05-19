@@ -9,8 +9,10 @@ import { Dashboard } from './pages/Dashboard'
 import { CompaniesPage } from './pages/CompaniesPage'
 import { CompanyJobsPage, CompanyProfilePage, CompanyReferralsPage } from './pages/CompanyDashboard'
 import { AuditLgpdPage, CommunicationPage } from './pages/CommunicationPage'
+import { CollaboratorsPage } from './pages/CollaboratorsPage'
 import { EntityPage } from './pages/EntityPage'
 import { Login } from './pages/Login'
+import { ProfilePage } from './pages/ProfilePage'
 import { WorkerJobsPage } from './pages/WorkerJobsPage'
 import { WorkerResumePage } from './pages/WorkerResumePage'
 
@@ -30,6 +32,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="perfil" element={<ProfilePage />} />
             <Route path="empresas" element={only(sineRoles, <CompaniesPage />)} />
             <Route path="empresa/cadastro" element={only(companyRoles, <CompanyProfilePage />)} />
             <Route path="empresa/vagas" element={only(companyRoles, <CompanyJobsPage />)} />
@@ -42,6 +45,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="vagas" element={only(sineRoles, <EntityPage title="Vagas" description="Solicitações, aprovação, publicação e triagem." endpoint="/jobs" actionLabel="Criar vaga" />)} />
             <Route path="encaminhamentos" element={only(sineRoles, <EntityPage title="Encaminhamentos" description="Candidatos formalmente enviados para empresas." actionLabel="Encaminhar candidato" />)} />
             <Route path="comunicacao" element={only(sineRoles, <CommunicationPage mode="sine" />)} />
+            <Route path="colaboradores" element={only(['super_admin', 'tenant_admin', 'sine_manager'], <CollaboratorsPage />)} />
             <Route path="auditoria-lgpd" element={only(['super_admin', 'tenant_admin', 'sine_manager'], <AuditLgpdPage />)} />
             <Route path="relatorios" element={only(['super_admin', 'tenant_admin', 'sine_manager'], <EntityPage title="Relatórios" description="Indicadores operacionais e gerenciais por tenant." actionLabel="Exportar" />)} />
             <Route path="admin" element={only(['super_admin', 'tenant_admin'], <EntityPage title="Configurações white label" description="Logo, cores, textos institucionais e usuários internos." actionLabel="Salvar identidade" />)} />

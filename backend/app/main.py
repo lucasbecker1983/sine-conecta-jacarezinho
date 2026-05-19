@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
-from app.routers import auth, crud, tenants
+from app.routers import ai_analysis, auth, communications, company_portal, feedbacks, jobs, profile, referrals, resumes, sine_dashboard, tenants, users, worker_portal
 
 configure_logging()
 settings = get_settings()
@@ -25,4 +25,15 @@ def health():
 
 app.include_router(auth.router, prefix="/api")
 app.include_router(tenants.router, prefix="/api")
-app.include_router(crud.router, prefix="/api")
+app.include_router(profile.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(users.registry_router, prefix="/api")
+app.include_router(company_portal.router, prefix="/api")
+app.include_router(worker_portal.router, prefix="/api")
+app.include_router(sine_dashboard.router, prefix="/api")
+app.include_router(jobs.router, prefix="/api")
+app.include_router(referrals.router, prefix="/api")
+app.include_router(feedbacks.router, prefix="/api")
+app.include_router(communications.router, prefix="/api")
+app.include_router(resumes.router, prefix="/api")
+app.include_router(ai_analysis.router, prefix="/api")

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BarChart3, Bell, BriefcaseBusiness, Building2, FileCheck2, FileText, LockKeyhole, LogOut, MessagesSquare, Settings, ShieldCheck, UserRound, UserRoundSearch, UsersRound } from 'lucide-react'
+import { BarChart3, Bell, BriefcaseBusiness, Building2, ChevronDown, FileCheck2, FileText, KeyRound, LockKeyhole, LogOut, MessagesSquare, Settings, ShieldCheck, UserRound, UserRoundSearch, UsersRound } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, getCurrentTenant } from '../services/api'
 import { useAuthStore } from '../stores/auth'
@@ -21,6 +21,7 @@ const items = [
   { to: '/vagas', label: 'Vagas', icon: BriefcaseBusiness, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/encaminhamentos', label: 'Encaminhamentos', icon: UserRoundSearch, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/comunicacao', label: 'Comunicação', icon: MessagesSquare, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
+  { to: '/colaboradores', label: 'Colaboradores', icon: UserRound, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },
   { to: '/auditoria-lgpd', label: 'Auditoria LGPD', icon: LockKeyhole, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },
   { to: '/relatorios', label: 'Relatorios', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },
   { to: '/admin', label: 'White label', icon: Settings, roles: ['super_admin', 'tenant_admin'] },
@@ -35,6 +36,7 @@ export function AppLayout() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([])
   const [unread, setUnread] = useState(0)
   const [openNotifications, setOpenNotifications] = useState(false)
+  const [openProfile, setOpenProfile] = useState(false)
 
   function refreshNotifications() {
     if (!localStorage.getItem('sine_access_token')) return
@@ -165,11 +167,20 @@ export function AppLayout() {
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2 lg:hidden">
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-700 text-xs font-bold text-white">{userInitials}</div>
-              <button aria-label="Sair" className="rounded-md p-2 text-slate-500 hover:bg-slate-100" onClick={handleLogout}>
-                <LogOut size={18} />
+            <div className="relative">
+              <button onClick={() => setOpenProfile((value) => !value)} className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 hover:border-emerald-300">
+                <span className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-700 text-xs font-bold text-white">{userInitials}</span>
+                <span className="hidden max-w-[150px] truncate font-semibold lg:block">{user?.full_name ?? 'Usuário'}</span>
+                <ChevronDown size={15} />
               </button>
+              {openProfile && (
+                <div className="absolute right-0 z-30 mt-2 w-56 overflow-hidden rounded-md border border-slate-200 bg-white py-1 shadow-xl">
+                  <button onClick={() => { setOpenProfile(false); navigate('/perfil') }} className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"><UserRound size={16} /> Meu perfil</button>
+                  <button onClick={() => { setOpenProfile(false); navigate('/perfil') }} className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"><KeyRound size={16} /> Alterar senha</button>
+                  <button onClick={() => { setOpenProfile(false); navigate('/perfil') }} className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"><ShieldCheck size={16} /> Dados da conta</button>
+                  <button onClick={handleLogout} className="flex w-full items-center gap-2 border-t border-slate-100 px-4 py-2 text-left text-sm font-semibold text-red-700 hover:bg-red-50"><LogOut size={16} /> Sair</button>
+                </div>
+              )}
             </div>
           </div>
         </header>

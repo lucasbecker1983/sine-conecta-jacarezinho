@@ -124,3 +124,8 @@ export type NotificationItem = {
   read_at?: string | null
   created_at: string
 }
+
+export type SineCollaborator = User & {
+  is_active: boolean
+  last_login_at?: string | null
+}

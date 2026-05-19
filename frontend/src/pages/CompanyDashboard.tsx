@@ -201,10 +201,11 @@ export function CompanyDashboard() {
                 <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800"><LockKeyhole size={14} /> LGPD e auditoria ativas</span>
               </div>
             </div>
-            <h1 className="mt-4 text-2xl font-bold text-slate-950">{company?.trade_name || company?.legal_name || 'Área da empresa'}</h1>
+            <h1 className="mt-4 text-3xl font-bold text-slate-950">Bem-vindo ao SINE Conecta Jacarezinho</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              A empresa cadastra dados, abre vagas e devolve feedback. A IA fica do lado do SINE, como apoio aos colaboradores na triagem.
+              {company?.trade_name || company?.legal_name || 'Sua empresa'} e o SINE caminham juntos para abrir oportunidades com clareza, respeito aos trabalhadores e retorno organizado para cada seleção.
             </p>
+            <p className="mt-2 max-w-3xl text-xs font-semibold uppercase tracking-wide text-emerald-800">A empresa vê apenas candidatos encaminhados oficialmente. A IA é ferramenta interna do SINE.</p>
             <div className="mt-5 grid gap-3 md:grid-cols-3">
               <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
                 <div className="text-xs font-semibold uppercase text-slate-500">Cadastro</div>
@@ -263,6 +264,7 @@ export function CompanyDashboard() {
             </div>
             <Link to="/empresa/encaminhamentos" className="rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white">Resolver feedback</Link>
           </div>
+          <p className="mt-3 text-sm leading-6 text-amber-900">Para mantermos o fluxo justo com os trabalhadores e eficiente para sua empresa, precisamos do retorno sobre os candidatos já encaminhados antes de abrir uma nova solicitação.</p>
           <div className="mt-4 grid gap-2 md:grid-cols-2">
             {(status.pending_feedbacks ?? []).map((item) => (
               <div key={item.referral_id} className="rounded-md border border-amber-200 bg-white p-3 text-sm">

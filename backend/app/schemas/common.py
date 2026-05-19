@@ -70,6 +70,52 @@ class UserOut(BaseModel):
     roles: list[str] = []
 
 
+class ProfileUpdateIn(BaseModel):
+    full_name: str = Field(min_length=3, max_length=160)
+
+
+class ChangePasswordIn(BaseModel):
+    current_password: str = Field(min_length=7, max_length=128)
+    new_password: str = Field(min_length=10, max_length=128)
+    confirm_password: str = Field(min_length=10, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_strong_password(cls, value: str) -> str:
+        checks = [
+            any(char.islower() for char in value),
+            any(char.isupper() for char in value),
+            any(char.isdigit() for char in value),
+            any(not char.isalnum() for char in value),
+        ]
+        if sum(checks) < 3:
+            raise ValueError("A nova senha deve combinar letras, numeros e simbolos")
+        return value
+
+
+class SineCollaboratorIn(BaseModel):
+    email: EmailStr
+    full_name: str = Field(min_length=3, max_length=160)
+    role: Literal["sine_staff", "sine_manager", "tenant_admin"] = "sine_staff"
+    is_active: bool = True
+
+
+class SineCollaboratorPatchIn(BaseModel):
+    full_name: str | None = Field(default=None, min_length=3, max_length=160)
+    role: Literal["sine_staff", "sine_manager", "tenant_admin"] | None = None
+    is_active: bool | None = None
+
+
+class SineCollaboratorOut(UserOut):
+    is_active: bool
+    last_login_at: datetime | None = None
+
+
+class TemporaryPasswordOut(BaseModel):
+    user_id: UUID
+    temporary_password: str
+
+
 class LoginIn(BaseModel):
     email: EmailStr
     password: str = Field(min_length=7, max_length=128)
