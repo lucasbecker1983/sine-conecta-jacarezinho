@@ -637,3 +637,88 @@ Validações executadas:
   - trabalhador: perfil `200`, companies `403`, company portal `403`, worker portal `200`, colaboradores `403`;
   - colaborador SINE: perfil `200`, companies `200`, company portal `403`, worker portal `403`, colaboradores `403`;
   - gestor SINE: perfil `200`, companies `200`, company portal `403`, worker portal `403`, colaboradores `200`.
+
+## 19. Refatoração, perfil de usuário, colaboradores do SINE e amadurecimento dos dashboards
+
+Em 19/05/2026, foi executada nova sprint de organização e continuidade, partindo do estado local e do `origin/main` do GitHub, sem recriar o projeto do zero.
+
+Arquivos criados:
+
+- `backend/app/routers/companies.py`;
+- `backend/app/routers/workers.py`;
+- `backend/app/routers/notifications.py`;
+- `backend/app/routers/reports.py`;
+- `frontend/src/pages/ChangePasswordPage.tsx`.
+
+Arquivos alterados:
+
+- `backend/app/main.py`;
+- `backend/app/routers/crud.py`;
+- `backend/app/routers/users.py`;
+- `backend/app/schemas/common.py`;
+- `frontend/src/layouts/AppLayout.tsx`;
+- `frontend/src/main.tsx`;
+- `frontend/src/pages/CollaboratorsPage.tsx`;
+- `frontend/src/pages/CommunicationPage.tsx`;
+- `frontend/src/pages/CompanyDashboard.tsx`;
+- `frontend/src/pages/Dashboard.tsx`;
+- `frontend/src/pages/ProfilePage.tsx`;
+- `frontend/src/pages/WorkerJobsPage.tsx`;
+- `frontend/src/types/index.ts`.
+
+Novas rotas e compatibilidade:
+
+- `GET /api/sine-users`;
+- `POST /api/sine-users`;
+- `PATCH /api/sine-users/{id}`;
+- `POST /api/sine-users/{id}/reset-password`;
+- `POST /api/sine-users/{id}/activate`;
+- `POST /api/sine-users/{id}/deactivate`;
+- mantida compatibilidade com `/api/users/sine-collaborators`;
+- `GET /api/communication/threads` agora aceita filtros por `topic`, `company_id`, `job_id` e `status`;
+- rotas de empresas, trabalhadores, notificações e relatórios foram movidas para routers próprios;
+- `crud.py` permanece temporariamente como camada legada/serviços compartilhados para preservar compatibilidade, mas não é mais registrado diretamente no `main.py`.
+
+Frontend e experiência:
+
+- `ProfilePage.tsx` ficou focada nos dados da conta;
+- `ChangePasswordPage.tsx` foi criada como tela própria de alteração de senha;
+- menu do usuário aponta separadamente para perfil, alteração de senha, dados da conta e sair;
+- página de colaboradores passou a usar `/api/sine-users`, editar e-mail/nome/perfil, ativar/desativar por endpoint dedicado e redefinir senha temporária;
+- comunicação SINE ↔ empresa ganhou filtros por tema, empresa, vaga e status;
+- dashboard do SINE ganhou `Fila de Trabalho do SINE` com prioridades e ações;
+- área `Assistente IA do SINE` ganhou seleção de vaga e reforço da frase obrigatória: `A IA é apenas apoio à triagem. A decisão final é do colaborador do SINE.`;
+- dashboard do trabalhador ganhou orientação em passos: escolher vaga, preencher/enviar currículo, acompanhar candidatura e aguardar orientação do SINE;
+- dashboard da empresa preservou regra de que a IA é interna do SINE e a empresa vê apenas candidatos oficialmente encaminhados.
+
+Formatação:
+
+- Prettier executado nos arquivos frontend alterados;
+- Black executado nos arquivos Python alterados;
+- imports e quebras de linha foram reorganizados para leitura mais fácil.
+
+Validações executadas:
+
+- `npm run build`;
+- `.venv/bin/python -m compileall app`;
+- `systemctl restart saas-sine-backend`;
+- `systemctl status saas-sine-backend --no-pager`;
+- `curl http://127.0.0.1:18743/api/health` retornou `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
+- `/api/openapi.json` retornou `200`;
+- `GET /api/sine-users` retornou `200` para gestor e `403` para empresa, trabalhador e colaborador comum;
+- rota legada `/api/users/sine-collaborators` retornou `200` para gestor;
+- `GET /api/communication/threads?topic=feedback_contratacao&status=aberta` retornou `200`;
+- `POST /api/profile/change-password` com senha atual incorreta retornou `403`;
+- validação por token real confirmou isolamento:
+  - empresa: perfil `200`, companies `403`, company portal `200`, worker portal `403`, sine-users `403`;
+  - trabalhador: perfil `200`, companies `403`, company portal `403`, worker portal `200`, sine-users `403`;
+  - colaborador SINE: perfil `200`, companies `200`, company portal `403`, worker portal `403`, sine-users `403`;
+  - gestor SINE: perfil `200`, companies `200`, company portal `403`, worker portal `403`, sine-users `200`.
+
+O que ainda falta:
+
+- retirar gradualmente as funções de negócio restantes de `crud.py` para serviços/routers definitivos;
+- implementar persistência real de invalidação de refresh tokens por sessão/dispositivo;
+- criar telas completas de aprovação/correção de vaga e triagem por vaga;
+- conectar o Assistente IA a uma lista real de candidatos/currículos por vaga com ações guiadas;
+- criar testes automatizados para fluxo empresa -> vaga -> SINE -> encaminhamento -> feedback.

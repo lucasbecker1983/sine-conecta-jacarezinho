@@ -101,6 +101,7 @@ class SineCollaboratorIn(BaseModel):
 
 
 class SineCollaboratorPatchIn(BaseModel):
+    email: EmailStr | None = None
     full_name: str | None = Field(default=None, min_length=3, max_length=160)
     role: Literal["sine_staff", "sine_manager", "tenant_admin"] | None = None
     is_active: bool | None = None

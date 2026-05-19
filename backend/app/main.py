@@ -3,12 +3,34 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
-from app.routers import ai_analysis, auth, communications, company_portal, feedbacks, jobs, profile, referrals, resumes, sine_dashboard, tenants, users, worker_portal
+from app.routers import (
+    ai_analysis,
+    auth,
+    communications,
+    companies,
+    company_portal,
+    feedbacks,
+    jobs,
+    notifications,
+    profile,
+    referrals,
+    reports,
+    resumes,
+    tenants,
+    users,
+    worker_portal,
+    workers,
+)
 
 configure_logging()
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name, version="0.1.0", openapi_url="/api/openapi.json", docs_url="/api/docs")
+app = FastAPI(
+    title=settings.app_name,
+    version="0.1.0",
+    openapi_url="/api/openapi.json",
+    docs_url="/api/docs",
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
@@ -27,10 +49,12 @@ app.include_router(auth.router, prefix="/api")
 app.include_router(tenants.router, prefix="/api")
 app.include_router(profile.router, prefix="/api")
 app.include_router(users.router, prefix="/api")
-app.include_router(users.registry_router, prefix="/api")
+app.include_router(companies.router, prefix="/api")
+app.include_router(workers.router, prefix="/api")
 app.include_router(company_portal.router, prefix="/api")
 app.include_router(worker_portal.router, prefix="/api")
-app.include_router(sine_dashboard.router, prefix="/api")
+app.include_router(notifications.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")
 app.include_router(referrals.router, prefix="/api")
 app.include_router(feedbacks.router, prefix="/api")
