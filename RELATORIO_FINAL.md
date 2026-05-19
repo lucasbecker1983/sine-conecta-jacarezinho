@@ -309,6 +309,37 @@ Validações executadas:
 - criação HTTP real de conversa com tema `correcao_vaga`;
 - validação de `GET /api/company-portal/status` retornando `pending_feedbacks` e `blocking_reason`.
 
+## 15. Sino de notificações operacionais
+
+Foi implementado um sino global de notificações no header do sistema, visível para empresa, SINE e demais perfis autenticados.
+
+Eventos que geram notificação:
+
+- mensagem nova do SINE para a empresa;
+- resposta da empresa para o SINE;
+- abertura de conversa pela empresa;
+- feedback de contratação/não contratação registrado pela empresa;
+- nova candidatura/interação de trabalhador para o SINE;
+- atualização de currículo pelo trabalhador em vaga já relacionada.
+
+Comportamento:
+
+- empresa recebe notificações direcionadas aos usuários vinculados à empresa;
+- SINE recebe notificações gerais do tenant quando empresas respondem ou trabalhadores interagem;
+- endpoint `GET /api/notifications/summary` retorna contador de não lidas;
+- endpoint `GET /api/notifications` retorna as notificações recentes;
+- endpoint `POST /api/notifications/read-all` marca como lidas;
+- frontend consulta automaticamente a cada 30 segundos e exibe contador no sino.
+
+Validações executadas:
+
+- `python -m compileall app`;
+- `npm run build`;
+- reinício do `saas-sine-backend`;
+- `/api/health`;
+- teste HTTP real: mensagem do SINE gerou `{"unread":1}` para empresa;
+- teste HTTP real: resposta da empresa gerou `{"unread":1}` para o SINE.
+
 Branch publicado:
 
 ```text

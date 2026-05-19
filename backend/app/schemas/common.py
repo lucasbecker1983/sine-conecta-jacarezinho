@@ -355,3 +355,12 @@ class DataAccessLogOut(BaseModel):
     reason: str | None = None
     ip_address: str | None = None
     created_at: datetime
+
+
+class NotificationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    title: str
+    message: str
+    read_at: datetime | None = None
+    created_at: datetime

@@ -116,3 +116,11 @@ export type DataAccessLog = {
   ip_address?: string | null
   created_at: string
 }
+
+export type NotificationItem = {
+  id: string
+  title: string
+  message: string
+  read_at?: string | null
+  created_at: string
+}

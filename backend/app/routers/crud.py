@@ -11,8 +11,8 @@ from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.permissions import get_current_user, require_permissions
 from app.core.security import hash_password
-from app.models import Company, CompanyFeedback, CompanyMessage, CompanyMessageThread, CompanyUser, DataAccessLog, Job, Referral, Resume, Role, Tenant, User, Worker, LGPDConsent
-from app.schemas.common import CommunicationMessageIn, CommunicationMessageOut, CommunicationThreadIn, CommunicationThreadOut, CompanyIn, CompanyOut, CompanyPortalJobIn, CompanyPortalUserIn, CompanyPortalUserOut, CompanyReferralFeedbackIn, CompanyReferralOut, DataAccessLogOut, FeedbackIn, JobIn, JobOut, ReferralIn, ReferralOut, ResumeOut, WorkerIn, WorkerOut, WorkerProfileIn
+from app.models import Company, CompanyFeedback, CompanyMessage, CompanyMessageThread, CompanyUser, DataAccessLog, Job, Notification, Referral, Resume, Role, Tenant, User, Worker, LGPDConsent
+from app.schemas.common import CommunicationMessageIn, CommunicationMessageOut, CommunicationThreadIn, CommunicationThreadOut, CompanyIn, CompanyOut, CompanyPortalJobIn, CompanyPortalUserIn, CompanyPortalUserOut, CompanyReferralFeedbackIn, CompanyReferralOut, DataAccessLogOut, FeedbackIn, JobIn, JobOut, NotificationOut, ReferralIn, ReferralOut, ResumeOut, WorkerIn, WorkerOut, WorkerProfileIn
 from app.services.audit import audit, log_resume_access
 from app.services.resumes import extract_pdf_text, save_pdf_resume
 
@@ -76,6 +76,20 @@ def current_company(db: Session, user: User) -> Company | None:
 
 def role_names(user: User) -> set[str]:
     return {role.name for role in user.roles}
+
+
+def is_sine_user(user: User) -> bool:
+    return bool(role_names(user).intersection({"super_admin", "tenant_admin", "sine_manager", "sine_staff"}))
+
+
+def notify_sine(db: Session, tenant_id: UUID, title: str, message: str) -> None:
+    db.add(Notification(tenant_id=tenant_id, user_id=None, title=title, message=message))
+
+
+def notify_company_users(db: Session, tenant_id: UUID, company_id: UUID, title: str, message: str) -> None:
+    user_ids = db.scalars(select(CompanyUser.user_id).where(CompanyUser.tenant_id == tenant_id, CompanyUser.company_id == company_id)).all()
+    for user_id in user_ids:
+        db.add(Notification(tenant_id=tenant_id, user_id=user_id, title=title, message=message))
 
 
 def get_company_owned_thread(db: Session, tenant_id: UUID, company_id: UUID, thread_id: UUID) -> CompanyMessageThread:
@@ -258,10 +272,12 @@ def create_or_update_worker_application(db: Session, tenant_id: UUID, user: User
     if referral:
         if resume:
             referral.resume_id = resume.id
+            notify_sine(db, tenant_id, "Curriculo atualizado pelo candidato", f"{worker.full_name} atualizou o curriculo para a vaga {job.title}.")
         return referral
     referral = Referral(tenant_id=tenant_id, job_id=job.id, worker_id=worker.id, resume_id=resume.id if resume else None, referred_by_user_id=user.id, status="candidatura_trabalhador", notes="Candidatura realizada pelo Portal do Trabalhador")
     db.add(referral)
     db.flush()
+    notify_sine(db, tenant_id, "Nova candidatura de trabalhador", f"{worker.full_name} demonstrou interesse na vaga {job.title}.")
     audit(db, tenant_id, user.id, "worker.apply_job", "Referral", referral.id, {"job_id": str(job.id), "worker_id": str(worker.id), "resume_id": str(resume.id) if resume else None}, request.client.host if request.client else None)
     return referral
 
@@ -517,6 +533,7 @@ def create_company_portal_feedback(referral_id: UUID, payload: CompanyReferralFe
         "feedback",
         {"feedback_status": payload.status, "referral_id": str(referral.id)},
     )
+    notify_sine(db, tenant_id, "Feedback de contratacao recebido", f"{company.trade_name or company.legal_name} registrou {payload.status} para um candidato encaminhado.")
     audit(db, tenant_id, user.id, "company_portal.feedback.create", "Referral", referral.id, {"company_id": str(company.id), "status": payload.status}, request.client.host if request.client else None)
     db.commit()
     return {"status": "ok"}
@@ -599,6 +616,44 @@ def create_feedback(payload: FeedbackIn, db: Session = Depends(get_db), user: Us
         sync_job_return_status(db, tenant_id, job)
         thread = get_or_create_referral_thread(db, tenant_id, job.company_id, referral, user.id)
         add_thread_message(db, thread, user, "sine", payload.comments or f"SINE registrou feedback: {payload.status}", "feedback", {"feedback_status": payload.status, "referral_id": str(referral.id)})
+        notify_company_users(db, tenant_id, job.company_id, "Feedback registrado pelo SINE", f"O SINE atualizou um encaminhamento da vaga {job.title}.")
+    db.commit()
+    return {"status": "ok"}
+
+
+@router.get("/notifications", response_model=list[NotificationOut])
+def list_notifications(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    query = select(Notification).where(Notification.tenant_id == tenant_id)
+    if is_sine_user(user):
+        query = query.where((Notification.user_id == user.id) | (Notification.user_id.is_(None)))
+    else:
+        query = query.where(Notification.user_id == user.id)
+    return db.scalars(query.order_by(Notification.created_at.desc()).limit(30)).all()
+
+
+@router.get("/notifications/summary")
+def notifications_summary(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    query = select(func.count()).select_from(Notification).where(Notification.tenant_id == tenant_id, Notification.read_at.is_(None))
+    if is_sine_user(user):
+        query = query.where((Notification.user_id == user.id) | (Notification.user_id.is_(None)))
+    else:
+        query = query.where(Notification.user_id == user.id)
+    return {"unread": db.scalar(query) or 0}
+
+
+@router.post("/notifications/read-all")
+def read_all_notifications(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    now = datetime.now(timezone.utc)
+    query = select(Notification).where(Notification.tenant_id == tenant_id, Notification.read_at.is_(None))
+    if is_sine_user(user):
+        query = query.where((Notification.user_id == user.id) | (Notification.user_id.is_(None)))
+    else:
+        query = query.where(Notification.user_id == user.id)
+    for notification in db.scalars(query).all():
+        notification.read_at = now
     db.commit()
     return {"status": "ok"}
 
@@ -630,6 +685,7 @@ def create_sine_thread(payload: CommunicationThreadIn, request: Request, db: Ses
     db.add(thread)
     db.flush()
     add_thread_message(db, thread, user, "sine", payload.body, details={"job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None})
+    notify_company_users(db, tenant_id, company.id, "Nova mensagem do SINE", f"{payload.subject}: {payload.body[:140]}")
     if referral and resume:
         log_resume_access(db, tenant_id, user.id, worker.id if worker else None, resume.id, "sine_thread_create_referral_context", "SINE abriu conversa vinculada a curriculo encaminhado", request.client.host if request.client else None)
     audit(db, tenant_id, user.id, "communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None, "topic": payload.topic}, request.client.host if request.client else None)
@@ -659,6 +715,7 @@ def create_sine_thread_message(thread_id: UUID, payload: CommunicationMessageIn,
     tenant_id = tenant_scope(user, db)
     thread = get_sine_thread(db, tenant_id, thread_id)
     message = add_thread_message(db, thread, user, "sine", payload.body)
+    notify_company_users(db, tenant_id, thread.company_id, "Nova resposta do SINE", f"{thread.subject}: {payload.body[:140]}")
     audit(db, tenant_id, user.id, "communication.message.create", "CompanyMessage", message.id, {"thread_id": str(thread.id), "side": "sine"}, request.client.host if request.client else None)
     db.commit()
     db.refresh(message)
@@ -688,6 +745,7 @@ def create_company_thread(payload: CommunicationThreadIn, request: Request, db: 
     db.add(thread)
     db.flush()
     add_thread_message(db, thread, user, "company", payload.body, details={"job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None})
+    notify_sine(db, tenant_id, "Nova mensagem de empresa", f"{company.trade_name or company.legal_name}: {payload.subject}")
     if referral and resume:
         log_resume_access(db, tenant_id, user.id, worker.id if worker else None, resume.id, "company_thread_create_referral_context", "Empresa abriu conversa sobre curriculo encaminhado", request.client.host if request.client else None)
     audit(db, tenant_id, user.id, "company_portal.communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None, "topic": payload.topic}, request.client.host if request.client else None)
@@ -725,6 +783,7 @@ def create_company_thread_message(thread_id: UUID, payload: CommunicationMessage
         raise HTTPException(status_code=400, detail="Cadastro da empresa nao encontrado")
     thread = get_company_owned_thread(db, tenant_id, company.id, thread_id)
     message = add_thread_message(db, thread, user, "company", payload.body)
+    notify_sine(db, tenant_id, "Nova resposta de empresa", f"{company.trade_name or company.legal_name} respondeu em {thread.subject}.")
     audit(db, tenant_id, user.id, "company_portal.communication.message.create", "CompanyMessage", message.id, {"thread_id": str(thread.id), "company_id": str(company.id)}, request.client.host if request.client else None)
     db.commit()
     db.refresh(message)
