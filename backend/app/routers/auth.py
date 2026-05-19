@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.permissions import get_current_user
-from app.core.security import create_token, decode_token, verify_password
+from app.core.security import create_token, decode_token, verify_and_upgrade_password
 from app.models import User
 from app.schemas.common import LoginIn, RefreshTokenIn, TenantOut, TokenOut, UserOut
 
@@ -32,12 +32,18 @@ def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
     if _login_attempts[key] >= 10:
         raise HTTPException(status_code=429, detail="Muitas tentativas de login. Aguarde alguns minutos.")
     user = db.scalar(select(User).where(User.email == payload.email.lower(), User.is_active.is_(True)))
-    if not user or not verify_password(payload.password, user.password_hash):
+    password_valid = False
+    upgraded_hash: str | None = None
+    if user:
+        password_valid, upgraded_hash = verify_and_upgrade_password(payload.password, user.password_hash)
+    if not user or not password_valid:
         _login_attempts[key] += 1
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais invalidas")
     _login_attempts.pop(key, None)
     settings = get_settings()
     user.last_login_at = datetime.now(timezone.utc)
+    if upgraded_hash:
+        user.password_hash = upgraded_hash
     db.commit()
     access = create_token(str(user.id), "access", minutes=settings.access_token_expire_minutes, extra={"tenant_id": str(user.tenant_id) if user.tenant_id else None})
     refresh = create_token(str(user.id), "refresh", days=settings.refresh_token_expire_days)

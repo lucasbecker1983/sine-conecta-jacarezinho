@@ -539,3 +539,33 @@ Validações executadas:
 - token real de `candidato@sine.jacarezinho.cloud`: `/api/companies` retornou `403`, `/api/company-portal/status` retornou `403`, `/api/worker-portal/open-jobs` retornou `200`;
 - token real de `colaborador@sine.jacarezinho.cloud`: `/api/companies` retornou `200`, `/api/company-portal/status` retornou `403`, `/api/worker-portal/open-jobs` retornou `403`;
 - tentativa de vincular `colaborador@sine.jacarezinho.cloud` como usuário de empresa retornou `409`, preservando o isolamento do perfil.
+
+## 17. Migração de senhas para Argon2id
+
+Em 19/05/2026, o armazenamento de senhas foi migrado de bcrypt para Argon2id, mantendo compatibilidade com hashes antigos.
+
+Implementação:
+
+- `hash_password` agora gera hashes `$argon2id$`;
+- `verify_and_upgrade_password` valida senha atual e retorna novo hash quando o algoritmo antigo precisa ser atualizado;
+- bcrypt foi mantido apenas como legado para login de usuários já existentes;
+- no login real, quando a senha bcrypt valida corretamente, o hash é regravado automaticamente em Argon2id;
+- novas senhas geradas por seed, reset administrativo ou usuário de empresa já usam Argon2id;
+- foi adicionada a dependência `argon2-cffi==23.1.0`.
+
+Parâmetros Argon2id configurados:
+
+- memória: `19456 KiB`;
+- iterações: `2`;
+- paralelismo: `1`;
+- tipo: `ID`.
+
+Validações executadas:
+
+- teste local confirmou que hash novo inicia com `$argon2id$`;
+- teste local confirmou que bcrypt legado valida e retorna hash atualizado para Argon2id;
+- `.venv/bin/python -m compileall app`;
+- `npm run build`;
+- reinício do serviço `saas-sine-backend`;
+- `/api/health` local e HTTPS retornaram `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
+- criado usuário temporário com bcrypt legado, login real em `/api/auth/login` retornou `200`, o banco regravou o hash como `$argon2id$` e o usuário temporário foi removido.

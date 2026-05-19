@@ -7,7 +7,14 @@ from passlib.context import CryptContext
 from app.core.config import get_settings
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["argon2", "bcrypt"],
+    deprecated=["bcrypt"],
+    argon2__type="ID",
+    argon2__memory_cost=19456,
+    argon2__rounds=2,
+    argon2__parallelism=1,
+)
 
 
 def hash_password(password: str) -> str:
@@ -16,6 +23,11 @@ def hash_password(password: str) -> str:
 
 def verify_password(password: str, hashed_password: str) -> bool:
     return pwd_context.verify(password, hashed_password)
+
+
+def verify_and_upgrade_password(password: str, hashed_password: str) -> tuple[bool, str | None]:
+    valid, upgraded_hash = pwd_context.verify_and_update(password, hashed_password)
+    return bool(valid), upgraded_hash
 
 
 def create_token(subject: str, token_type: str, minutes: int | None = None, days: int | None = None, extra: dict[str, Any] | None = None) -> str:
