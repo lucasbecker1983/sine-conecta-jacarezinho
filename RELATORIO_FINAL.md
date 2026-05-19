@@ -187,7 +187,7 @@ até 16/08/2026
 
 - Evoluir o frontend de MVP para telas CRUD completas com formulários finais de empresa, trabalhador, vaga, encaminhamento e feedback.
 - Criar testes automatizados de backend e frontend.
-- Implementar refresh token persistente com rotação e revogação.
+- Evoluir refresh token para revogação persistente por dispositivo/sessão.
 - Adicionar rate limit distribuído em Redis para produção de maior escala.
 - Implementar RLS no PostgreSQL ou camada adicional de isolamento por tenant.
 - Criar fluxo completo de empresa e trabalhador com autocadastro público.
@@ -367,6 +367,25 @@ As senhas temporárias foram informadas no terminal/conversa e não devem ser pr
 Em 19/05/2026, a senha do usuário gestor do SINE (`gestor@sine.jacarezinho.cloud`) foi redefinida no banco com hash bcrypt e validada por login real na API (`POST /api/auth/login`), retornando o perfil `tenant_admin`.
 
 A senha em texto puro não foi gravada neste relatório nem em qualquer arquivo versionado, por segurança operacional e conformidade LGPD.
+
+### Persistência de Sessão no Dashboard
+
+Em 19/05/2026, foi corrigida a queda indevida para a tela de login durante reload forte do navegador (`Ctrl+Shift+R`) quando ainda existe sessão válida.
+
+Implementação:
+
+- criado endpoint `POST /api/auth/refresh` com validação de refresh token;
+- renovação de access token e refresh token na API;
+- interceptor Axios renovando a sessão automaticamente em respostas `401`;
+- `ProtectedRoute` passou a aceitar sessão pendente com refresh token para permitir revalidação antes de redirecionar;
+- backend `saas-sine-backend` reiniciado após a alteração.
+
+Validações executadas:
+
+- `npm run build` no frontend;
+- `python -m compileall app` no backend;
+- login real do gestor do SINE;
+- refresh real via API retornando novo access token e novo refresh token para o perfil `tenant_admin`.
 
 ### Tela de login
 

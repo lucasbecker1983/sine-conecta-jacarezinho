@@ -8,9 +8,9 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.permissions import get_current_user
-from app.core.security import create_token, verify_password
+from app.core.security import create_token, decode_token, verify_password
 from app.models import User
-from app.schemas.common import LoginIn, TenantOut, TokenOut, UserOut
+from app.schemas.common import LoginIn, RefreshTokenIn, TenantOut, TokenOut, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 _login_attempts: dict[str, int] = defaultdict(int)
@@ -39,6 +39,25 @@ def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
     settings = get_settings()
     user.last_login_at = datetime.now(timezone.utc)
     db.commit()
+    access = create_token(str(user.id), "access", minutes=settings.access_token_expire_minutes, extra={"tenant_id": str(user.tenant_id) if user.tenant_id else None})
+    refresh = create_token(str(user.id), "refresh", days=settings.refresh_token_expire_days)
+    return TokenOut(access_token=access, refresh_token=refresh, user=serialize_user(user), tenant=TenantOut.model_validate(user.tenant) if user.tenant else None)
+
+
+@router.post("/refresh", response_model=TokenOut)
+def refresh_session(payload: RefreshTokenIn, db: Session = Depends(get_db)):
+    try:
+        token_payload = decode_token(payload.refresh_token, refresh=True)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token invalido") from exc
+    if token_payload.get("type") != "refresh" or not token_payload.get("sub"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token invalido")
+
+    user = db.scalar(select(User).where(User.id == token_payload["sub"], User.is_active.is_(True)))
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario inativo ou inexistente")
+
+    settings = get_settings()
     access = create_token(str(user.id), "access", minutes=settings.access_token_expire_minutes, extra={"tenant_id": str(user.tenant_id) if user.tenant_id else None})
     refresh = create_token(str(user.id), "refresh", days=settings.refresh_token_expire_days)
     return TokenOut(access_token=access, refresh_token=refresh, user=serialize_user(user), tenant=TenantOut.model_validate(user.tenant) if user.tenant else None)

@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from 'react-router-dom'
 
 export function ProtectedRoute() {
-  return localStorage.getItem('sine_access_token') ? <Outlet /> : <Navigate to="/login" replace />
+  const hasSession = Boolean(localStorage.getItem('sine_access_token') || localStorage.getItem('sine_refresh_token'))
+  return hasSession ? <Outlet /> : <Navigate to="/login" replace />
 }

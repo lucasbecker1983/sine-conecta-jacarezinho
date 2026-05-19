@@ -75,6 +75,10 @@ class LoginIn(BaseModel):
     password: str = Field(min_length=7, max_length=128)
 
 
+class RefreshTokenIn(BaseModel):
+    refresh_token: str = Field(min_length=20)
+
+
 class TokenOut(BaseModel):
     access_token: str
     refresh_token: str
