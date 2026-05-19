@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import sineLogo from '../assets/logos/sine-logo.png'
+import sineLogo from '../assets/logos/sine-logo-fullhd.png'
 
 type Props = {
   className?: string

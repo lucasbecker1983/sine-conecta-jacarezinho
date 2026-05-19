@@ -413,6 +413,27 @@ Validação executada:
 
 - `npm run build` no frontend.
 
+### Ajustes de Responsividade do Login
+
+Em 19/05/2026, a tela de login foi compactada para monitores menores, reduzindo scroll indevido no desktop com pouca altura.
+
+Alterações:
+
+- shell do login passou a usar altura controlada no desktop;
+- hero e painel de acesso foram compactados em breakpoints de altura;
+- cards de perfil, formulário e rodapé reduzem espaçamentos em monitores baixos;
+- componente `Logo` passou a usar o asset `sine-logo-fullhd.png`, mantendo qualidade ultra HD no login.
+
+Validação executada:
+
+- `npm run build` no frontend.
+
+### Credencial do Trabalhador
+
+Em 19/05/2026, a senha do usuário trabalhador (`candidato@sine.jacarezinho.cloud`) foi redefinida no banco com hash bcrypt e validada por login real na API (`POST /api/auth/login`), retornando o perfil `worker`.
+
+A senha em texto puro não foi gravada neste relatório nem em qualquer arquivo versionado, por segurança operacional e conformidade LGPD.
+
 ### Tela de login
 
 A tela de login foi redesenhada com:

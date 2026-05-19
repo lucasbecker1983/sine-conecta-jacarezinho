@@ -70,15 +70,15 @@ export function Login() {
   }
 
   return (
-    <div className="login-page min-h-screen bg-[#eef5f1] px-3 py-3 text-slate-950 sm:px-4 sm:py-4">
-      <div className="login-shell mx-auto flex min-h-[calc(100vh-32px)] w-full max-w-7xl flex-col overflow-hidden rounded-md border border-white/70 bg-white shadow-soft">
-        <div className="grid flex-1 lg:grid-cols-[1.03fr_0.97fr]">
-          <section className="login-hero relative min-h-[320px] overflow-hidden p-5 text-white sm:p-7 lg:min-h-[560px]">
+    <div className="login-page min-h-screen bg-[#eef5f1] px-3 py-3 text-slate-950 sm:px-4 sm:py-4 lg:h-screen lg:overflow-hidden">
+      <div className="login-shell mx-auto flex min-h-[calc(100vh-24px)] w-full max-w-7xl flex-col overflow-hidden rounded-md border border-white/70 bg-white shadow-soft lg:h-[calc(100vh-32px)] lg:min-h-0">
+        <div className="grid min-h-0 flex-1 lg:grid-cols-[1.03fr_0.97fr]">
+          <section className="login-hero relative min-h-[300px] overflow-hidden p-5 text-white sm:p-7 lg:min-h-0">
             <LoginNetworkCanvas />
-            <div className="login-hero-content relative z-10 flex h-full min-h-[320px] flex-col justify-between">
+            <div className="login-hero-content relative z-10 flex h-full min-h-[300px] flex-col justify-between lg:min-h-0">
               <div>
-                <div className="inline-flex rounded-md bg-white/94 p-2.5 shadow-lg">
-                  <Logo className="login-logo h-16 w-52 object-contain sm:h-20 sm:w-64" />
+                <div className="inline-flex rounded-md bg-white/94 p-2 shadow-lg sm:p-2.5">
+                  <Logo className="login-logo h-14 w-48 object-contain sm:h-20 sm:w-64" />
                 </div>
                 <div className="login-intro mt-7 max-w-xl">
                   <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/16 px-3 py-1 text-sm font-semibold text-white ring-1 ring-white/28">
@@ -97,7 +97,7 @@ export function Login() {
             </div>
           </section>
 
-          <section className="login-panel flex flex-col justify-center p-4 sm:p-6 lg:p-7 xl:p-8">
+          <section className="login-panel flex min-h-0 flex-col justify-center overflow-hidden p-4 sm:p-6 lg:p-6 xl:p-7">
             <div className="login-heading mb-4">
               <div className="text-sm font-semibold uppercase tracking-wide text-emerald-700">Escolha seu acesso</div>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">Entrar na plataforma</h2>
