@@ -5,6 +5,7 @@ import { api, getCurrentTenant } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 import type { NotificationItem } from '../types'
 import jmbLogo from '../assets/logos/jmb-tecnologia-logo.png'
+import { DashboardHeroCanvas } from '../canvas/DashboardHeroCanvas'
 
 const items = [
   { to: '/', label: 'Dashboard', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user', 'worker'] },
@@ -53,6 +54,28 @@ export function AppLayout() {
     refreshNotifications()
   }
 
+  function handleLogout() {
+    logout()
+    navigate('/login')
+  }
+
+  const isCompany = userRoles.includes('company_user')
+  const isWorker = userRoles.includes('worker')
+  const heroVariant = isCompany ? 'company' : isWorker ? 'worker' : 'sine'
+  const heroEyebrow = isCompany ? 'Portal da Empresa' : isWorker ? 'Portal do Trabalhador' : 'Operação SINE Jacarezinho'
+  const heroTitle = isCompany ? 'Relação transparente com o SINE' : isWorker ? 'Sua jornada acompanhada pelo SINE' : 'Painel inteligente de intermediação'
+  const heroDescription = isCompany
+    ? 'Vagas, encaminhamentos, mensagens e feedbacks em um fluxo auditável, com IA sempre do lado do SINE.'
+    : isWorker
+      ? 'Currículo, vagas e candidaturas conectados em uma experiência clara, protegida e acolhedora.'
+      : 'Triagem, comunicação, LGPD, retornos de empresas e indicadores em uma central moderna para a equipe.'
+  const userInitials = (user?.full_name ?? 'Usuário')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'US'
+
   useEffect(() => {
     if (user || !localStorage.getItem('sine_access_token')) return
     Promise.all([api.get('/auth/me'), getCurrentTenant()])
@@ -71,12 +94,12 @@ export function AppLayout() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <aside className="fixed inset-y-0 left-0 hidden w-72 border-r border-slate-200 bg-white px-4 py-5 lg:block">
+      <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-slate-200 bg-white px-4 py-5 lg:flex">
         <div className="mb-8">
           <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">SaaS GovTech</div>
           <div className="mt-1 text-xl font-bold text-slate-950">{tenant?.name ?? 'SINE Jacarezinho'}</div>
         </div>
-        <nav className="space-y-1">
+        <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
           {visibleItems.map((item) => {
             const Icon = item.icon
             return (
@@ -87,6 +110,25 @@ export function AppLayout() {
             )
           })}
         </nav>
+        <div className="mt-5 border-t border-slate-200 pt-4">
+          <div className="flex items-center gap-3 rounded-md bg-slate-50 p-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-emerald-700 text-sm font-bold text-white">
+              {userInitials}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="truncate text-sm font-semibold text-slate-950">{user?.full_name ?? 'Usuário'}</div>
+              <div className="truncate text-xs text-slate-500">{user?.roles?.join(', ')}</div>
+            </div>
+            <button
+              aria-label="Sair"
+              className="rounded-md p-2 text-slate-500 transition hover:bg-white hover:text-red-700"
+              onClick={handleLogout}
+              title="Sair"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        </div>
       </aside>
       <main className="lg:pl-72">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-5 backdrop-blur">
@@ -123,15 +165,36 @@ export function AppLayout() {
                 </div>
               )}
             </div>
-            <div className="text-right">
-              <div className="text-sm font-semibold text-slate-900">{user?.full_name ?? 'Usuário'}</div>
-              <div className="text-xs text-slate-500">{user?.roles?.join(', ')}</div>
+            <div className="flex items-center gap-2 lg:hidden">
+              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-700 text-xs font-bold text-white">{userInitials}</div>
+              <button aria-label="Sair" className="rounded-md p-2 text-slate-500 hover:bg-slate-100" onClick={handleLogout}>
+                <LogOut size={18} />
+              </button>
             </div>
-            <button aria-label="Sair" className="rounded-md p-2 text-slate-500 hover:bg-slate-100" onClick={() => { logout(); navigate('/login') }}>
-              <LogOut size={18} />
-            </button>
           </div>
         </header>
+        <section className="px-5 pt-5">
+          <div className="relative overflow-hidden rounded-md border border-emerald-100 bg-white shadow-sm">
+            <DashboardHeroCanvas
+              variant={heroVariant}
+              primary={unread}
+              secondary={visibleItems.length}
+              className="absolute inset-0 h-full w-full"
+            />
+            <div className="relative z-10 grid min-h-56 items-center gap-5 bg-white/45 p-5 backdrop-blur-[1px] sm:p-7 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div>
+                <span className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-emerald-900 shadow-sm">{heroEyebrow}</span>
+                <h1 className="mt-4 max-w-3xl text-3xl font-bold text-slate-950">{heroTitle}</h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-700">{heroDescription}</p>
+              </div>
+              <div className="hidden justify-self-end rounded-md border border-white/70 bg-white/75 p-4 shadow-sm xl:block">
+                <div className="text-xs font-semibold uppercase text-slate-500">Sessão ativa</div>
+                <div className="mt-2 max-w-[300px] truncate text-sm font-bold text-slate-950">{user?.full_name ?? 'Usuário'}</div>
+                <div className="mt-1 text-xs text-slate-500">Notificações não lidas: {unread}</div>
+              </div>
+            </div>
+          </div>
+        </section>
         <div className="p-5">
           <Outlet />
         </div>

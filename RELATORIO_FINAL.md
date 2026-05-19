@@ -397,6 +397,22 @@ Validação executada:
 
 - `npm run build` no frontend.
 
+### UI dos Dashboards com Sidebar e Hero Canvas
+
+Em 19/05/2026, a experiência visual dos dashboards foi amadurecida no layout global protegido.
+
+Alterações:
+
+- usuário logado movido para o rodapé do sidebar, com avatar por iniciais, perfil e ícone de logout;
+- header superior ficou mais limpo, mantendo contexto institucional e sino de notificações;
+- criado Hero global em React + Tailwind + Canvas para todas as áreas protegidas;
+- Hero muda a comunicação conforme o perfil: SINE, empresa ou trabalhador;
+- `DashboardHeroCanvas` passou a aceitar classe customizada e animação sutil com linhas de fluxo e pulso visual.
+
+Validação executada:
+
+- `npm run build` no frontend.
+
 ### Tela de login
 
 A tela de login foi redesenhada com:
