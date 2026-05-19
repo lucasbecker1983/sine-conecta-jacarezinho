@@ -225,6 +225,51 @@ Repositório GitHub:
 https://github.com/lucasbecker1983/sine-conecta-jacarezinho
 ```
 
+## 12. Regra operacional incontestável
+
+A partir deste ponto, toda rodada concluída neste projeto deve terminar com:
+
+- registro do que foi feito em arquivo `.md` do projeto, preferencialmente neste `RELATORIO_FINAL.md` quando for estado funcional/operacional;
+- validação objetiva do que foi alterado;
+- versionamento no Git;
+- commit e push para o GitHub em `origin/main`, salvo bloqueio técnico explícito que deve ser informado no fechamento.
+
+Esta regra vale para mudanças de backend, frontend, banco, infraestrutura, validação, publicação e fluxo de negócio.
+
+## 13. Evolução da área da empresa, comunicação e bloqueio operacional
+
+Foi implementado o módulo completo da empresa no SaaS de recrutamento do SINE Jacarezinho:
+
+- cadastro de empresa com razão social, nome fantasia, CNPJ, inscrições estadual/federal, cidade regional do PR, estado, CEP, contatos, responsável pelo RH e aceite LGPD;
+- usuário `company_user` com portal separado;
+- empresa mock de validação vinculada a `empresa@sine.jacarezinho.cloud`;
+- rotas separadas para `Meu cadastro`, `Minhas vagas`, `Candidatos` e `Comunicação`;
+- abertura de vagas com data de início, data final, requisitos detalhados, jornada, local, salário/faixa, escolaridade, CNH, cursos e benefícios;
+- Central de Comunicação SINE ↔ empresa, com conversas oficiais auditáveis;
+- ligação entre empresa, vaga, encaminhamento, currículo escolhido pelo SINE e feedback da empresa;
+- criação automática de conversa oficial quando o SINE encaminha currículo para a empresa;
+- feedback da empresa registrado também na conversa oficial;
+- Auditoria LGPD para acessos a currículos/candidatos, com usuário, finalidade, IP e data/hora;
+- Hero Canvas em React/Tailwind nos dashboards do SINE, empresa e trabalhador.
+
+O fluxo de bloqueio operacional foi endurecido:
+
+1. Quando o SINE encaminha um candidato/currículo para a empresa, a vaga entra em `aguardando_retorno_empresa`.
+2. Enquanto houver encaminhamento com retorno pendente, a empresa fica bloqueada para abrir nova vaga.
+3. O status `entrevistado` continua pendente.
+4. A empresa só é liberada quando registrar feedback final: `contratado`, `dispensado`, `nao_compareceu`, `banco_futuro` ou `sem_interesse`.
+5. Ao finalizar o último retorno pendente, a vaga muda para `retorno_registrado`.
+
+Validações executadas nesta evolução:
+
+- `npm run build` no frontend;
+- `python -m compileall app` no backend;
+- migrações Alembic aplicadas até `20260518_0003`;
+- reinício do serviço `saas-sine-backend`;
+- validação local de `/api/health`;
+- teste HTTP real de conversa SINE ↔ empresa com resposta da empresa;
+- teste transacional confirmando bloqueio de nova vaga sem feedback final e liberação após feedback final.
+
 Branch publicado:
 
 ```text

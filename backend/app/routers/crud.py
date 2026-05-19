@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -9,12 +10,29 @@ from app.ai.local_provider import get_ai_provider
 from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.permissions import get_current_user, require_permissions
-from app.models import Company, CompanyFeedback, DataAccessLog, Job, Referral, Resume, Tenant, User, Worker, LGPDConsent
-from app.schemas.common import CompanyIn, CompanyOut, FeedbackIn, JobIn, JobOut, ReferralIn, ReferralOut, ResumeOut, WorkerIn, WorkerOut, WorkerProfileIn
+from app.core.security import hash_password
+from app.models import Company, CompanyFeedback, CompanyMessage, CompanyMessageThread, CompanyUser, DataAccessLog, Job, Referral, Resume, Role, Tenant, User, Worker, LGPDConsent
+from app.schemas.common import CommunicationMessageIn, CommunicationMessageOut, CommunicationThreadIn, CommunicationThreadOut, CompanyIn, CompanyOut, CompanyPortalJobIn, CompanyPortalUserIn, CompanyPortalUserOut, CompanyReferralFeedbackIn, CompanyReferralOut, DataAccessLogOut, FeedbackIn, JobIn, JobOut, ReferralIn, ReferralOut, ResumeOut, WorkerIn, WorkerOut, WorkerProfileIn
 from app.services.audit import audit, log_resume_access
 from app.services.resumes import extract_pdf_text, save_pdf_resume
 
 router = APIRouter(tags=["core"])
+
+COMPANY_PENDING_RETURN_STATUSES = {
+    "encaminhado",
+    "entrevista_agendada",
+    "entrevistado",
+    "aguardando_retorno",
+    "aguardando_retorno_empresa",
+}
+
+COMPANY_FINAL_FEEDBACK_STATUSES = {
+    "contratado",
+    "dispensado",
+    "nao_compareceu",
+    "banco_futuro",
+    "sem_interesse",
+}
 
 
 def tenant_scope(user: User, db: Session) -> UUID:
@@ -33,9 +51,172 @@ def require_worker_user(user: User) -> None:
         raise HTTPException(status_code=403, detail="Acesso exclusivo do trabalhador")
 
 
+def require_company_user(user: User) -> None:
+    if "company_user" not in {role.name for role in user.roles}:
+        raise HTTPException(status_code=403, detail="Acesso exclusivo da empresa")
+
+
 def current_worker(db: Session, user: User) -> Worker | None:
     tenant_id = tenant_scope(user, db)
     return db.scalar(select(Worker).where(Worker.tenant_id == tenant_id, Worker.email == user.email, Worker.deleted_at.is_(None)))
+
+
+def current_company(db: Session, user: User) -> Company | None:
+    tenant_id = tenant_scope(user, db)
+    return db.scalar(
+        select(Company)
+        .join(CompanyUser, CompanyUser.company_id == Company.id)
+        .where(
+            Company.tenant_id == tenant_id,
+            Company.deleted_at.is_(None),
+            CompanyUser.user_id == user.id,
+        )
+    )
+
+
+def role_names(user: User) -> set[str]:
+    return {role.name for role in user.roles}
+
+
+def get_company_owned_thread(db: Session, tenant_id: UUID, company_id: UUID, thread_id: UUID) -> CompanyMessageThread:
+    thread = db.get(CompanyMessageThread, thread_id)
+    if not thread or thread.tenant_id != tenant_id or thread.company_id != company_id or thread.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Conversa nao encontrada")
+    return thread
+
+
+def get_sine_thread(db: Session, tenant_id: UUID, thread_id: UUID) -> CompanyMessageThread:
+    thread = db.get(CompanyMessageThread, thread_id)
+    if not thread or thread.tenant_id != tenant_id or thread.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Conversa nao encontrada")
+    return thread
+
+
+def validate_thread_context(db: Session, tenant_id: UUID, company_id: UUID, job_id: UUID | None = None, referral_id: UUID | None = None) -> tuple[Job | None, Referral | None, Worker | None, Resume | None]:
+    job: Job | None = None
+    referral: Referral | None = None
+    worker: Worker | None = None
+    resume: Resume | None = None
+    if job_id:
+        job = db.get(Job, job_id)
+        if not job or job.tenant_id != tenant_id or job.company_id != company_id or job.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Vaga nao encontrada para esta empresa")
+    if referral_id:
+        referral = db.get(Referral, referral_id)
+        if not referral or referral.tenant_id != tenant_id:
+            raise HTTPException(status_code=404, detail="Encaminhamento nao encontrado")
+        referral_job = db.get(Job, referral.job_id)
+        if not referral_job or referral_job.company_id != company_id or referral_job.tenant_id != tenant_id:
+            raise HTTPException(status_code=403, detail="Encaminhamento nao pertence a esta empresa")
+        job = job or referral_job
+        worker = db.get(Worker, referral.worker_id)
+        resume = db.get(Resume, referral.resume_id) if referral.resume_id else None
+    return job, referral, worker, resume
+
+
+def get_or_create_referral_thread(db: Session, tenant_id: UUID, company_id: UUID, referral: Referral, user_id: UUID | None, subject: str | None = None) -> CompanyMessageThread:
+    thread = db.scalar(select(CompanyMessageThread).where(CompanyMessageThread.tenant_id == tenant_id, CompanyMessageThread.company_id == company_id, CompanyMessageThread.referral_id == referral.id, CompanyMessageThread.deleted_at.is_(None)))
+    if thread:
+        return thread
+    job, _referral, worker, resume = validate_thread_context(db, tenant_id, company_id, referral.job_id, referral.id)
+    thread = CompanyMessageThread(
+        tenant_id=tenant_id,
+        company_id=company_id,
+        job_id=job.id if job else referral.job_id,
+        referral_id=referral.id,
+        created_by_user_id=user_id,
+        subject=subject or f"Encaminhamento: {worker.full_name if worker else 'candidato'} para {job.title if job else 'vaga'}",
+        status="aberta",
+        priority="normal",
+        last_message_at=datetime.now(timezone.utc),
+    )
+    db.add(thread)
+    db.flush()
+    if resume:
+        details = {"resume_id": str(resume.id), "resume_filename": resume.original_filename, "worker_id": str(referral.worker_id), "job_id": str(referral.job_id)}
+    else:
+        details = {"worker_id": str(referral.worker_id), "job_id": str(referral.job_id)}
+    db.add(CompanyMessage(tenant_id=tenant_id, thread_id=thread.id, sender_user_id=user_id, sender_role="sine", message_type="referral_sent", body="Candidato encaminhado oficialmente pelo SINE para avaliacao da empresa.", details=details))
+    return thread
+
+
+def add_thread_message(db: Session, thread: CompanyMessageThread, user: User, sender_role: str, body: str, message_type: str = "message", details: dict | None = None) -> CompanyMessage:
+    now = datetime.now(timezone.utc)
+    message = CompanyMessage(tenant_id=thread.tenant_id, thread_id=thread.id, sender_user_id=user.id, sender_role=sender_role, message_type=message_type, body=body, details=details)
+    thread.last_message_at = now
+    if sender_role == "company":
+        thread.company_last_read_at = now
+    else:
+        thread.sine_last_read_at = now
+    db.add(message)
+    db.flush()
+    return message
+
+
+def thread_rows_query(tenant_id: UUID):
+    return (
+        select(CompanyMessageThread, Company, Job, Referral, Worker, Resume)
+        .join(Company, Company.id == CompanyMessageThread.company_id)
+        .outerjoin(Job, Job.id == CompanyMessageThread.job_id)
+        .outerjoin(Referral, Referral.id == CompanyMessageThread.referral_id)
+        .outerjoin(Worker, Worker.id == Referral.worker_id)
+        .outerjoin(Resume, Resume.id == Referral.resume_id)
+        .where(CompanyMessageThread.tenant_id == tenant_id, CompanyMessageThread.deleted_at.is_(None))
+        .order_by(CompanyMessageThread.last_message_at.desc().nullslast(), CompanyMessageThread.created_at.desc())
+    )
+
+
+def serialize_thread(thread: CompanyMessageThread, company: Company, job: Job | None, referral: Referral | None, worker: Worker | None, resume: Resume | None) -> CommunicationThreadOut:
+    return CommunicationThreadOut(
+        id=thread.id,
+        company_id=company.id,
+        company_name=company.trade_name or company.legal_name,
+        job_id=job.id if job else None,
+        job_title=job.title if job else None,
+        referral_id=referral.id if referral else None,
+        worker_name=worker.full_name if worker else None,
+        resume_id=resume.id if resume else None,
+        resume_filename=resume.original_filename if resume else None,
+        subject=thread.subject,
+        status=thread.status,
+        priority=thread.priority,
+        last_message_at=thread.last_message_at,
+        created_at=thread.created_at,
+    )
+
+
+def serialize_message(message: CompanyMessage, sender: User | None) -> CommunicationMessageOut:
+    return CommunicationMessageOut(id=message.id, thread_id=message.thread_id, sender_user_id=message.sender_user_id, sender_name=sender.full_name if sender else None, sender_role=message.sender_role, message_type=message.message_type, body=message.body, details=message.details, created_at=message.created_at)
+
+
+def company_pending_return_count(db: Session, tenant_id: UUID, company_id: UUID) -> int:
+    waiting_referrals = db.scalar(
+        select(func.count())
+        .select_from(Referral)
+        .join(Job, Job.id == Referral.job_id)
+        .where(
+            Referral.tenant_id == tenant_id,
+            Job.company_id == company_id,
+            Referral.status.in_(COMPANY_PENDING_RETURN_STATUSES),
+        )
+    ) or 0
+    return waiting_referrals
+
+
+def sync_job_return_status(db: Session, tenant_id: UUID, job: Job) -> None:
+    pending = db.scalar(
+        select(func.count())
+        .select_from(Referral)
+        .where(
+            Referral.tenant_id == tenant_id,
+            Referral.job_id == job.id,
+            Referral.status.in_(COMPANY_PENDING_RETURN_STATUSES),
+        )
+    ) or 0
+    if pending:
+        job.status = "aguardando_retorno_empresa"
+    elif job.status == "aguardando_retorno_empresa":
+        job.status = "retorno_registrado"
 
 
 def get_worker_open_job(db: Session, tenant_id: UUID, job_id: UUID) -> Job:
@@ -65,13 +246,54 @@ def list_companies(db: Session = Depends(get_db), user: User = Depends(get_curre
 
 @router.post("/companies", response_model=CompanyOut, dependencies=[Depends(require_permissions("companies:manage"))])
 def create_company(payload: CompanyIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    company = Company(tenant_id=tenant_scope(user, db), **payload.model_dump())
+    data = payload.model_dump()
+    if not data["lgpd_accepted"]:
+        raise HTTPException(status_code=400, detail="Aceite LGPD obrigatorio para cadastrar a empresa")
+    data["lgpd_accepted_at"] = datetime.now(timezone.utc)
+    company = Company(tenant_id=tenant_scope(user, db), **data)
     db.add(company)
     db.flush()
-    audit(db, company.tenant_id, user.id, "company.create", "Company", company.id, ip_address=request.client.host if request.client else None)
+    audit(db, company.tenant_id, user.id, "company.create", "Company", company.id, {"lgpd_accepted": True}, request.client.host if request.client else None)
     db.commit()
     db.refresh(company)
     return company
+
+
+@router.post("/companies/{company_id}/portal-user", response_model=CompanyPortalUserOut, dependencies=[Depends(require_permissions("companies:manage"))])
+def create_company_portal_user(company_id: UUID, payload: CompanyPortalUserIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    company = db.get(Company, company_id)
+    if not company or company.tenant_id != tenant_id or company.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Empresa nao encontrada")
+    role = db.scalar(select(Role).where(Role.name == "company_user"))
+    if not role:
+        raise HTTPException(status_code=500, detail="Perfil company_user nao configurado")
+    email = payload.email.lower()
+    portal_user = db.scalar(select(User).where(User.email == email))
+    temporary_password: str | None = None
+    created = False
+    if portal_user:
+        if portal_user.tenant_id not in (None, tenant_id):
+            raise HTTPException(status_code=409, detail="Usuario ja pertence a outro tenant")
+        portal_user.tenant_id = tenant_id
+        portal_user.full_name = payload.full_name
+        portal_user.is_active = True
+    else:
+        temporary_password = secrets.token_urlsafe(12)
+        portal_user = User(tenant_id=tenant_id, email=email, full_name=payload.full_name, password_hash=hash_password(temporary_password), is_active=True)
+        db.add(portal_user)
+        created = True
+    if role not in portal_user.roles:
+        portal_user.roles.append(role)
+    db.flush()
+    link = db.scalar(select(CompanyUser).where(CompanyUser.tenant_id == tenant_id, CompanyUser.company_id == company.id, CompanyUser.user_id == portal_user.id))
+    if not link:
+        db.add(CompanyUser(tenant_id=tenant_id, company_id=company.id, user_id=portal_user.id, position=payload.position))
+    elif payload.position:
+        link.position = payload.position
+    audit(db, tenant_id, user.id, "company.portal_user.create", "User", portal_user.id, {"company_id": str(company.id), "created": created}, request.client.host if request.client else None)
+    db.commit()
+    return CompanyPortalUserOut(user_id=portal_user.id, company_id=company.id, email=portal_user.email, full_name=portal_user.full_name, temporary_password=temporary_password, created=created)
 
 
 @router.get("/workers", response_model=list[WorkerOut], dependencies=[Depends(require_permissions("workers:manage"))])
@@ -113,6 +335,161 @@ def create_job(payload: JobIn, request: Request, db: Session = Depends(get_db), 
     db.commit()
     db.refresh(job)
     return job
+
+
+@router.get("/company-portal/profile", response_model=CompanyOut | None, dependencies=[Depends(require_permissions("company:portal"))])
+def company_portal_profile(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    return current_company(db, user)
+
+
+@router.put("/company-portal/profile", response_model=CompanyOut, dependencies=[Depends(require_permissions("company:portal"))])
+def save_company_portal_profile(payload: CompanyIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    data = payload.model_dump()
+    if not data["lgpd_accepted"]:
+        raise HTTPException(status_code=400, detail="Aceite LGPD obrigatorio para salvar o cadastro da empresa")
+    company = current_company(db, user)
+    existing = db.scalar(select(Company).where(Company.tenant_id == tenant_id, Company.cnpj == data["cnpj"], Company.deleted_at.is_(None)))
+    if existing and (not company or existing.id != company.id):
+        if existing.email and existing.email.lower() == user.email.lower():
+            company = existing
+            db.add(CompanyUser(tenant_id=tenant_id, company_id=company.id, user_id=user.id, position="Responsavel pelo RH"))
+        else:
+            raise HTTPException(status_code=409, detail="CNPJ ja cadastrado para outra empresa")
+    if company:
+        for key, value in data.items():
+            setattr(company, key, value)
+    else:
+        company = Company(tenant_id=tenant_id, **data)
+        db.add(company)
+        db.flush()
+        db.add(CompanyUser(tenant_id=tenant_id, company_id=company.id, user_id=user.id, position="Responsavel pelo RH"))
+    if company.lgpd_accepted and not company.lgpd_accepted_at:
+        company.lgpd_accepted_at = datetime.now(timezone.utc)
+    db.flush()
+    audit(db, tenant_id, user.id, "company_portal.profile.save", "Company", company.id, {"lgpd_accepted": True}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(company)
+    return company
+
+
+@router.get("/company-portal/jobs", response_model=list[JobOut], dependencies=[Depends(require_permissions("company:portal"))])
+def list_company_portal_jobs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        return []
+    return db.scalars(select(Job).where(Job.tenant_id == tenant_id, Job.company_id == company.id, Job.deleted_at.is_(None)).order_by(Job.created_at.desc())).all()
+
+
+@router.get("/company-portal/status", dependencies=[Depends(require_permissions("company:portal"))])
+def company_portal_status(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    pending_returns = company_pending_return_count(db, tenant_id, company.id) if company else 0
+    return {
+        "profile_complete": bool(company and company.lgpd_accepted),
+        "pending_returns": pending_returns,
+        "can_open_job": bool(company and company.lgpd_accepted and pending_returns == 0),
+        "ai_scope": "A IA auxilia exclusivamente os colaboradores do SINE na triagem. A empresa registra vagas e retornos, sem decisao automatizada.",
+    }
+
+
+@router.post("/company-portal/jobs", response_model=JobOut, dependencies=[Depends(require_permissions("company:portal"))])
+def create_company_portal_job(payload: CompanyPortalJobIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        raise HTTPException(status_code=400, detail="Complete o cadastro da empresa antes de abrir vagas")
+    if not company.lgpd_accepted:
+        raise HTTPException(status_code=400, detail="Aceite LGPD obrigatorio para abrir vagas")
+    pending_returns = company_pending_return_count(db, tenant_id, company.id)
+    if pending_returns:
+        raise HTTPException(status_code=409, detail="Empresa bloqueada: registre o feedback final da contratacao ou nao contratacao anterior antes de abrir uma nova vaga")
+    job = Job(tenant_id=tenant_id, company_id=company.id, status="solicitada", **payload.model_dump())
+    db.add(job)
+    db.flush()
+    audit(db, tenant_id, user.id, "company_portal.job.request", "Job", job.id, {"company_id": str(company.id), "ai_scope": "sine_only"}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(job)
+    return job
+
+
+@router.get("/company-portal/referrals", response_model=list[CompanyReferralOut], dependencies=[Depends(require_permissions("company:portal"))])
+def list_company_portal_referrals(request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        return []
+    rows = db.execute(
+        select(Referral, Job, Worker, Resume)
+        .join(Job, Job.id == Referral.job_id)
+        .join(Worker, Worker.id == Referral.worker_id)
+        .outerjoin(Resume, Resume.id == Referral.resume_id)
+        .where(Referral.tenant_id == tenant_id, Job.company_id == company.id)
+        .order_by(Referral.created_at.desc())
+    ).all()
+    for referral, _job, worker, resume in rows:
+        log_resume_access(db, tenant_id, user.id, worker.id, resume.id if resume else None, "company_referral_view", "Empresa visualizou encaminhamento enviado pelo SINE", request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "company_portal.referrals.list", "Company", company.id, {"count": len(rows)}, request.client.host if request.client else None)
+    db.commit()
+    return [
+        CompanyReferralOut(
+            id=referral.id,
+            job_id=job.id,
+            job_title=job.title,
+            worker_id=worker.id,
+            worker_name=worker.full_name,
+            worker_email=worker.email,
+            worker_phone=worker.phone,
+            worker_whatsapp=worker.whatsapp,
+            resume_id=resume.id if resume else None,
+            resume_filename=resume.original_filename if resume else None,
+            status=referral.status,
+            match_score=referral.match_score,
+            notes=referral.notes,
+            created_at=referral.created_at,
+        )
+        for referral, job, worker, resume in rows
+    ]
+
+
+@router.post("/company-portal/referrals/{referral_id}/feedback", dependencies=[Depends(require_permissions("company:portal"))])
+def create_company_portal_feedback(referral_id: UUID, payload: CompanyReferralFeedbackIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        raise HTTPException(status_code=400, detail="Cadastro da empresa nao encontrado")
+    referral = db.get(Referral, referral_id)
+    if not referral or referral.tenant_id != tenant_id:
+        raise HTTPException(status_code=404, detail="Encaminhamento nao encontrado")
+    job = db.get(Job, referral.job_id)
+    if not job or job.company_id != company.id:
+        raise HTTPException(status_code=403, detail="Encaminhamento nao pertence a esta empresa")
+    feedback = CompanyFeedback(tenant_id=tenant_id, referral_id=referral.id, company_id=company.id, status=payload.status, comments=payload.comments)
+    referral.status = payload.status
+    sync_job_return_status(db, tenant_id, job)
+    db.add(feedback)
+    thread = get_or_create_referral_thread(db, tenant_id, company.id, referral, user.id)
+    add_thread_message(
+        db,
+        thread,
+        user,
+        "company",
+        payload.comments or f"Empresa registrou retorno: {payload.status}",
+        "feedback",
+        {"feedback_status": payload.status, "referral_id": str(referral.id)},
+    )
+    audit(db, tenant_id, user.id, "company_portal.feedback.create", "Referral", referral.id, {"company_id": str(company.id), "status": payload.status}, request.client.host if request.client else None)
+    db.commit()
+    return {"status": "ok"}
 
 
 @router.post("/resumes/{worker_id}", response_model=ResumeOut, dependencies=[Depends(require_permissions("workers:manage"))])
@@ -162,10 +539,17 @@ def create_referral(payload: ReferralIn, request: Request, db: Session = Depends
     worker = db.get(Worker, payload.worker_id)
     if not job or not worker or job.tenant_id != tenant_id or worker.tenant_id != tenant_id:
         raise HTTPException(status_code=404, detail="Vaga ou trabalhador nao encontrado")
+    resume = db.get(Resume, payload.resume_id) if payload.resume_id else None
+    if resume and (resume.tenant_id != tenant_id or resume.worker_id != worker.id):
+        raise HTTPException(status_code=404, detail="Curriculo nao pertence ao trabalhador informado")
     referral = Referral(tenant_id=tenant_id, referred_by_user_id=user.id, **payload.model_dump())
     db.add(referral)
     db.flush()
-    audit(db, tenant_id, user.id, "referral.create", "Referral", referral.id, ip_address=request.client.host if request.client else None)
+    sync_job_return_status(db, tenant_id, job)
+    get_or_create_referral_thread(db, tenant_id, job.company_id, referral, user.id)
+    if resume:
+        log_resume_access(db, tenant_id, user.id, worker.id, resume.id, "referral_send_to_company", "Curriculo escolhido pelo SINE e vinculado ao encaminhamento para empresa", request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "referral.create", "Referral", referral.id, {"company_id": str(job.company_id), "job_id": str(job.id), "worker_id": str(worker.id), "resume_id": str(resume.id) if resume else None}, request.client.host if request.client else None)
     db.commit()
     db.refresh(referral)
     return referral
@@ -180,8 +564,141 @@ def create_feedback(payload: FeedbackIn, db: Session = Depends(get_db), user: Us
     feedback = CompanyFeedback(tenant_id=tenant_id, **payload.model_dump())
     referral.status = payload.status
     db.add(feedback)
+    job = db.get(Job, referral.job_id)
+    if job:
+        sync_job_return_status(db, tenant_id, job)
+        thread = get_or_create_referral_thread(db, tenant_id, job.company_id, referral, user.id)
+        add_thread_message(db, thread, user, "sine", payload.comments or f"SINE registrou feedback: {payload.status}", "feedback", {"feedback_status": payload.status, "referral_id": str(referral.id)})
     db.commit()
     return {"status": "ok"}
+
+
+@router.get("/communication/threads", response_model=list[CommunicationThreadOut], dependencies=[Depends(require_permissions("referrals:manage"))])
+def list_sine_threads(company_id: UUID | None = None, job_id: UUID | None = None, referral_id: UUID | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    query = thread_rows_query(tenant_id)
+    if company_id:
+        query = query.where(CompanyMessageThread.company_id == company_id)
+    if job_id:
+        query = query.where(CompanyMessageThread.job_id == job_id)
+    if referral_id:
+        query = query.where(CompanyMessageThread.referral_id == referral_id)
+    rows = db.execute(query.limit(200)).all()
+    return [serialize_thread(thread, company, job, referral, worker, resume) for thread, company, job, referral, worker, resume in rows]
+
+
+@router.post("/communication/threads", response_model=CommunicationThreadOut, dependencies=[Depends(require_permissions("referrals:manage"))])
+def create_sine_thread(payload: CommunicationThreadIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    if not payload.company_id:
+        raise HTTPException(status_code=400, detail="Informe a empresa para iniciar a conversa")
+    company = db.get(Company, payload.company_id)
+    if not company or company.tenant_id != tenant_id or company.deleted_at is not None:
+        raise HTTPException(status_code=404, detail="Empresa nao encontrada")
+    job, referral, worker, resume = validate_thread_context(db, tenant_id, company.id, payload.job_id, payload.referral_id)
+    thread = CompanyMessageThread(tenant_id=tenant_id, company_id=company.id, job_id=job.id if job else None, referral_id=referral.id if referral else None, created_by_user_id=user.id, subject=payload.subject, status="aberta", priority=payload.priority, last_message_at=datetime.now(timezone.utc), sine_last_read_at=datetime.now(timezone.utc))
+    db.add(thread)
+    db.flush()
+    add_thread_message(db, thread, user, "sine", payload.body, details={"job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None})
+    if referral and resume:
+        log_resume_access(db, tenant_id, user.id, worker.id if worker else None, resume.id, "sine_thread_create_referral_context", "SINE abriu conversa vinculada a curriculo encaminhado", request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(thread)
+    return serialize_thread(thread, company, job, referral, worker, resume)
+
+
+@router.get("/communication/threads/{thread_id}/messages", response_model=list[CommunicationMessageOut], dependencies=[Depends(require_permissions("referrals:manage"))])
+def list_sine_thread_messages(thread_id: UUID, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    thread = get_sine_thread(db, tenant_id, thread_id)
+    thread.sine_last_read_at = datetime.now(timezone.utc)
+    rows = db.execute(select(CompanyMessage, User).outerjoin(User, User.id == CompanyMessage.sender_user_id).where(CompanyMessage.tenant_id == tenant_id, CompanyMessage.thread_id == thread.id).order_by(CompanyMessage.created_at.asc())).all()
+    if thread.referral_id:
+        referral = db.get(Referral, thread.referral_id)
+        resume = db.get(Resume, referral.resume_id) if referral and referral.resume_id else None
+        if referral and resume:
+            log_resume_access(db, tenant_id, user.id, referral.worker_id, resume.id, "sine_thread_view_referral_context", "SINE visualizou conversa vinculada a curriculo encaminhado", request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "communication.thread.view", "CompanyMessageThread", thread.id, {"side": "sine"}, request.client.host if request.client else None)
+    db.commit()
+    return [serialize_message(message, sender) for message, sender in rows]
+
+
+@router.post("/communication/threads/{thread_id}/messages", response_model=CommunicationMessageOut, dependencies=[Depends(require_permissions("referrals:manage"))])
+def create_sine_thread_message(thread_id: UUID, payload: CommunicationMessageIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    tenant_id = tenant_scope(user, db)
+    thread = get_sine_thread(db, tenant_id, thread_id)
+    message = add_thread_message(db, thread, user, "sine", payload.body)
+    audit(db, tenant_id, user.id, "communication.message.create", "CompanyMessage", message.id, {"thread_id": str(thread.id), "side": "sine"}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(message)
+    return serialize_message(message, user)
+
+
+@router.get("/company-portal/communication/threads", response_model=list[CommunicationThreadOut], dependencies=[Depends(require_permissions("company:portal"))])
+def list_company_threads(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        return []
+    rows = db.execute(thread_rows_query(tenant_id).where(CompanyMessageThread.company_id == company.id).limit(200)).all()
+    return [serialize_thread(thread, company_row, job, referral, worker, resume) for thread, company_row, job, referral, worker, resume in rows]
+
+
+@router.post("/company-portal/communication/threads", response_model=CommunicationThreadOut, dependencies=[Depends(require_permissions("company:portal"))])
+def create_company_thread(payload: CommunicationThreadIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        raise HTTPException(status_code=400, detail="Cadastro da empresa nao encontrado")
+    job, referral, worker, resume = validate_thread_context(db, tenant_id, company.id, payload.job_id, payload.referral_id)
+    thread = CompanyMessageThread(tenant_id=tenant_id, company_id=company.id, job_id=job.id if job else None, referral_id=referral.id if referral else None, created_by_user_id=user.id, subject=payload.subject, status="aberta", priority=payload.priority, last_message_at=datetime.now(timezone.utc), company_last_read_at=datetime.now(timezone.utc))
+    db.add(thread)
+    db.flush()
+    add_thread_message(db, thread, user, "company", payload.body, details={"job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None})
+    if referral and resume:
+        log_resume_access(db, tenant_id, user.id, worker.id if worker else None, resume.id, "company_thread_create_referral_context", "Empresa abriu conversa sobre curriculo encaminhado", request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "company_portal.communication.thread.create", "CompanyMessageThread", thread.id, {"company_id": str(company.id), "job_id": str(job.id) if job else None, "referral_id": str(referral.id) if referral else None}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(thread)
+    return serialize_thread(thread, company, job, referral, worker, resume)
+
+
+@router.get("/company-portal/communication/threads/{thread_id}/messages", response_model=list[CommunicationMessageOut], dependencies=[Depends(require_permissions("company:portal"))])
+def list_company_thread_messages(thread_id: UUID, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        raise HTTPException(status_code=400, detail="Cadastro da empresa nao encontrado")
+    thread = get_company_owned_thread(db, tenant_id, company.id, thread_id)
+    thread.company_last_read_at = datetime.now(timezone.utc)
+    rows = db.execute(select(CompanyMessage, User).outerjoin(User, User.id == CompanyMessage.sender_user_id).where(CompanyMessage.tenant_id == tenant_id, CompanyMessage.thread_id == thread.id).order_by(CompanyMessage.created_at.asc())).all()
+    if thread.referral_id:
+        referral = db.get(Referral, thread.referral_id)
+        resume = db.get(Resume, referral.resume_id) if referral and referral.resume_id else None
+        if referral and resume:
+            log_resume_access(db, tenant_id, user.id, referral.worker_id, resume.id, "company_thread_view_referral_context", "Empresa visualizou conversa vinculada a curriculo encaminhado", request.client.host if request.client else None)
+    audit(db, tenant_id, user.id, "company_portal.communication.thread.view", "CompanyMessageThread", thread.id, {"company_id": str(company.id)}, request.client.host if request.client else None)
+    db.commit()
+    return [serialize_message(message, sender) for message, sender in rows]
+
+
+@router.post("/company-portal/communication/threads/{thread_id}/messages", response_model=CommunicationMessageOut, dependencies=[Depends(require_permissions("company:portal"))])
+def create_company_thread_message(thread_id: UUID, payload: CommunicationMessageIn, request: Request, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        raise HTTPException(status_code=400, detail="Cadastro da empresa nao encontrado")
+    thread = get_company_owned_thread(db, tenant_id, company.id, thread_id)
+    message = add_thread_message(db, thread, user, "company", payload.body)
+    audit(db, tenant_id, user.id, "company_portal.communication.message.create", "CompanyMessage", message.id, {"thread_id": str(thread.id), "company_id": str(company.id)}, request.client.host if request.client else None)
+    db.commit()
+    db.refresh(message)
+    return serialize_message(message, user)
 
 
 @router.get("/reports/summary", dependencies=[Depends(require_permissions("reports:view"))])
@@ -201,9 +718,33 @@ def reports_summary(db: Session = Depends(get_db), user: User = Depends(get_curr
     }
 
 
-@router.get("/audit/data-access", dependencies=[Depends(require_permissions("reports:view"))])
+@router.get("/audit/data-access", response_model=list[DataAccessLogOut], dependencies=[Depends(require_permissions("reports:view"))])
 def data_access_logs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return db.scalars(select(DataAccessLog).where(DataAccessLog.tenant_id == tenant_scope(user, db)).order_by(DataAccessLog.created_at.desc()).limit(100)).all()
+    rows = db.execute(
+        select(DataAccessLog, User, Worker, Resume)
+        .outerjoin(User, User.id == DataAccessLog.accessed_by_user_id)
+        .outerjoin(Worker, Worker.id == DataAccessLog.worker_id)
+        .outerjoin(Resume, Resume.id == DataAccessLog.resume_id)
+        .where(DataAccessLog.tenant_id == tenant_scope(user, db))
+        .order_by(DataAccessLog.created_at.desc())
+        .limit(200)
+    ).all()
+    return [
+        DataAccessLogOut(
+            id=log.id,
+            accessed_by_user_id=log.accessed_by_user_id,
+            accessed_by_name=accessed_by.full_name if accessed_by else None,
+            worker_id=log.worker_id,
+            worker_name=worker.full_name if worker else None,
+            resume_id=log.resume_id,
+            resume_filename=resume.original_filename if resume else None,
+            action=log.action,
+            reason=log.reason,
+            ip_address=log.ip_address,
+            created_at=log.created_at,
+        )
+        for log, accessed_by, worker, resume in rows
+    ]
 
 
 @router.get("/worker-portal/profile", response_model=WorkerOut | None)

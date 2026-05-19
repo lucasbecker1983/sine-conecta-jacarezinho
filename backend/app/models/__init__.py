@@ -78,6 +78,8 @@ class Company(UUIDMixin, TimestampMixin, Base):
     cnpj: Mapped[str] = mapped_column(String(18), nullable=False)
     legal_name: Mapped[str] = mapped_column(String(180), nullable=False)
     trade_name: Mapped[str | None] = mapped_column(String(180))
+    state_registration: Mapped[str | None] = mapped_column(String(40))
+    federal_registration: Mapped[str | None] = mapped_column(String(40))
     phone: Mapped[str | None] = mapped_column(String(30))
     whatsapp: Mapped[str | None] = mapped_column(String(30))
     email: Mapped[str | None] = mapped_column(String(255))
@@ -85,9 +87,13 @@ class Company(UUIDMixin, TimestampMixin, Base):
     district: Mapped[str | None] = mapped_column(String(100))
     city: Mapped[str | None] = mapped_column(String(100))
     state: Mapped[str | None] = mapped_column(String(2))
+    cep: Mapped[str | None] = mapped_column(String(10))
     responsible_name: Mapped[str | None] = mapped_column(String(160))
+    hr_responsible_name: Mapped[str | None] = mapped_column(String(160))
     segment: Mapped[str | None] = mapped_column(String(120))
     notes: Mapped[str | None] = mapped_column(Text)
+    lgpd_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    lgpd_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     __table_args__ = (UniqueConstraint("tenant_id", "cnpj", name="uq_company_tenant_cnpj"),)
 
 
@@ -195,6 +201,7 @@ class Job(UUIDMixin, TimestampMixin, Base):
     travel_required: Mapped[bool] = mapped_column(Boolean, default=False)
     contract_type: Mapped[str | None] = mapped_column(String(80))
     notes: Mapped[str | None] = mapped_column(Text)
+    start_date: Mapped[date | None] = mapped_column(Date)
     closing_deadline: Mapped[date | None] = mapped_column(Date)
     status: Mapped[str] = mapped_column(String(50), default="solicitada", index=True, nullable=False)
 
@@ -236,6 +243,33 @@ class CompanyFeedback(UUIDMixin, TimestampMixin, Base):
     company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), index=True, nullable=False)
     status: Mapped[str] = mapped_column(String(80), nullable=False)
     comments: Mapped[str | None] = mapped_column(Text)
+
+
+class CompanyMessageThread(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "company_message_threads"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), index=True, nullable=False)
+    job_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("jobs.id"), index=True)
+    referral_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("referrals.id"), index=True)
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    subject: Mapped[str] = mapped_column(String(180), nullable=False)
+    status: Mapped[str] = mapped_column(String(40), default="aberta", index=True, nullable=False)
+    priority: Mapped[str] = mapped_column(String(30), default="normal", nullable=False)
+    last_message_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    company_last_read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sine_last_read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class CompanyMessage(UUIDMixin, Base):
+    __tablename__ = "company_messages"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    thread_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("company_message_threads.id"), index=True, nullable=False)
+    sender_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    sender_role: Mapped[str] = mapped_column(String(30), nullable=False)
+    message_type: Mapped[str] = mapped_column(String(40), default="message", nullable=False)
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    details: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
 
 class LGPDConsent(UUIDMixin, Base):

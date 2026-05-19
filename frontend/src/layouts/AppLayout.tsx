@@ -1,18 +1,24 @@
 import { useEffect } from 'react'
-import { BarChart3, BriefcaseBusiness, Building2, FileText, LogOut, Settings, ShieldCheck, UserRound, UserRoundSearch, UsersRound } from 'lucide-react'
+import { BarChart3, BriefcaseBusiness, Building2, FileCheck2, FileText, LockKeyhole, LogOut, MessagesSquare, Settings, ShieldCheck, UserRound, UserRoundSearch, UsersRound } from 'lucide-react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, getCurrentTenant } from '../services/api'
 import { useAuthStore } from '../stores/auth'
 
 const items = [
   { to: '/', label: 'Dashboard', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user', 'worker'] },
+  { to: '/empresa/cadastro', label: 'Meu cadastro', icon: FileCheck2, roles: ['company_user'] },
+  { to: '/empresa/vagas', label: 'Minhas vagas', icon: BriefcaseBusiness, roles: ['company_user'] },
+  { to: '/empresa/encaminhamentos', label: 'Candidatos', icon: UserRoundSearch, roles: ['company_user'] },
+  { to: '/empresa/comunicacao', label: 'Comunicação', icon: MessagesSquare, roles: ['company_user'] },
   { to: '/meu-curriculo', label: 'Meu Currículo', icon: UserRound, roles: ['worker'] },
   { to: '/vagas-abertas', label: 'Vagas abertas', icon: BriefcaseBusiness, roles: ['worker'] },
   { to: '/empresas', label: 'Empresas', icon: Building2, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/trabalhadores', label: 'Trabalhadores', icon: UsersRound, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
   { to: '/curriculos', label: 'Curriculos', icon: FileText, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
-  { to: '/vagas', label: 'Vagas', icon: BriefcaseBusiness, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user'] },
-  { to: '/encaminhamentos', label: 'Encaminhamentos', icon: UserRoundSearch, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'company_user', 'worker'] },
+  { to: '/vagas', label: 'Vagas', icon: BriefcaseBusiness, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
+  { to: '/encaminhamentos', label: 'Encaminhamentos', icon: UserRoundSearch, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff', 'worker'] },
+  { to: '/comunicacao', label: 'Comunicação', icon: MessagesSquare, roles: ['super_admin', 'tenant_admin', 'sine_manager', 'sine_staff'] },
+  { to: '/auditoria-lgpd', label: 'Auditoria LGPD', icon: LockKeyhole, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },
   { to: '/relatorios', label: 'Relatorios', icon: BarChart3, roles: ['super_admin', 'tenant_admin', 'sine_manager'] },
   { to: '/admin', label: 'White label', icon: Settings, roles: ['super_admin', 'tenant_admin'] },
   { to: '/master', label: 'Master SaaS', icon: ShieldCheck, roles: ['super_admin'] }

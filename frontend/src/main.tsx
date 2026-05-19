@@ -5,6 +5,9 @@ import './index.css'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './layouts/AppLayout'
 import { Dashboard } from './pages/Dashboard'
+import { CompaniesPage } from './pages/CompaniesPage'
+import { CompanyJobsPage, CompanyProfilePage, CompanyReferralsPage } from './pages/CompanyDashboard'
+import { AuditLgpdPage, CommunicationPage } from './pages/CommunicationPage'
 import { EntityPage } from './pages/EntityPage'
 import { Login } from './pages/Login'
 import { WorkerJobsPage } from './pages/WorkerJobsPage'
@@ -18,13 +21,19 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="empresas" element={<EntityPage title="Empresas" description="Cadastro e gestão das empresas solicitantes." endpoint="/companies" actionLabel="Cadastrar empresa" />} />
+            <Route path="empresas" element={<CompaniesPage />} />
+            <Route path="empresa/cadastro" element={<CompanyProfilePage />} />
+            <Route path="empresa/vagas" element={<CompanyJobsPage />} />
+            <Route path="empresa/encaminhamentos" element={<CompanyReferralsPage />} />
+            <Route path="empresa/comunicacao" element={<CommunicationPage mode="company" />} />
             <Route path="trabalhadores" element={<EntityPage title="Trabalhadores" description="Cadastro, LGPD, histórico e busca de candidatos." endpoint="/workers" actionLabel="Cadastrar trabalhador" />} />
             <Route path="meu-curriculo" element={<WorkerResumePage />} />
             <Route path="vagas-abertas" element={<WorkerJobsPage />} />
             <Route path="curriculos" element={<EntityPage title="Currículos" description="Upload, análise local de IA e auditoria de acessos." actionLabel="Enviar PDF" />} />
             <Route path="vagas" element={<EntityPage title="Vagas" description="Solicitações, aprovação, publicação e triagem." endpoint="/jobs" actionLabel="Criar vaga" />} />
             <Route path="encaminhamentos" element={<EntityPage title="Encaminhamentos" description="Candidatos formalmente enviados para empresas." actionLabel="Encaminhar candidato" />} />
+            <Route path="comunicacao" element={<CommunicationPage mode="sine" />} />
+            <Route path="auditoria-lgpd" element={<AuditLgpdPage />} />
             <Route path="relatorios" element={<EntityPage title="Relatórios" description="Indicadores operacionais e gerenciais por tenant." actionLabel="Exportar" />} />
             <Route path="admin" element={<EntityPage title="Configurações white label" description="Logo, cores, textos institucionais e usuários internos." actionLabel="Salvar identidade" />} />
             <Route path="master" element={<EntityPage title="Painel Master SaaS" description="Base para gerir tenants, domínios e uso da plataforma." actionLabel="Novo tenant" />} />
