@@ -362,6 +362,12 @@ Foram criados usuários temporários para teste dos três perfis públicos/inter
 
 As senhas temporárias foram informadas no terminal/conversa e não devem ser preservadas em arquivo versionado. Para recriar senhas, usar script administrativo ou reset manual com hash bcrypt.
 
+### Credencial do Gestor do SINE
+
+Em 19/05/2026, a senha do usuário gestor do SINE (`gestor@sine.jacarezinho.cloud`) foi redefinida no banco com hash bcrypt e validada por login real na API (`POST /api/auth/login`), retornando o perfil `tenant_admin`.
+
+A senha em texto puro não foi gravada neste relatório nem em qualquer arquivo versionado, por segurança operacional e conformidade LGPD.
+
 ### Tela de login
 
 A tela de login foi redesenhada com:
