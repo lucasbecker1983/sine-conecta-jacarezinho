@@ -13,6 +13,7 @@ import { PublicJobsCanvas } from "../canvas/PublicJobsCanvas";
 import { api } from "../services/api";
 import type { PublicJob } from "../types";
 import sineLogo from "../assets/logos/sine-logo.png";
+import { EmptyState } from "../components/common/EmptyState";
 
 type SortMode = "recentes" | "encerramento";
 
@@ -236,13 +237,8 @@ export function PublicJobsPage() {
                 <PublicJobCard key={job.id} job={job} />
               ))}
             {!loading && visibleJobs.length === 0 && (
-              <div className="rounded-md border border-dashed border-slate-300 bg-white p-8 text-center lg:col-span-3">
-                <div className="font-bold text-slate-950">
-                  Nenhuma vaga encontrada com esses filtros.
-                </div>
-                <p className="mt-2 text-sm text-slate-600">
-                  Tente buscar por outro cargo ou cidade.
-                </p>
+              <div className="lg:col-span-3">
+                <EmptyState message="Ainda não há vagas para exibir com esses filtros." />
               </div>
             )}
           </div>

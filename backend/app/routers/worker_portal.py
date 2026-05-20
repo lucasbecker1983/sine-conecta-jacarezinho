@@ -94,10 +94,10 @@ def worker_apply_to_job(
             Referral.worker_id == worker.id,
         )
     )
-    if existing and existing.status != "candidatura_trabalhador":
+    if existing:
         raise HTTPException(
             status_code=409,
-            detail="Esta candidatura ja esta em andamento com o SINE",
+            detail="Voce ja se candidatou a esta vaga",
         )
     referral = existing or Referral(
         tenant_id=tenant_id,

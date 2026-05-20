@@ -11,6 +11,7 @@ import {
   LockKeyhole,
   LogOut,
   MessagesSquare,
+  ServerCog,
   Settings,
   ShieldCheck,
   UserRound,
@@ -134,6 +135,12 @@ const items = [
     label: "Relatorios",
     icon: BarChart3,
     roles: ["super_admin", "tenant_admin", "sine_manager"],
+  },
+  {
+    to: "/sistema/status",
+    label: "Status",
+    icon: ServerCog,
+    roles: ["super_admin", "tenant_admin"],
   },
   {
     to: "/admin",

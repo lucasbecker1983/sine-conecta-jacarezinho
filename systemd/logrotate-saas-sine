@@ -1,0 +1,12 @@
+/opt/saas_sine/logs/*.log {
+    daily
+    rotate 14
+    compress
+    missingok
+    notifempty
+    create 0640 www-data www-data
+    sharedscripts
+    postrotate
+        systemctl kill -s USR1 saas-sine-backend.service >/dev/null 2>&1 || true
+    endscript
+}

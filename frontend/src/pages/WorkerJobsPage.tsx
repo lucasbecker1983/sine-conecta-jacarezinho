@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+import { EmptyState } from "../components/common/EmptyState";
 
 type Job = {
   id: string;
@@ -141,8 +142,8 @@ export function WorkerJobsPage() {
           </p>
           <div className="mt-4 divide-y divide-slate-100">
             {applications.length === 0 && (
-              <div className="py-6 text-sm text-slate-500">
-                Você ainda não se candidatou a nenhuma vaga.
+              <div className="py-3">
+                <EmptyState message="Você ainda não se candidatou a nenhuma vaga." />
               </div>
             )}
             {applications.map((application) => (

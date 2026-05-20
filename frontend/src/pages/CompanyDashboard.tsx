@@ -15,6 +15,8 @@ import { api } from "../services/api";
 import type { Company, Job } from "../types";
 import { DashboardHeroCanvas } from "../canvas/DashboardHeroCanvas";
 import sineLogoFullHd from "../assets/logos/sine-logo-fullhd.png";
+import { ErrorState } from "../components/common/ErrorState";
+import { LoadingState } from "../components/common/LoadingState";
 
 const regionalCities = [
   "Jacarezinho",
@@ -233,6 +235,9 @@ export function CompanyDashboard() {
   const latestJobs = useMemo(() => jobs.slice(0, 3), [jobs]);
   const latestReferrals = useMemo(() => referrals.slice(0, 3), [referrals]);
 
+  if (loading) return <LoadingState />;
+  if (error) return <ErrorState message={error} />;
+
   return (
     <div className="space-y-5">
       <section className="overflow-hidden rounded-md border border-emerald-100 bg-white">
@@ -309,8 +314,6 @@ export function CompanyDashboard() {
           </div>
         </div>
       </section>
-
-      <PortalAlert error={error} />
 
       <div className="grid gap-3 md:grid-cols-3">
         <Link

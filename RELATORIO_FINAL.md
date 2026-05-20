@@ -219,6 +219,73 @@ URL pública:
 https://sine.jacarezinho.cloud
 ```
 
+## Sprint 7 — Qualidade de Produção, Segurança, Testes, Backup e Observabilidade
+
+Data: 20/05/2026
+
+### Arquivos criados
+
+- `backend/tests/` com testes de health, auth, permissões, portal público, candidatura, bloqueio por feedback, triagem SINE, relatórios e LGPD.
+- `backend/app/routers/admin.py` com `GET /api/admin/system/status`.
+- `backend/app/migrations/versions/20260520_0006_production_indexes.py`.
+- `frontend/src/__tests__/` com testes de Login, vagas públicas, dashboard da empresa, triagem e relatórios.
+- `frontend/src/components/common/LoadingState.tsx`, `ErrorState.tsx`, `EmptyState.tsx`, `PermissionDenied.tsx`.
+- `frontend/src/pages/SystemStatusPage.tsx` e `frontend/src/pages/ReportsPage.tsx`.
+- `scripts/backup.sh` e `scripts/restore.sh`.
+- `.env.example`, `.github/workflows/ci.yml`, `systemd/logrotate-saas-sine`.
+- `docs/BACKUP_RESTORE.md`, `docs/PRODUCAO.md`, `docs/SEGURANCA.md`, `docs/TESTES.md`, `docs/LGPD_CHECKLIST_OPERACIONAL.md`.
+
+### Arquivos alterados
+
+- Backend: configuração, logging, permissões, auth/rate limit, relatórios CSV, roteamento principal, worker apply duplicado e Nginx.
+- Frontend: rotas, menu lateral, páginas principais com estados de feedback, package scripts e Vitest.
+- Infra: `.gitignore`, `nginx/sine.jacarezinho.cloud.conf`, dependências backend/frontend.
+
+### Hardening aplicado
+
+- CORS sem `*` em produção.
+- Validação mínima de força do `JWT_SECRET`.
+- Headers seguros no FastAPI e Nginx.
+- Logs separados: `backend.log`, `error.log`, `security.log`.
+- Rate limit básico de login: 5 tentativas por IP/e-mail em 5 minutos.
+- Exportação CSV protegida por `super_admin`, `tenant_admin` e `sine_manager`, com `audit_log`.
+- `sine_staff` pode visualizar relatórios internos, mas não exportar.
+- Status interno protegido para `super_admin` e `tenant_admin`.
+- Backup PostgreSQL + uploads com retenção local de 7 arquivos.
+
+### Testes e cobertura
+
+- Backend: `python -m pytest -q` → 22 passed.
+- Cobertura backend: 72% geral.
+- Frontend: `npm run test` → 5 arquivos, 10 testes passed.
+- Frontend build: `npm run build` concluído com sucesso.
+
+### Validações executadas
+
+- `python -m compileall app` → OK.
+- `alembic upgrade head` → OK, migration `20260520_0006` aplicada.
+- `nginx -t` → OK; há warnings globais existentes de outros vhosts/protocol options, mas a sintaxe é válida.
+- `systemctl restart saas-sine-backend` e `systemctl status saas-sine-backend --no-pager` → serviço ativo.
+- `curl http://127.0.0.1:18743/api/health` → 200 OK.
+- `curl http://127.0.0.1:18743/api/openapi.json` → 200 OK.
+- `GET /api/admin/system/status` com token de admin → 200 OK.
+- `bash /opt/saas_sine/scripts/backup.sh` → backup criado em `/opt/saas_sine/backups/sine-conecta-20260520-084605.tar.gz`.
+- Permissões validadas via HTTP local:
+  - público sem token não acessa relatórios internos: 401.
+  - empresa não acessa relatórios/IA: 403.
+  - trabalhador não acessa relatórios/triagem: 403.
+  - `sine_staff` acessa relatórios e triagem: 200.
+  - `sine_staff` não exporta CSV: 403.
+  - `tenant_admin` exporta CSV e acessa status do sistema: 200.
+
+### Pendências futuras
+
+- Trocar rate limit em memória por Redis se houver múltiplos workers/processos.
+- Evoluir refresh token para revogação persistente por dispositivo.
+- Aumentar cobertura dos CRUDs amplos em `crud.py`, `users.py` e fluxos de upload PDF.
+- Instalar o modelo de logrotate em `/etc/logrotate.d/saas-sine` durante janela operacional.
+- Criar rotina externa/offsite de backup com criptografia e política LGPD formal.
+
 Repositório GitHub:
 
 ```text

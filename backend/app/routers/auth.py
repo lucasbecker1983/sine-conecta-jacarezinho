@@ -1,5 +1,6 @@
+import logging
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
@@ -13,7 +14,10 @@ from app.models import User
 from app.schemas.common import LoginIn, RefreshTokenIn, TenantOut, TokenOut, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-_login_attempts: dict[str, int] = defaultdict(int)
+security_logger = logging.getLogger("sine.security")
+LOGIN_WINDOW = timedelta(minutes=5)
+LOGIN_MAX_ATTEMPTS = 5
+_login_attempts: dict[str, list[datetime]] = defaultdict(list)
 
 
 def serialize_user(user: User) -> UserOut:
@@ -29,7 +33,10 @@ def serialize_user(user: User) -> UserOut:
 @router.post("/login", response_model=TokenOut)
 def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
     key = f"{request.client.host if request.client else 'unknown'}:{payload.email.lower()}"
-    if _login_attempts[key] >= 10:
+    now = datetime.now(timezone.utc)
+    _login_attempts[key] = [item for item in _login_attempts[key] if now - item < LOGIN_WINDOW]
+    if len(_login_attempts[key]) >= LOGIN_MAX_ATTEMPTS:
+        security_logger.warning("rate_limited_login email=%s ip=%s", payload.email.lower(), request.client.host if request.client else "unknown")
         raise HTTPException(status_code=429, detail="Muitas tentativas de login. Aguarde alguns minutos.")
     user = db.scalar(select(User).where(User.email == payload.email.lower(), User.is_active.is_(True)))
     password_valid = False
@@ -37,7 +44,8 @@ def login(payload: LoginIn, request: Request, db: Session = Depends(get_db)):
     if user:
         password_valid, upgraded_hash = verify_and_upgrade_password(payload.password, user.password_hash)
     if not user or not password_valid:
-        _login_attempts[key] += 1
+        _login_attempts[key].append(now)
+        security_logger.info("failed_login email=%s ip=%s", payload.email.lower(), request.client.host if request.client else "unknown")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Credenciais invalidas")
     _login_attempts.pop(key, None)
     settings = get_settings()

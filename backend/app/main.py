@@ -1,10 +1,14 @@
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.routers import (
     ai_analysis,
+    admin,
     auth,
     communications,
     companies,
@@ -41,6 +45,31 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers.setdefault(
+        "Content-Security-Policy",
+        "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
+    )
+    return response
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logging.getLogger(__name__).exception("Unhandled error on %s", request.url.path)
+    if settings.app_env == "production":
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Erro interno. Tente novamente em instantes."},
+        )
+    raise exc
+
+
 @app.get("/api/health")
 def health():
     return {"status": "ok", "app": settings.app_name}
@@ -63,3 +92,4 @@ app.include_router(feedbacks.router, prefix="/api")
 app.include_router(communications.router, prefix="/api")
 app.include_router(resumes.router, prefix="/api")
 app.include_router(ai_analysis.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")

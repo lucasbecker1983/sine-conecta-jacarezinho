@@ -20,7 +20,9 @@ import { Login } from "./pages/Login";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicJobDetailsPage } from "./pages/PublicJobDetailsPage";
 import { PublicJobsPage } from "./pages/PublicJobsPage";
+import { ReportsPage } from "./pages/ReportsPage";
 import { SineJobTriagePage } from "./pages/SineJobTriagePage";
+import { SystemStatusPage } from "./pages/SystemStatusPage";
 import { WorkerJobsPage } from "./pages/WorkerJobsPage";
 import { WorkerRegisterPage } from "./pages/WorkerRegisterPage";
 import { WorkerResumePage } from "./pages/WorkerResumePage";
@@ -152,12 +154,12 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               path="relatorios"
               element={only(
                 ["super_admin", "tenant_admin", "sine_manager"],
-                <EntityPage
-                  title="Relatórios"
-                  description="Indicadores operacionais e gerenciais por tenant."
-                  actionLabel="Exportar"
-                />,
+                <ReportsPage />,
               )}
+            />
+            <Route
+              path="sistema/status"
+              element={only(["super_admin", "tenant_admin"], <SystemStatusPage />)}
             />
             <Route
               path="admin"

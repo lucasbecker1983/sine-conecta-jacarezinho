@@ -1,7 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,9 +29,21 @@ class Settings(BaseSettings):
     cors_origins: str = "https://sine.jacarezinho.cloud,http://localhost:5173"
     max_resume_size_mb: int = 20
 
+    @field_validator("jwt_secret")
+    @classmethod
+    def validate_jwt_secret(cls, value: str) -> str:
+        if len(value.strip()) < 32:
+            raise ValueError("JWT_SECRET deve ter pelo menos 32 caracteres")
+        return value
+
     @property
     def allowed_origins(self) -> list[str]:
-        return [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+        origins = [item.strip() for item in self.cors_origins.split(",") if item.strip()]
+        if self.app_env == "production":
+            origins = [origin for origin in origins if origin != "*"]
+            if not origins:
+                return [self.app_url]
+        return origins
 
     @property
     def refresh_secret(self) -> str:

@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend-frontend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: ci
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile backend
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://ci:ci@localhost:5432/ci
+          JWT_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+          APP_ENV: test
+        run: python -m compileall app
+
+      - name: Test backend
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql+psycopg://ci:ci@localhost:5432/ci
+          JWT_SECRET: ci-secret-ci-secret-ci-secret-ci-secret
+          APP_ENV: test
+        run: |
+          alembic upgrade head
+          pytest -q
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Test frontend
+        working-directory: frontend
+        run: npm run test
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build

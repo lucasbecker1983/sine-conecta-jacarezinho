@@ -26,7 +26,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     "super_admin": {"*"},
     "tenant_admin": {"tenant:admin", "reports:view", "users:manage", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
     "sine_manager": {"reports:view", "jobs:approve", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
-    "sine_staff": {"jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
+    "sine_staff": {"reports:view", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
     "company_user": {"company:portal"},
     "worker": {"worker:portal", "resume:own"},
 }
