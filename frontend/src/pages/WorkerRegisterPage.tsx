@@ -4,6 +4,7 @@ import { ArrowLeft, ShieldCheck, UserRoundPlus } from "lucide-react";
 import { api } from "../services/api";
 import { useAuthStore } from "../stores/auth";
 import type { Tenant, User } from "../types";
+import { AppAlert, AppStepper } from "../components/ui";
 
 type RegisterResponse = {
   access_token: string;
@@ -120,12 +121,27 @@ export function WorkerRegisterPage() {
               ? `Você está se cadastrando para continuar a candidatura na vaga ${jobTitle}.`
               : "Informe seus dados para acompanhar vagas e candidaturas pelo Portal do Trabalhador."}
           </p>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+            Essas informações ajudam o SINE a encontrar oportunidades mais
+            compatíveis com seu perfil.
+          </p>
         </section>
 
         <form
           onSubmit={submit}
           className="mt-5 rounded-md border border-slate-200 bg-white p-5 shadow-sm"
         >
+          <AppStepper
+            currentStep={0}
+            steps={[
+              "Dados pessoais",
+              "Localização",
+              "Perfil profissional",
+              "Segurança e LGPD",
+            ]}
+            className="mb-6"
+          />
+          <SectionTitle title="Etapa 1 — Dados pessoais" />
           <div className="grid gap-4 md:grid-cols-2">
             <TextField
               label="Nome completo"
@@ -164,6 +180,9 @@ export function WorkerRegisterPage() {
               onChange={(value) => update("email", value)}
               required
             />
+          </div>
+          <SectionTitle title="Etapa 2 — Localização" />
+          <div className="grid gap-4 md:grid-cols-2">
             <TextField
               label="Cidade"
               value={form.city}
@@ -176,20 +195,9 @@ export function WorkerRegisterPage() {
               onChange={(value) => update("state", value)}
               required
             />
-            <TextField
-              label="Senha"
-              type="password"
-              value={form.password}
-              onChange={(value) => update("password", value)}
-              required
-            />
-            <TextField
-              label="Confirmação de senha"
-              type="password"
-              value={form.confirm_password}
-              onChange={(value) => update("confirm_password", value)}
-              required
-            />
+          </div>
+          <SectionTitle title="Etapa 3 — Perfil profissional" />
+          <div className="grid gap-4 md:grid-cols-2">
             <TextField
               label="Escolaridade"
               value={form.education_level}
@@ -222,6 +230,23 @@ export function WorkerRegisterPage() {
               placeholder="Cursos, experiências, habilidades, horários disponíveis..."
             />
           </label>
+          <SectionTitle title="Etapa 4 — Segurança e LGPD" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <TextField
+              label="Senha"
+              type="password"
+              value={form.password}
+              onChange={(value) => update("password", value)}
+              required
+            />
+            <TextField
+              label="Confirmação de senha"
+              type="password"
+              value={form.confirm_password}
+              onChange={(value) => update("confirm_password", value)}
+              required
+            />
+          </div>
           <label className="mt-4 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950">
             <input
               type="checkbox"
@@ -241,11 +266,7 @@ export function WorkerRegisterPage() {
               </span>
             </span>
           </label>
-          {error && (
-            <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
-              {error}
-            </div>
-          )}
+          {error && <AppAlert tone="error" title={error} className="mt-4" />}
           <div className="mt-5 flex justify-end">
             <button
               disabled={loading}
@@ -257,6 +278,14 @@ export function WorkerRegisterPage() {
         </form>
       </main>
     </div>
+  );
+}
+
+function SectionTitle({ title }: { title: string }) {
+  return (
+    <h2 className="mb-3 mt-6 text-sm font-bold uppercase tracking-wide text-emerald-800">
+      {title}
+    </h2>
   );
 }
 

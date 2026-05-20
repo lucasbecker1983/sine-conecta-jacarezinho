@@ -10,10 +10,12 @@ import {
   KeyRound,
   LockKeyhole,
   LogOut,
+  Menu,
   MessagesSquare,
   ServerCog,
   Settings,
   ShieldCheck,
+  X,
   UserRound,
   UserRoundSearch,
   UsersRound,
@@ -185,6 +187,7 @@ export function AppLayout() {
   const [unread, setUnread] = useState(0);
   const [openNotifications, setOpenNotifications] = useState(false);
   const [openProfile, setOpenProfile] = useState(false);
+  const [openMobileMenu, setOpenMobileMenu] = useState(false);
 
   function refreshNotifications() {
     if (!localStorage.getItem("sine_access_token")) return;
@@ -255,7 +258,7 @@ export function AppLayout() {
   }, [user?.id]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="premium-focus min-h-screen bg-slate-50">
       <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-slate-200 bg-white px-4 py-5 lg:flex">
         <div className="mb-8">
           <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
@@ -306,15 +309,71 @@ export function AppLayout() {
           </div>
         </div>
       </aside>
+      {openMobileMenu && (
+        <div className="fixed inset-0 z-40 bg-slate-950/50 lg:hidden" onClick={() => setOpenMobileMenu(false)}>
+          <aside
+            className="h-full w-[min(86vw,320px)] overflow-y-auto bg-white px-4 py-5 shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+            aria-label="Menu principal"
+          >
+            <div className="mb-5 flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                  SaaS GovTech
+                </div>
+                <div className="mt-1 text-lg font-bold text-slate-950">
+                  {tenant?.name ?? "SINE Jacarezinho"}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="rounded-md p-2 text-slate-500 hover:bg-slate-100"
+                onClick={() => setOpenMobileMenu(false)}
+                aria-label="Fechar menu"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <nav className="space-y-1">
+              {visibleItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setOpenMobileMenu(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? "bg-emerald-50 text-emerald-900" : "text-slate-600 hover:bg-slate-100"}`
+                    }
+                  >
+                    <Icon size={18} />
+                    {item.label}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          </aside>
+        </div>
+      )}
       <main className="lg:pl-72">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/95 px-5 backdrop-blur">
-          <div>
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              className="rounded-md p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+              onClick={() => setOpenMobileMenu(true)}
+              aria-label="Abrir menu"
+            >
+              <Menu size={20} />
+            </button>
+            <div className="min-w-0">
             <div className="text-sm font-semibold text-slate-950">
               {tenant?.city ?? "Jacarezinho"} / {tenant?.state ?? "PR"}
             </div>
-            <div className="text-xs text-slate-500">
+            <div className="hidden text-xs text-slate-500 sm:block">
               A análise automática é apenas uma sugestão. A decisão final é do
               colaborador responsável.
+            </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -332,7 +391,7 @@ export function AppLayout() {
                 )}
               </button>
               {openNotifications && (
-                <div className="absolute right-0 z-30 mt-2 w-[360px] overflow-hidden rounded-md border border-slate-200 bg-white shadow-xl">
+                <div className="absolute right-0 z-30 mt-2 w-[min(92vw,360px)] overflow-hidden rounded-md border border-slate-200 bg-white shadow-xl">
                   <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                     <div className="text-sm font-bold text-slate-950">
                       Notificações

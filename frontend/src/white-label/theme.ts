@@ -1,8 +1,11 @@
-import type { Tenant } from '../types'
+import type { Tenant } from "../types";
+import { tenantToTheme } from "./tenantTheme";
 
 export function applyTenantTheme(tenant: Tenant) {
-  const root = document.documentElement
-  root.style.setProperty('--tenant-primary', tenant.primary_color)
-  root.style.setProperty('--tenant-secondary', tenant.secondary_color)
-  root.style.setProperty('--tenant-accent', tenant.accent_color)
+  const theme = tenantToTheme(tenant);
+  const root = document.documentElement;
+  root.style.setProperty("--tenant-primary", theme.primaryColor);
+  root.style.setProperty("--tenant-secondary", theme.secondaryColor);
+  root.style.setProperty("--tenant-accent", theme.accentColor);
+  root.style.setProperty("--tenant-background", theme.backgroundColor);
 }

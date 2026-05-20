@@ -113,3 +113,16 @@ A Sprint 8 adiciona governança LGPD em `/api/lgpd` e nas telas:
 - `/lgpd`.
 
 O módulo cobre termos versionados, solicitações do titular, histórico de consentimento, compartilhamento oficial com empresas, retenção manual, anonimização controlada, incidentes e atividades de tratamento.
+
+## UX premium
+
+A Sprint 9 adiciona uma camada de experiência GovTech premium no frontend, documentada em `docs/UX_PREMIUM.md`.
+
+Principais pontos:
+
+- design system em `frontend/src/components/ui`;
+- tema white label centralizado em `frontend/src/white-label`;
+- onboarding por perfil com estado local;
+- status técnicos traduzidos em textos amigáveis;
+- melhorias de login, portal público, dashboards, triagem, relatórios e LGPD;
+- foco em acessibilidade básica, responsividade e mensagens humanizadas.

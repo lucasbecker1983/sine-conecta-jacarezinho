@@ -34,7 +34,7 @@ describe("PublicJobsPage", () => {
   it("mostra estado vazio", async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: [] });
     render(<PublicJobsPage />, { wrapper: MemoryRouter });
-    expect(await screen.findByText(/ainda não há vagas/i)).toBeInTheDocument();
+    expect(await screen.findByText(/não encontramos vagas/i)).toBeInTheDocument();
   });
 
   it("aplica filtro de busca", async () => {

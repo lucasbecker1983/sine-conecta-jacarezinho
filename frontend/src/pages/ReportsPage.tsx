@@ -5,6 +5,7 @@ import { useAuthStore } from "../stores/auth";
 import { EmptyState } from "../components/common/EmptyState";
 import { ErrorState } from "../components/common/ErrorState";
 import { LoadingState } from "../components/common/LoadingState";
+import { AppMetricCard } from "../components/ui";
 
 type Summary = Record<string, number>;
 
@@ -51,6 +52,10 @@ export function ReportsPage() {
             Relatórios internos
           </div>
           <h1 className="mt-2 text-2xl font-bold text-slate-950">Indicadores do SINE</h1>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+            Use os indicadores para acompanhar a intermediação de mão de obra,
+            identificar gargalos e apoiar decisões da gestão pública.
+          </p>
         </div>
         {canExport && (
           <a
@@ -62,12 +67,23 @@ export function ReportsPage() {
           </a>
         )}
       </header>
+      <section className="rounded-md border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="font-bold text-slate-950">Filtros</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              Visão consolidada do tenant atual. Novos recortes podem ser
+              adicionados sem expor dados pessoais desnecessários.
+            </p>
+          </div>
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+            Dados auditáveis
+          </span>
+        </div>
+      </section>
       <section className="grid gap-3 md:grid-cols-3">
         {cards.map(([key, value]) => (
-          <div key={key} className="rounded-md border border-slate-200 bg-white p-4">
-            <div className="text-xs font-semibold uppercase text-slate-500">{labels[key] ?? key}</div>
-            <div className="mt-2 text-2xl font-bold text-slate-950">{value}</div>
-          </div>
+          <AppMetricCard key={key} label={labels[key] ?? key} value={value} />
         ))}
       </section>
     </div>

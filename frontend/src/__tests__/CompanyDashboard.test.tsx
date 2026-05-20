@@ -32,6 +32,7 @@ describe("CompanyDashboard", () => {
     render(<CompanyDashboard />, { wrapper: MemoryRouter });
     expect(await screen.findByText(/ferramenta interna do SINE/i)).toBeInTheDocument();
     expect(screen.getByText(/bloqueado até registrar/i)).toBeInTheDocument();
-    expect(screen.getByText(/registre o retorno/i)).toBeInTheDocument();
+    expect(screen.getByText(/precisamos do seu retorno/i)).toBeInTheDocument();
+    expect(screen.getByText(/informar retorno agora/i)).toBeInTheDocument();
   });
 });

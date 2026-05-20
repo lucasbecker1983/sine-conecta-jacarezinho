@@ -1119,3 +1119,94 @@ Pendências futuras:
 - implementar fluxo de dupla aprovação para descarte definitivo;
 - notificar encarregado e titular por e-mail quando SMTP estiver formalizado;
 - limpar warnings globais do Nginx em sprint de infraestrutura dedicada.
+
+## Sprint 9 — UX Premium, Polimento Visual e Experiência Humanizada
+
+Objetivo:
+
+- transformar a interface em uma experiência GovTech mais profissional, acolhedora, responsiva e acessível;
+- preservar regras de negócio, login, dashboards, portal público, triagem, relatórios e LGPD avançada;
+- não alterar regras centrais de backend.
+
+Arquivos e áreas criadas:
+
+- `frontend/src/components/ui/`: design system com botões, cards, badges, alertas, inputs, selects, textarea, modal, abas, tabela, tooltip, stepper, headers, métricas, estados vazios/loading/erro/permissão, títulos, timeline e dicas;
+- `frontend/src/components/onboarding/OnboardingChecklist.tsx`;
+- `frontend/src/components/onboarding/OnboardingCard.tsx`;
+- `frontend/src/white-label/tenantTheme.ts`;
+- `frontend/src/white-label/useTenantTheme.ts`;
+- `frontend/src/styles/premium.css`;
+- `frontend/src/utils/statusLabels.ts`;
+- `frontend/src/__tests__/UxPremium.test.tsx`;
+- `docs/UX_PREMIUM.md`.
+
+Páginas alteradas:
+
+- `frontend/src/pages/Login.tsx`;
+- `frontend/src/pages/PublicJobsPage.tsx`;
+- `frontend/src/pages/WorkerRegisterPage.tsx`;
+- `frontend/src/pages/Dashboard.tsx`;
+- `frontend/src/pages/CompanyDashboard.tsx`;
+- `frontend/src/pages/SineJobTriagePage.tsx`;
+- `frontend/src/pages/ReportsPage.tsx`;
+- `frontend/src/pages/LgpdRequestPage.tsx`;
+- `frontend/src/layouts/AppLayout.tsx`;
+- `frontend/src/index.css`;
+- `README.md`.
+
+Melhorias por perfil:
+
+- trabalhador: hero acolhedor, cards de candidaturas/currículo/vagas/encaminhamentos/privacidade, timeline de candidatura e cadastro em etapas;
+- empresa: onboarding, aviso humanizado de feedback pendente, card de privacidade, status amigáveis e reforço de que IA é interna do SINE;
+- SINE: painel operacional com fila de trabalho, assistente IA destacado, LGPD na fila e status mais claros;
+- público: login premium, portal de vagas com hero, cards de confiança, filtros e estado vazio humanizado;
+- LGPD: solicitação pública em etapas e mensagens de sucesso/erro padronizadas.
+
+Melhorias mobile e acessibilidade:
+
+- menu mobile no `AppLayout`;
+- foco visível global;
+- botões e links com áreas clicáveis melhores;
+- filtros e cards responsivos;
+- mensagens associadas a estado/ação;
+- respeito a `prefers-reduced-motion`;
+- Canvas preservado sem virar dependência para leitura.
+
+Testes executados:
+
+- `cd /opt/saas_sine/frontend && npm run test`: 7 arquivos, 19 testes, todos passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK;
+- `cd /opt/saas_sine/backend && . .venv/bin/activate && python -m compileall app`: OK;
+- `cd /opt/saas_sine/backend && . .venv/bin/activate && pytest -q`: 31 passed, 43 warnings;
+- `cd /opt/saas_sine/backend && . .venv/bin/activate && alembic upgrade head`: OK;
+- `systemctl restart saas-sine-backend`: OK;
+- `systemctl status saas-sine-backend --no-pager`: `active (running)`;
+- `curl http://127.0.0.1:18743/api/health`: 200, `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
+- `curl http://127.0.0.1:18743/api/openapi.json`: 200;
+- `nginx -t`: sintaxe OK e teste bem-sucedido, com warnings pré-existentes de vhosts/nomes conflitantes fora do escopo desta sprint.
+
+Validação visual/manual registrada:
+
+- login desktop/mobile: revisado por build e rota `/login` 200;
+- portal público `/vagas` desktop/mobile: revisado por build e rota 200;
+- detalhe da vaga: SPA fallback `/vagas/job-smoke` 200;
+- cadastro do trabalhador: rota `/trabalhador/cadastro` 200;
+- dashboard trabalhador: cards/timeline/onboarding revisados no código e testes de build;
+- dashboard empresa: bloqueio amigável e aviso IA cobertos por teste;
+- dashboard SINE: Fila de Trabalho e Assistente IA revisados no código;
+- triagem por vaga: aviso IA, status amigável e aviso de encaminhamento revisados;
+- relatórios: título, filtros e exportação por perfil preservados em testes;
+- LGPD pública: `/privacidade/direitos` 200 e `/privacidade/solicitacao` 200;
+- LGPD admin: SPA `/lgpd` 200, acesso real protegido pelo módulo Sprint 8;
+- menu mobile: implementado no `AppLayout`;
+- estados vazios/loading/erros: design system criado e aplicado nas telas tocadas;
+- acessibilidade básica com Tab: foco visível e labels preservados;
+- Canvas: build validado sem quebrar layout.
+
+Pendências futuras:
+
+- executar auditoria Lighthouse/axe com screenshots reais em staging;
+- adicionar Playwright para smoke visual desktop/mobile;
+- permitir edição do tema white label por tenant no painel;
+- converter tabelas longas restantes para cards em mobile;
+- expandir uso do design system para telas administrativas secundárias.

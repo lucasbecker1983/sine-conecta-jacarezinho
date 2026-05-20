@@ -13,7 +13,7 @@ import { PublicJobsCanvas } from "../canvas/PublicJobsCanvas";
 import { api } from "../services/api";
 import type { PublicJob } from "../types";
 import sineLogo from "../assets/logos/sine-logo.png";
-import { EmptyState } from "../components/common/EmptyState";
+import { AppBadge, AppEmptyState } from "../components/ui";
 
 type SortMode = "recentes" | "encerramento";
 
@@ -99,8 +99,8 @@ export function PublicJobsPage() {
                 Encontre oportunidades de trabalho em Jacarezinho e região
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
-                Vagas encaminhadas com apoio do SINE, conectando trabalhadores e
-                empresas com segurança, transparência e cuidado.
+                Vagas acompanhadas pelo SINE, com orientação, segurança e
+                transparência para trabalhadores e empresas.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
@@ -120,7 +120,7 @@ export function PublicJobsPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <HeroMetric
                 icon={BriefcaseBusiness}
-                label="Vagas abertas"
+                label="Atendimento pelo SINE"
                 value={jobs.length}
               />
               <HeroMetric
@@ -130,13 +130,13 @@ export function PublicJobsPage() {
               />
               <HeroMetric
                 icon={UsersRound}
-                label="Candidaturas em andamento"
-                value="com triagem"
+                label="Candidatura segura"
+                value="LGPD"
               />
               <HeroMetric
                 icon={HandHeart}
-                label="Atendimento humanizado pelo SINE"
-                value="LGPD"
+                label="Seus dados protegidos"
+                value="SINE"
               />
             </div>
           </div>
@@ -221,6 +221,22 @@ export function PublicJobsPage() {
                 <option value="recentes">Mais recentes</option>
                 <option value="encerramento">Por data de encerramento</option>
               </select>
+              <button
+                type="button"
+                onClick={() =>
+                  setFilters({
+                    search: "",
+                    city: "",
+                    role: "",
+                    modality: "",
+                    education: "",
+                    salary: false,
+                  })
+                }
+                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-emerald-400"
+              >
+                Limpar filtros
+              </button>
             </div>
           </div>
 
@@ -238,7 +254,10 @@ export function PublicJobsPage() {
               ))}
             {!loading && visibleJobs.length === 0 && (
               <div className="lg:col-span-3">
-                <EmptyState message="Ainda não há vagas para exibir com esses filtros." />
+                <AppEmptyState
+                  title="Não encontramos vagas com esses filtros."
+                  message="Tente outro cargo ou cidade. Caso precise de ajuda, procure a equipe do SINE Jacarezinho."
+                />
               </div>
             )}
           </div>
@@ -308,15 +327,12 @@ function HeroMetric({
 
 function PublicJobCard({ job }: { job: PublicJob }) {
   return (
-    <article className="flex min-h-64 flex-col rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-400">
+    <article className="premium-card-hover flex min-h-64 flex-col rounded-md border border-slate-200 bg-white p-5 shadow-sm transition hover:border-emerald-400">
       <div className="flex flex-wrap gap-2">
-        <span className="rounded-full bg-emerald-50 px-2 py-1 text-xs font-bold text-emerald-800">
-          {job.modality}
-        </span>
+        <AppBadge tone="success">Publicada</AppBadge>
+        <AppBadge tone="info">{job.modality || "Presencial"}</AppBadge>
         {job.salary_range && (
-          <span className="rounded-full bg-amber-50 px-2 py-1 text-xs font-bold text-amber-800">
-            Salário informado
-          </span>
+          <AppBadge tone="warning">Salário informado</AppBadge>
         )}
       </div>
       <h2 className="mt-4 text-lg font-bold text-slate-950">{job.title}</h2>

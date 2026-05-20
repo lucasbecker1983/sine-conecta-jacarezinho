@@ -17,6 +17,8 @@ import { DashboardHeroCanvas } from "../canvas/DashboardHeroCanvas";
 import sineLogoFullHd from "../assets/logos/sine-logo-fullhd.png";
 import { ErrorState } from "../components/common/ErrorState";
 import { LoadingState } from "../components/common/LoadingState";
+import { OnboardingChecklist } from "../components/onboarding/OnboardingChecklist";
+import { friendlyStatus } from "../utils/statusLabels";
 
 const regionalCities = [
   "Jacarezinho",
@@ -264,9 +266,8 @@ export function CompanyDashboard() {
               Bem-vindo ao SINE Conecta Jacarezinho
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              {company?.trade_name || company?.legal_name || "Sua empresa"} e o
-              SINE caminham juntos para abrir oportunidades com clareza,
-              respeito aos trabalhadores e retorno organizado para cada seleção.
+              Solicite vagas, acompanhe candidatos encaminhados e mantenha o
+              retorno em dia para fortalecer a empregabilidade local.
             </p>
             <p className="mt-2 max-w-3xl text-xs font-semibold uppercase tracking-wide text-emerald-800">
               A empresa vê apenas candidatos encaminhados oficialmente. A IA é
@@ -314,6 +315,7 @@ export function CompanyDashboard() {
           </div>
         </div>
       </section>
+      <OnboardingChecklist role="company_user" />
 
       <div className="grid gap-3 md:grid-cols-3">
         <Link
@@ -351,8 +353,20 @@ export function CompanyDashboard() {
           </p>
         </Link>
         <Link
+          to="/empresa/privacidade"
+          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
+        >
+          <ShieldCheck className="text-emerald-700" size={22} />
+          <div className="mt-3 font-bold text-slate-950">
+            Privacidade e dados
+          </div>
+          <p className="mt-1 text-sm text-slate-600">
+            Consulte termos, compartilhamentos recebidos e orientações LGPD.
+          </p>
+        </Link>
+        <Link
           to="/empresa/comunicacao"
-          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400 md:col-span-3"
+          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400 md:col-span-2"
         >
           <MessageSquareReply className="text-emerald-700" size={22} />
           <div className="mt-3 font-bold text-slate-950">
@@ -370,24 +384,24 @@ export function CompanyDashboard() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="font-bold text-amber-950">
-                Empresa bloqueada para novas vagas
+                Precisamos do seu retorno para continuar o fluxo
               </h2>
               <p className="mt-1 text-sm text-amber-900">
                 {status.blocking_reason ??
-                  "Registre o feedback final dos encaminhamentos anteriores para liberar novas vagas."}
+                  "Para mantermos o processo justo com os trabalhadores e eficiente para sua empresa, informe o resultado dos candidatos encaminhados antes de abrir uma nova solicitação."}
               </p>
             </div>
             <Link
               to="/empresa/encaminhamentos"
               className="rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white"
             >
-              Resolver feedback
+              Informar retorno agora
             </Link>
           </div>
           <p className="mt-3 text-sm leading-6 text-amber-900">
-            Para mantermos o fluxo justo com os trabalhadores e eficiente para
-            sua empresa, precisamos do retorno sobre os candidatos já
-            encaminhados antes de abrir uma nova solicitação.
+            Para mantermos o processo justo com os trabalhadores e eficiente
+            para sua empresa, informe o resultado dos candidatos encaminhados
+            antes de abrir uma nova solicitação.
           </p>
           <div className="mt-4 grid gap-2 md:grid-cols-2">
             {(status.pending_feedbacks ?? []).map((item) => (
@@ -399,7 +413,7 @@ export function CompanyDashboard() {
                   {item.worker_name}
                 </div>
                 <div className="mt-1 text-slate-600">
-                  {item.job_title} · {item.status}
+                  {item.job_title} · {friendlyStatus(item.status)}
                 </div>
               </div>
             ))}
@@ -423,7 +437,9 @@ export function CompanyDashboard() {
                 className="rounded-md border border-slate-100 bg-slate-50 p-3"
               >
                 <div className="font-semibold text-slate-950">{job.title}</div>
-                <div className="mt-1 text-xs text-slate-500">{job.status}</div>
+                <div className="mt-1 text-xs text-slate-500">
+                  {friendlyStatus(job.status)}
+                </div>
               </div>
             ))}
           </div>
@@ -448,7 +464,7 @@ export function CompanyDashboard() {
                   {referral.worker_name}
                 </div>
                 <div className="mt-1 text-xs text-slate-500">
-                  {referral.job_title} · {referral.status}
+                  {referral.job_title} · {friendlyStatus(referral.status)}
                 </div>
               </div>
             ))}

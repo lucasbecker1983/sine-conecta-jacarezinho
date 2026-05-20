@@ -20,6 +20,9 @@ import { DashboardHeroCanvas } from "../canvas/DashboardHeroCanvas";
 import { ResumeInsightCanvas } from "../canvas/ResumeInsightCanvas";
 import { useAuthStore } from "../stores/auth";
 import { CompanyDashboard } from "./CompanyDashboard";
+import { AppStatusTimeline } from "../components/ui";
+import { OnboardingChecklist } from "../components/onboarding/OnboardingChecklist";
+import { friendlyStatus } from "../utils/statusLabels";
 
 const operationalCards: Array<[string, string, LucideIcon]> = [
   ["vagas_solicitadas", "Novas solicitações de vagas", BriefcaseBusiness],
@@ -123,7 +126,7 @@ export function Dashboard() {
                 Portal do Trabalhador
               </span>
               <h1 className="mt-4 text-2xl font-bold text-slate-950">
-                Currículo pronto para boas oportunidades
+                Olá, {user?.full_name?.split(" ")[0] || "trabalhador"}. Vamos acompanhar suas oportunidades?
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
                 Atualize seus dados, escolha uma vaga e acompanhe os
@@ -135,7 +138,32 @@ export function Dashboard() {
             </div>
           </div>
         </section>
-        <div className="grid gap-3 md:grid-cols-3">
+        <OnboardingChecklist role="worker" />
+        <div className="grid gap-3 md:grid-cols-5">
+          <Link
+            to="/vagas-abertas"
+            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
+          >
+            <div className="text-sm font-semibold text-emerald-700">
+              Minhas candidaturas
+            </div>
+            <div className="mt-3 text-sm text-slate-600">
+              {workerApplications.length} candidatura(s) em acompanhamento.
+            </div>
+          </Link>
+          <Link
+            to="/meu-curriculo"
+            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
+          >
+            <div className="text-sm font-semibold text-emerald-700">
+              Currículo
+            </div>
+            <div className="mt-3 text-sm text-slate-600">
+              {workerResumes.length > 0
+                ? `${workerResumes.length} currículo(s) enviado(s).`
+                : "Envie um currículo em PDF legível."}
+            </div>
+          </Link>
           <Link
             to="/vagas"
             className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
@@ -148,16 +176,14 @@ export function Dashboard() {
             </div>
           </Link>
           <Link
-            to="/meu-curriculo"
+            to="/trabalhador/privacidade"
             className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
           >
             <div className="text-sm font-semibold text-emerald-700">
-              2. Enviar currículo
+              Privacidade e meus dados
             </div>
             <div className="mt-3 text-sm text-slate-600">
-              {workerResumes.length > 0
-                ? `${workerResumes.length} currículo(s) enviado(s).`
-                : "Preencha no portal ou envie PDF depois de selecionar a vaga."}
+              Veja consentimentos e empresas que receberam seus dados.
             </div>
           </Link>
           <Link
@@ -165,10 +191,10 @@ export function Dashboard() {
             className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
           >
             <div className="text-sm font-semibold text-emerald-700">
-              Minhas candidaturas
+              Encaminhamentos
             </div>
             <div className="mt-3 text-sm text-slate-600">
-              {workerApplications.length} candidatura(s) em acompanhamento.
+              Acompanhe quando o SINE enviar seu perfil a uma empresa.
             </div>
           </Link>
         </div>
@@ -188,7 +214,7 @@ export function Dashboard() {
                     {application.job_title}
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
-                    {friendlyWorkerStatus(application.status)} ·{" "}
+                    {friendlyStatus(application.status)} ·{" "}
                     {new Date(application.created_at).toLocaleDateString(
                       "pt-BR",
                     )}
@@ -199,6 +225,15 @@ export function Dashboard() {
           </div>
           <aside className="rounded-md border border-emerald-100 bg-white p-5">
             <h2 className="font-bold text-slate-950">Orientações do SINE</h2>
+            <AppStatusTimeline
+              className="mt-4"
+              items={[
+                { title: "Candidatura enviada ao SINE", description: "Recebemos seu interesse na vaga.", status: "done" },
+                { title: "Em análise pelo SINE", description: "A equipe organiza seu currículo e dados.", status: "current" },
+                { title: "Encaminhado para empresa", description: "A empresa só recebe seus dados após encaminhamento oficial." },
+                { title: "Aguardando retorno da empresa", description: "O SINE acompanha o resultado do processo." },
+              ]}
+            />
             <div className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
               <p>
                 Mantenha telefone, WhatsApp e cidade atualizados para a equipe
@@ -231,11 +266,11 @@ export function Dashboard() {
               Operação SINE
             </span>
             <h1 className="mt-4 text-2xl font-bold text-slate-950">
-              Dashboard operacional
+              Painel operacional do SINE
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Fila de vagas, currículos, encaminhamentos e retorno das empresas
-              em uma visão auditável.
+              Organize vagas, candidaturas, triagens, encaminhamentos e
+              retornos das empresas em um só lugar.
             </p>
           </div>
           <div className="border-t border-emerald-100 bg-emerald-50/40 p-4 xl:border-l xl:border-t-0">
@@ -248,6 +283,7 @@ export function Dashboard() {
           </div>
         </div>
       </section>
+      <OnboardingChecklist role={roles.includes("sine_manager") ? "sine_manager" : "sine_staff"} />
       <div className="grid gap-3 md:grid-cols-4">
         {operationalCards.map(([key, label, Icon]) => {
           const route = [
@@ -377,9 +413,9 @@ export function Dashboard() {
             ],
             [
               "Baixa",
-              "Cadastro incompleto",
-              "Conferir empresas com LGPD ou dados essenciais pendentes.",
-              "/empresas",
+              "Solicitações LGPD",
+              "Verificar pedidos de titulares e possíveis incidentes de privacidade.",
+              "/lgpd",
             ],
           ].map(([priority, type, title, to]) => (
             <div
@@ -471,21 +507,6 @@ export function Dashboard() {
       </div>
     </div>
   );
-}
-
-function friendlyWorkerStatus(status: string) {
-  const map: Record<string, string> = {
-    candidatura_trabalhador: "Candidatura enviada ao SINE",
-    em_analise: "Em análise pelo SINE",
-    encaminhado: "Encaminhado para empresa",
-    aguardando_retorno_empresa: "Aguardando retorno da empresa",
-    encerrado: "Processo encerrado",
-    nao_selecionado: "Não selecionado",
-    nao_contratado: "Não selecionado",
-    contratado: "Contratado",
-    banco_talentos: "Banco de talentos",
-  };
-  return map[status] ?? status;
 }
 
 function missingWorkerFields(profile: Record<string, unknown> | null) {

@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../services/api";
+import { AppAlert, AppStepper } from "../components/ui";
 
 export function LgpdRequestPage() {
   const [message, setMessage] = useState<string | null>(null);
@@ -39,6 +40,14 @@ export function LgpdRequestPage() {
         <p className="mt-2 text-slate-600">Use este canal para solicitar acesso, correção, revogação, informação de compartilhamento ou outra demanda sobre seus dados.</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4 rounded-md border border-slate-200 bg-white p-5">
+          <AppStepper
+            current={0}
+            steps={[
+              { title: "Identificação", description: "Informe como o SINE pode encontrar seu atendimento." },
+              { title: "Pedido", description: "Escolha o direito que deseja exercer." },
+              { title: "Confirmação", description: "A identidade poderá ser validada antes da resposta." },
+            ]}
+          />
           <label className="block text-sm font-medium text-slate-700">
             Nome
             <input required name="requester_name" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2" />
@@ -80,8 +89,8 @@ export function LgpdRequestPage() {
             <input required type="checkbox" name="confirmation" className="mt-1" />
             <span>Declaro que as informações fornecidas são verdadeiras e estou ciente de que o SINE poderá solicitar confirmação de identidade antes de responder.</span>
           </label>
-          {message ? <p className="rounded-md bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p> : null}
-          {error ? <p className="rounded-md bg-rose-50 p-3 text-sm text-rose-800">{error}</p> : null}
+          {message ? <AppAlert tone="success">{message}</AppAlert> : null}
+          {error ? <AppAlert tone="error">{error}</AppAlert> : null}
           <button className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800" type="submit">
             Enviar solicitação
           </button>

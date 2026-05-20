@@ -13,6 +13,8 @@ import { api } from "../services/api";
 import type { CandidateAnalysis, Company, Job, JobCandidate } from "../types";
 import { JobTriageCanvas } from "../canvas/JobTriageCanvas";
 import { CandidateResumeModal } from "./CandidateResumeModal";
+import { AppBadge } from "../components/ui";
+import { friendlyStatus } from "../utils/statusLabels";
 
 const triageStatuses = [
   "solicitada",
@@ -283,7 +285,7 @@ export function SineJobTriagePage() {
               </div>
               <div className="mt-3 grid gap-2 text-sm text-slate-600">
                 <span>Vagas: {selectedJob.vacancies}</span>
-                <span>Status: {selectedJob.status}</span>
+                <span>Status: {friendlyStatus(selectedJob.status)}</span>
                 <span>
                   Criada em:{" "}
                   {new Date(selectedJob.created_at).toLocaleDateString("pt-BR")}
@@ -381,7 +383,7 @@ export function SineJobTriagePage() {
                       value={selectedJob.salary_range}
                     />
                     <Info label="Observações" value={selectedJob.notes} />
-                    <Info label="Status atual" value={selectedJob.status} />
+                    <Info label="Status atual" value={friendlyStatus(selectedJob.status)} />
                   </div>
                 </div>
                 <div className="rounded-md border border-emerald-100 bg-emerald-50 p-4 text-sm text-emerald-950">
@@ -454,6 +456,11 @@ export function SineJobTriagePage() {
               >
                 <Send size={16} /> Encaminhar selecionados
               </button>
+              <p className="w-full text-xs leading-5 text-slate-500">
+                Ao encaminhar, a empresa será notificada, receberá apenas os
+                dados autorizados para esta vaga e deverá informar o retorno ao
+                SINE.
+              </p>
             </div>
             <div className="grid gap-4 xl:grid-cols-2">
               {visibleCandidates.map((candidate) => (
@@ -538,9 +545,7 @@ function CandidateCard({
         <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
           {level}
         </span>
-        <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">
-          {candidate.application_status}
-        </span>
+        <AppBadge tone="info">{friendlyStatus(candidate.application_status)}</AppBadge>
         {candidate.source === "public_portal" && (
           <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-900">
             Candidatura direta

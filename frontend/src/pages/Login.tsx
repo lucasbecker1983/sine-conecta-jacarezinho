@@ -14,6 +14,8 @@ import { useAuthStore } from "../stores/auth";
 import { applyTenantTheme } from "../white-label/theme";
 import { Logo } from "../components/Logo";
 import { LoginNetworkCanvas } from "../canvas/LoginNetworkCanvas";
+import { AppAlert } from "../components/ui";
+import { defaultTenantTheme } from "../white-label/tenantTheme";
 
 type AccessProfile = "company" | "worker" | "staff";
 
@@ -108,11 +110,10 @@ export function Login() {
                     Atendimento público com LGPD
                   </div>
                   <h1 className="text-3xl font-bold leading-tight sm:text-5xl">
-                    SINE Jacarezinho
+                    {defaultTenantTheme.visibleName}
                   </h1>
                   <p className="login-copy mt-3 max-w-lg text-base leading-7 text-white/88 sm:text-lg">
-                    Plataforma de Intermediação de Mão de Obra para conectar
-                    empresas, trabalhadores e colaboradores do SINE.
+                    {defaultTenantTheme.tagline}
                   </p>
                 </div>
               </div>
@@ -138,6 +139,9 @@ export function Login() {
               <h2 className="mt-2 text-2xl font-bold text-slate-950">
                 Entrar na plataforma
               </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Acesso restrito para usuários cadastrados.
+              </p>
             </div>
 
             <div className="login-profile-grid mb-4 grid gap-2.5">
@@ -225,11 +229,7 @@ export function Login() {
                   />
                 </span>
               </label>
-              {error && (
-                <div className="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
-                  {error}
-                </div>
-              )}
+              {error && <AppAlert tone="error" title={error} className="mb-4" />}
               <button
                 className="tenant-button h-11 w-full rounded-md font-semibold disabled:opacity-70"
                 disabled={loading}
@@ -256,7 +256,7 @@ export function Login() {
                   </button>
                 </div>
               )}
-              <div className="mt-4 grid gap-2 text-center text-sm sm:grid-cols-3">
+              <div className="mt-4 grid gap-2 text-center text-sm sm:grid-cols-2 xl:grid-cols-4">
                 <Link
                   to="/vagas"
                   className="font-semibold text-emerald-800 hover:text-emerald-950"
@@ -276,8 +276,15 @@ export function Login() {
                 >
                   Sou empresa e quero solicitar vagas
                 </Link>
+                <Link
+                  to="/privacidade/direitos"
+                  className="font-semibold text-emerald-800 hover:text-emerald-950"
+                >
+                  Privacidade e LGPD
+                </Link>
               </div>
               <p className="login-lgpd mt-4 text-xs leading-5 text-slate-500">
+                Ambiente seguro para empresas, trabalhadores e equipe do SINE.
                 Dados pessoais são tratados conforme LGPD e auditados por
                 finalidade de atendimento público.
               </p>
