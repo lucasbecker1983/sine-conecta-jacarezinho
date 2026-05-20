@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import { api } from "../services/api";
 import type { Company, Job } from "../types";
-import { DashboardHeroCanvas } from "../canvas/DashboardHeroCanvas";
 import sineLogoFullHd from "../assets/logos/sine-logo-fullhd.png";
 import { ErrorState } from "../components/common/ErrorState";
 import { LoadingState } from "../components/common/LoadingState";
@@ -242,9 +241,8 @@ export function CompanyDashboard() {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-md border border-emerald-100 bg-white">
-        <div className="grid gap-0 xl:grid-cols-[1fr_420px]">
-          <div className="p-5 sm:p-7">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <div>
             <div className="flex flex-wrap items-start justify-between gap-4">
               <img
                 src={sineLogoFullHd}
@@ -274,7 +272,7 @@ export function CompanyDashboard() {
               ferramenta interna do SINE.
             </p>
             <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-xs font-semibold uppercase text-slate-500">
                   Cadastro
                 </div>
@@ -287,7 +285,7 @@ export function CompanyDashboard() {
                   {status.profile_complete ? "Disponível ao SINE" : "Pendente"}
                 </div>
               </div>
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-xs font-semibold uppercase text-slate-500">
                   Vagas solicitadas
                 </div>
@@ -295,7 +293,7 @@ export function CompanyDashboard() {
                   {jobs.length}
                 </div>
               </div>
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <div className="text-xs font-semibold uppercase text-slate-500">
                   Retornos pendentes
                 </div>
@@ -304,15 +302,6 @@ export function CompanyDashboard() {
                 </div>
               </div>
             </div>
-          </div>
-          <div className="border-t border-emerald-100 bg-emerald-50/40 p-4 xl:border-l xl:border-t-0">
-            <DashboardHeroCanvas
-              variant="company"
-              primary={jobs.length}
-              secondary={referrals.length}
-              locked={!status.can_open_job}
-            />
-          </div>
         </div>
       </section>
       <OnboardingChecklist role="company_user" />

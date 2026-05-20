@@ -16,7 +16,6 @@ import {
 import { api } from "../services/api";
 import type { Company, Job, Summary } from "../types";
 import { CandidateMatchCanvas } from "../canvas/CandidateMatchCanvas";
-import { DashboardHeroCanvas } from "../canvas/DashboardHeroCanvas";
 import { ResumeInsightCanvas } from "../canvas/ResumeInsightCanvas";
 import { useAuthStore } from "../stores/auth";
 import { CompanyDashboard } from "./CompanyDashboard";
@@ -119,23 +118,18 @@ export function Dashboard() {
   if (isWorker) {
     return (
       <div className="space-y-5">
-        <section className="overflow-hidden rounded-md border border-emerald-100 bg-white">
-          <div className="grid gap-0 xl:grid-cols-[1fr_380px]">
-            <div className="p-5 sm:p-7">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+          <div className="max-w-4xl">
               <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
                 Portal do Trabalhador
               </span>
-              <h1 className="mt-4 text-2xl font-bold text-slate-950">
+              <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">
                 Olá, {user?.full_name?.split(" ")[0] || "trabalhador"}. Vamos acompanhar suas oportunidades?
               </h1>
               <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
                 Atualize seus dados, escolha uma vaga e acompanhe os
                 encaminhamentos feitos pelo SINE.
               </p>
-            </div>
-            <div className="border-t border-emerald-100 bg-emerald-50/40 p-4 xl:border-l xl:border-t-0">
-              <DashboardHeroCanvas variant="worker" primary={1} secondary={3} />
-            </div>
           </div>
         </section>
         <OnboardingChecklist role="worker" />
@@ -259,28 +253,18 @@ export function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <section className="overflow-hidden rounded-md border border-emerald-100 bg-white">
-        <div className="grid gap-0 xl:grid-cols-[1fr_420px]">
-          <div className="p-5 sm:p-7">
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <div className="max-w-4xl">
             <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
               Operação SINE
             </span>
-            <h1 className="mt-4 text-2xl font-bold text-slate-950">
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">
               Painel operacional do SINE
             </h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
               Organize vagas, candidaturas, triagens, encaminhamentos e
               retornos das empresas em um só lugar.
             </p>
-          </div>
-          <div className="border-t border-emerald-100 bg-emerald-50/40 p-4 xl:border-l xl:border-t-0">
-            <DashboardHeroCanvas
-              variant="sine"
-              primary={summary.curriculos_pendentes ?? 0}
-              secondary={companies.length}
-              locked={(summary.empresas_aguardando_retorno ?? 0) > 0}
-            />
-          </div>
         </div>
       </section>
       <OnboardingChecklist role={roles.includes("sine_manager") ? "sine_manager" : "sine_staff"} />

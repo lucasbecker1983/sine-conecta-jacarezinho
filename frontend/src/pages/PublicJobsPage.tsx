@@ -88,15 +88,13 @@ export function PublicJobsPage() {
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <PublicHeader />
       <main>
-        <section className="relative overflow-hidden border-b border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_48%,#e0f2fe_100%)]">
-          <PublicJobsCanvas className="absolute inset-0 h-full w-full opacity-45" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(245,158,11,0.16),transparent_34%),linear-gradient(90deg,rgba(255,255,255,0.9),rgba(255,255,255,0.58)_58%,rgba(255,255,255,0.3))]" />
-          <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[1.02fr_0.98fr] lg:py-16">
-            <div>
-              <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-emerald-900 shadow-sm ring-1 ring-emerald-100">
+        <section className="border-b border-slate-200 bg-white">
+          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center lg:py-14">
+            <div className="max-w-3xl">
+              <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900 ring-1 ring-emerald-100">
                 Portal Público de Vagas
               </span>
-              <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.04] tracking-tight text-slate-950 lg:text-6xl">
+              <h1 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight text-slate-950 lg:text-5xl">
                 Encontre oportunidades de trabalho em Jacarezinho e região
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
@@ -106,50 +104,57 @@ export function PublicJobsPage() {
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   to="/trabalhador/cadastro"
-                  className="tenant-button inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold"
+                  className="tenant-button inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
                 >
                   <Send size={16} /> Sou trabalhador
                 </Link>
                 <Link
                   to="/login?role=company"
-                  className="rounded-md border border-emerald-700 bg-white px-4 py-2 text-sm font-semibold text-emerald-900 hover:bg-emerald-50"
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:border-emerald-500"
                 >
                   Sou empresa
                 </Link>
               </div>
+              <div className="mt-8 grid gap-3 sm:grid-cols-4">
+                <TrustItem icon={BriefcaseBusiness} label="Atendimento pelo SINE" />
+                <TrustItem icon={Building2} label="Empresas parceiras" />
+                <TrustItem icon={UsersRound} label="Candidatura segura" />
+                <TrustItem icon={HandHeart} label="Dados protegidos" />
+              </div>
             </div>
-            <div className="relative min-h-[300px]">
-              <div className="absolute inset-0 rounded-[2rem] border border-white/80 bg-white/35 shadow-2xl shadow-emerald-900/10 backdrop-blur-sm" />
-              <PublicJobsCanvas className="absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)] rounded-[1.5rem] opacity-95" />
-              <div className="relative grid h-full gap-3 p-5 sm:grid-cols-2">
-                <HeroMetric
-                  icon={BriefcaseBusiness}
-                  label="Atendimento pelo SINE"
-                  value={jobs.length}
-                />
-                <HeroMetric
-                  icon={Building2}
-                  label="Empresas parceiras"
-                  value="SINE"
-                />
-                <HeroMetric
-                  icon={UsersRound}
-                  label="Candidatura segura"
-                  value="LGPD"
-                />
-                <HeroMetric
-                  icon={HandHeart}
-                  label="Seus dados protegidos"
-                  value="SINE"
-                />
+            <div className="relative hidden min-h-[330px] overflow-hidden rounded-2xl border border-slate-200 bg-emerald-50 shadow-sm lg:block">
+              <PublicJobsCanvas className="absolute inset-0 h-full w-full opacity-95" />
+              <div className="absolute inset-0 bg-gradient-to-r from-white/20 via-transparent to-white/50" />
+              <div className="absolute bottom-5 left-5 right-5 rounded-xl border border-white/80 bg-white/88 p-4 shadow-lg backdrop-blur">
+                <div className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                  Vagas publicadas
+                </div>
+                <div className="mt-1 text-3xl font-black text-slate-950">
+                  {jobs.length}
+                </div>
+                <p className="mt-1 text-sm leading-6 text-slate-600">
+                  Candidaturas passam pelo acompanhamento do SINE antes do
+                  encaminhamento à empresa.
+                </p>
               </div>
             </div>
           </div>
         </section>
 
         <section className="mx-auto max-w-7xl px-5 py-8">
-          <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 className="font-bold text-slate-950">Buscar vagas</h2>
+                <p className="text-sm text-slate-500">
+                  Filtre por cargo, cidade e perfil da oportunidade.
+                </p>
+              </div>
+              <span className="text-sm font-semibold text-emerald-800">
+                {visibleJobs.length} resultado(s)
+              </span>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-[1.15fr_0.85fr_0.85fr_0.85fr]">
               <label className="relative">
                 <Search
                   className="absolute left-3 top-3 text-slate-400"
@@ -169,7 +174,7 @@ export function PublicJobsPage() {
                 onChange={(event) =>
                   setFilters({ ...filters, city: event.target.value })
                 }
-                className="h-11 rounded-md border border-slate-200 px-3 text-sm"
+                className="h-11 rounded-lg border border-slate-200 px-3 text-sm"
               >
                 <option value="">Todas as cidades</option>
                 {cities.map((city) => (
@@ -183,7 +188,7 @@ export function PublicJobsPage() {
                 onChange={(event) =>
                   setFilters({ ...filters, role: event.target.value })
                 }
-                className="h-11 rounded-md border border-slate-200 px-3 text-sm"
+                className="h-11 rounded-lg border border-slate-200 px-3 text-sm"
                 placeholder="Cargo"
               />
               <select
@@ -191,7 +196,7 @@ export function PublicJobsPage() {
                 onChange={(event) =>
                   setFilters({ ...filters, modality: event.target.value })
                 }
-                className="h-11 rounded-md border border-slate-200 px-3 text-sm"
+                className="h-11 rounded-lg border border-slate-200 px-3 text-sm"
               >
                 <option value="">Modalidade</option>
                 <option value="presencial">Presencial</option>
@@ -326,6 +331,21 @@ function HeroMetric({
       <Icon className="text-emerald-700" size={20} />
       <div className="mt-3 text-2xl font-bold text-slate-950">{value}</div>
       <div className="mt-1 text-sm text-slate-600">{label}</div>
+    </div>
+  );
+}
+
+function TrustItem({
+  icon: Icon,
+  label,
+}: {
+  icon: typeof BriefcaseBusiness;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+      <Icon size={16} className="text-emerald-700" />
+      <span>{label}</span>
     </div>
   );
 }

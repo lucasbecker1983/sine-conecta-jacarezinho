@@ -1210,3 +1210,23 @@ Pendências futuras:
 - permitir edição do tema white label por tenant no painel;
 - converter tabelas longas restantes para cards em mobile;
 - expandir uso do design system para telas administrativas secundárias.
+
+### Ajuste pós-Sprint 9 — Direção visual e redução de poluição
+
+Motivação:
+
+- a primeira versão do Hero ficou visualmente carregada, com Canvas, cards, CTAs e gradientes competindo por atenção;
+- o layout interno também tinha um Hero global no `AppLayout`, repetido em todas as áreas autenticadas, criando ruído acima das páginas.
+
+Correções aplicadas:
+
+- `frontend/src/pages/Login.tsx`: Hero simplificado, CTAs duplicados removidos, cores mais sóbrias e foco maior no fluxo de autenticação;
+- `frontend/src/pages/PublicJobsPage.tsx`: Canvas duplicado removido, filtros organizados com título e contagem, bloco de confiança simplificado;
+- `frontend/src/layouts/AppLayout.tsx`: Hero global com Canvas removido das páginas internas para reduzir poluição visual;
+- `frontend/src/pages/Dashboard.tsx`: headers do trabalhador e SINE simplificados, sem Canvas decorativo redundante;
+- `frontend/src/pages/CompanyDashboard.tsx`: header da empresa simplificado, sem painel visual redundante.
+
+Validações:
+
+- `cd /opt/saas_sine/frontend && npm run test`: 7 arquivos, 19 testes, todos passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK.

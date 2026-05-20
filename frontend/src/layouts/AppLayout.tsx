@@ -26,7 +26,6 @@ import { api, getCurrentTenant } from "../services/api";
 import { useAuthStore } from "../stores/auth";
 import type { NotificationItem } from "../types";
 import jmbLogo from "../assets/logos/jmb-tecnologia-logo.png";
-import { DashboardHeroCanvas } from "../canvas/DashboardHeroCanvas";
 
 const items = [
   {
@@ -215,24 +214,6 @@ export function AppLayout() {
     navigate("/login");
   }
 
-  const isCompany = userRoles.includes("company_user");
-  const isWorker = userRoles.includes("worker");
-  const heroVariant = isCompany ? "company" : isWorker ? "worker" : "sine";
-  const heroEyebrow = isCompany
-    ? "Portal da Empresa"
-    : isWorker
-      ? "Portal do Trabalhador"
-      : "Operação SINE Jacarezinho";
-  const heroTitle = isCompany
-    ? "Relação transparente com o SINE"
-    : isWorker
-      ? "Sua jornada acompanhada pelo SINE"
-      : "Painel inteligente de intermediação";
-  const heroDescription = isCompany
-    ? "Vagas, encaminhamentos, mensagens e feedbacks em um fluxo auditável, com IA sempre do lado do SINE."
-    : isWorker
-      ? "Currículo, vagas e candidaturas conectados em uma experiência clara, protegida e acolhedora."
-      : "Triagem, comunicação, LGPD, retornos de empresas e indicadores em uma central moderna para a equipe.";
   const userInitials =
     (user?.full_name ?? "Usuário")
       .split(" ")
@@ -484,40 +465,6 @@ export function AppLayout() {
             </div>
           </div>
         </header>
-        <section className="px-5 pt-5">
-          <div className="relative overflow-hidden rounded-md border border-emerald-100 bg-white shadow-sm">
-            <DashboardHeroCanvas
-              variant={heroVariant}
-              primary={unread}
-              secondary={visibleItems.length}
-              className="absolute inset-0 h-full w-full"
-            />
-            <div className="relative z-10 grid min-h-56 items-center gap-5 bg-white/45 p-5 backdrop-blur-[1px] sm:p-7 xl:grid-cols-[minmax(0,1fr)_360px]">
-              <div>
-                <span className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-emerald-900 shadow-sm">
-                  {heroEyebrow}
-                </span>
-                <h1 className="mt-4 max-w-3xl text-3xl font-bold text-slate-950">
-                  {heroTitle}
-                </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-700">
-                  {heroDescription}
-                </p>
-              </div>
-              <div className="hidden justify-self-end rounded-md border border-white/70 bg-white/75 p-4 shadow-sm xl:block">
-                <div className="text-xs font-semibold uppercase text-slate-500">
-                  Sessão ativa
-                </div>
-                <div className="mt-2 max-w-[300px] truncate text-sm font-bold text-slate-950">
-                  {user?.full_name ?? "Usuário"}
-                </div>
-                <div className="mt-1 text-xs text-slate-500">
-                  Notificações não lidas: {unread}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
         <div className="p-5">
           <Outlet />
         </div>
