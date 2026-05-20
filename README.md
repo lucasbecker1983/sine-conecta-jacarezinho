@@ -101,3 +101,15 @@ As senhas são geradas no seed e não ficam hardcoded.
 - Frontend não carrega API: confirme proxy `/api/` no Nginx e `BACKEND_PORT`.
 - SSL falha: confirme DNS, firewall, `nginx -t` e tente `certbot renew --dry-run`.
 - Upload falha: confirme permissões em `/opt/saas_sine/uploads/resumes` e limite de 20 MB.
+
+## LGPD avançado
+
+A Sprint 8 adiciona governança LGPD em `/api/lgpd` e nas telas:
+
+- `/privacidade/direitos`;
+- `/privacidade/solicitacao`;
+- `/trabalhador/privacidade`;
+- `/empresa/privacidade`;
+- `/lgpd`.
+
+O módulo cobre termos versionados, solicitações do titular, histórico de consentimento, compartilhamento oficial com empresas, retenção manual, anonimização controlada, incidentes e atividades de tratamento.

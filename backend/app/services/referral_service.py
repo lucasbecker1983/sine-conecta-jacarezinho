@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import CompanyMessage, Job, Referral, Resume, User, Worker
+from app.models import CompanyMessage, Job, LGPDDataSharingRecord, Referral, Resume, User, Worker
 from app.routers import crud
 from app.schemas.common import ReferCandidateIn, ReferCandidatesIn, ReferCandidatesOut
 from app.services.audit import audit, log_resume_access
@@ -62,6 +62,33 @@ def refer_candidates(
         referral.match_explanation = candidate.match_explanation
         referral.triage_notes = payload.message_to_company
         referral_ids.append(referral.id)
+        existing_sharing = db.scalar(
+            select(LGPDDataSharingRecord).where(
+                LGPDDataSharingRecord.tenant_id == tenant_id,
+                LGPDDataSharingRecord.referral_id == referral.id,
+            )
+        )
+        if not existing_sharing:
+            db.add(
+                LGPDDataSharingRecord(
+                    tenant_id=tenant_id,
+                    worker_id=worker.id,
+                    company_id=job.company_id,
+                    job_id=job.id,
+                    referral_id=referral.id,
+                    shared_by_user_id=user.id,
+                    data_categories=[
+                        "nome",
+                        "telefone",
+                        "whatsapp",
+                        "email",
+                        "curriculo",
+                        "experiencias",
+                    ],
+                    purpose="Encaminhamento de candidato para avaliacao de vaga solicitada pela empresa",
+                    legal_basis="execucao_politica_publica",
+                )
+            )
         if resume:
             log_resume_access(
                 db,

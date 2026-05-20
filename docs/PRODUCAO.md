@@ -41,6 +41,29 @@ curl http://127.0.0.1:18743/api/health
 curl http://127.0.0.1:18743/api/openapi.json
 ```
 
+## LGPD avançado
+
+Rotas públicas:
+
+```bash
+curl http://127.0.0.1:18743/api/lgpd/public/terms
+```
+
+Rotas internas exigem token:
+
+```bash
+curl -H "Authorization: Bearer TOKEN" http://127.0.0.1:18743/api/lgpd/dashboard
+curl -H "Authorization: Bearer TOKEN" http://127.0.0.1:18743/api/lgpd/requests
+```
+
+No frontend:
+
+- `/privacidade/direitos`;
+- `/privacidade/solicitacao`;
+- `/trabalhador/privacidade`;
+- `/empresa/privacidade`;
+- `/lgpd`.
+
 ## Nginx e SSL
 
 ```bash
@@ -79,6 +102,9 @@ npm run build
 - Empresa vê apenas candidatos encaminhados.
 - SINE acessa triagem e relatórios.
 - Exportação CSV registra auditoria.
+- Painel `/lgpd` abre para perfis SINE autorizados.
+- Solicitação pública LGPD registra evento `created`.
+- Encaminhamento oficial cria registro em `lgpd_data_sharing_records`.
 - Backup manual criado e logado.
 - `nginx -t` sem erro.
 - `systemctl status saas-sine-backend` ativo.

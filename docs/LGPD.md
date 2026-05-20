@@ -12,3 +12,16 @@ Princípios aplicados:
 - isolamento por `tenant_id`;
 - auditoria para currículo, encaminhamento e dados sensíveis;
 - empresa só acessa candidatos formalmente encaminhados.
+
+## Sprint 8
+
+O módulo avançado fica documentado em `docs/LGPD_AVANCADO.md` e adiciona:
+
+- termos versionados em `lgpd_terms_versions`;
+- solicitações de titulares em `lgpd_data_subject_requests`;
+- eventos em `lgpd_request_events`;
+- histórico de consentimento em `lgpd_consent_history`;
+- registros de compartilhamento em `lgpd_data_sharing_records`;
+- políticas e revisões de retenção;
+- incidentes de segurança e privacidade;
+- mapa de atividades de tratamento.

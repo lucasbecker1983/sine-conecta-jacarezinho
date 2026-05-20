@@ -982,3 +982,140 @@ O que ainda falta:
 - criar teste automatizado end-to-end para portal público, cadastro, currículo, candidatura e triagem;
 - criar página pública institucional da empresa apenas se houver regra futura de anonimização/visibilidade;
 - evoluir recomendações do trabalhador sem expor ranking ou critérios internos de IA.
+
+## Sprint 8 — Módulo LGPD Avançado
+
+Objetivo concluído: criado módulo avançado de governança LGPD integrado ao SaaS existente, sem recriar o projeto e preservando login, dashboards, portal público, jornada do trabalhador, dashboard da empresa, triagem, IA interna, relatórios, comunicação e bloqueio por feedback pendente.
+
+Tabelas e migrations criadas:
+
+- `20260520_0007_lgpd_advanced.py`;
+- `20260520_0008_lgpd_deleted_at_alignment.py`;
+- `lgpd_terms_versions`;
+- `lgpd_data_subject_requests`;
+- `lgpd_request_events`;
+- `lgpd_consent_history`;
+- `lgpd_data_sharing_records`;
+- `lgpd_retention_policies`;
+- `lgpd_retention_reviews`;
+- `lgpd_incidents`;
+- `lgpd_processing_activities`;
+- novos campos em `workers`: `is_anonymized`, `anonymized_at`, `processing_blocked`, `processing_blocked_at`.
+
+Backend criado/alterado:
+
+- `backend/app/routers/lgpd.py`;
+- `backend/app/services/lgpd_service.py`;
+- `backend/app/services/data_retention_service.py`;
+- `backend/app/services/anonymization_service.py`;
+- `backend/app/services/incident_service.py`;
+- `backend/app/models/__init__.py`;
+- `backend/app/schemas/common.py`;
+- `backend/app/services/referral_service.py`;
+- `backend/app/main.py`;
+- `backend/pytest.ini`.
+
+Endpoints principais:
+
+- públicos: `GET /api/lgpd/public/terms`, `POST /api/lgpd/public/requests`;
+- trabalhador: `GET /api/lgpd/me/consents`, `GET /api/lgpd/me/data-sharing`, `GET/POST /api/lgpd/me/requests`, `POST /api/lgpd/me/consents/{consent_id}/revoke`;
+- empresa: `GET /api/lgpd/company/consents`, `GET /api/lgpd/company/data-sharing`, `GET/POST /api/lgpd/company/requests`;
+- administrativo: termos, solicitações, eventos, exportação, correção, anonimização, bloqueio, retenção, incidentes, atividades de tratamento e compartilhamentos.
+
+Frontend criado/alterado:
+
+- `frontend/src/pages/LgpdRightsPage.tsx`;
+- `frontend/src/pages/LgpdRequestPage.tsx`;
+- `frontend/src/pages/WorkerPrivacyPage.tsx`;
+- `frontend/src/pages/CompanyPrivacyPage.tsx`;
+- `frontend/src/pages/LgpdAdminPage.tsx`;
+- `frontend/src/components/lgpd/LgpdStatusBadge.tsx`;
+- `frontend/src/components/lgpd/LgpdRequestTimeline.tsx`;
+- `frontend/src/components/lgpd/ConsentVersionCard.tsx`;
+- `frontend/src/components/lgpd/DataSharingTable.tsx`;
+- `frontend/src/components/lgpd/RetentionPolicyCard.tsx`;
+- `frontend/src/components/lgpd/IncidentSeverityBadge.tsx`;
+- `frontend/src/components/lgpd/PrivacyNoticeBox.tsx`;
+- rotas adicionadas em `frontend/src/main.tsx`;
+- menus adicionados em `frontend/src/layouts/AppLayout.tsx`.
+
+Rotas frontend:
+
+- `/privacidade/direitos`;
+- `/privacidade/solicitacao`;
+- `/trabalhador/privacidade`;
+- `/empresa/privacidade`;
+- `/lgpd`.
+
+Testes criados:
+
+- `backend/tests/test_lgpd_advanced.py`;
+- `frontend/src/__tests__/LgpdPages.test.tsx`.
+
+Documentação criada/atualizada:
+
+- `docs/LGPD_AVANCADO.md`;
+- `docs/LGPD.md`;
+- `docs/LGPD_CHECKLIST_OPERACIONAL.md`;
+- `docs/SEGURANCA.md`;
+- `docs/PRODUCAO.md`;
+- `README.md`.
+
+Hardening e auditoria:
+
+- endpoints administrativos LGPD exigem autenticação;
+- público acessa apenas termos e criação de solicitação;
+- trabalhador e empresa têm rotas próprias segregadas;
+- exportação de dados do titular registra `audit_log` e evento `data_exported`;
+- correção registra `audit_log` e evento `correction_applied`;
+- anonimização registra `audit_log` e evento `anonymization_applied`;
+- incidente registra `audit_log`;
+- encaminhamento oficial pelo SINE cria `lgpd_data_sharing_records`;
+- retenção cria fila de revisão manual, sem exclusão automática.
+
+Validações executadas:
+
+- `cd /opt/saas_sine/backend && . .venv/bin/activate && python -m compileall app`: OK;
+- `cd /opt/saas_sine/backend && . .venv/bin/activate && pytest -q`: 31 passed, 43 warnings;
+- `cd /opt/saas_sine/backend && . .venv/bin/activate && coverage run -m pytest && coverage report`: 31 passed, cobertura total 71%;
+- `cd /opt/saas_sine/backend && . .venv/bin/activate && alembic upgrade head`: OK, head em `20260520_0008`;
+- `cd /opt/saas_sine/frontend && npm run test`: 6 arquivos, 17 testes, todos passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK;
+- `systemctl restart saas-sine-backend`: OK;
+- `systemctl status saas-sine-backend --no-pager`: `active (running)`;
+- `curl http://127.0.0.1:18743/api/health`: 200, `{"status":"ok","app":"SINE Conecta Jacarezinho"}`;
+- `curl http://127.0.0.1:18743/api/openapi.json`: 200;
+- `nginx -t`: sintaxe OK e teste bem-sucedido, com warnings pré-existentes de vhosts/nomes conflitantes fora do escopo da sprint.
+
+Testes manuais LGPD:
+
+- `/privacidade/direitos`: 200;
+- `/privacidade/solicitacao`: 200;
+- `GET /api/lgpd/public/terms`: 200;
+- solicitação pública LGPD criada: `f162ce2e-4863-4df1-b111-c2ece89624a4`;
+- `/trabalhador/privacidade`: 200;
+- `GET /api/lgpd/me/consents` com token worker: 200;
+- solicitação LGPD pelo trabalhador criada: `1c041ca1-8c09-420a-9e9c-5be02fed0f97`;
+- `/empresa/privacidade`: 200;
+- `GET /api/lgpd/company/data-sharing` com token empresa: 200;
+- `/lgpd`: 200;
+- `GET /api/lgpd/dashboard` com token tenant_admin: 200;
+- `GET /api/lgpd/requests` com token tenant_admin: 200;
+- empresa acessando painel interno `/api/lgpd/requests`: 403;
+- trabalhador acessando painel interno `/api/lgpd/requests`: 403;
+- alteração de status de solicitação: 200;
+- adição de resposta: 200;
+- conclusão de solicitação: 200;
+- criação de incidente: 201;
+- criação de política de retenção: 201;
+- execução de revisão de retenção: 200;
+- encaminhamento controlado criou `lgpd_data_sharing_records`: 200, `sharing_after_has_sprint8=True`;
+- feedback final da empresa registrado após teste de encaminhamento: 200.
+
+Pendências futuras:
+
+- adicionar download temporário assinado para pacote de portabilidade;
+- parametrizar prazo LGPD por tenant;
+- implementar fluxo de dupla aprovação para descarte definitivo;
+- notificar encarregado e titular por e-mail quando SMTP estiver formalizado;
+- limpar warnings globais do Nginx em sprint de infraestrutura dedicada.

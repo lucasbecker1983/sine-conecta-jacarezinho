@@ -193,6 +193,10 @@ class Worker(UUIDMixin, TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text)
     lgpd_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     lgpd_accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    is_anonymized: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    anonymized_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    processing_blocked: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    processing_blocked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     __table_args__ = (
         UniqueConstraint("tenant_id", "cpf", name="uq_worker_tenant_cpf"),
     )
@@ -444,6 +448,151 @@ class LGPDConsent(UUIDMixin, Base):
     ip_address: Mapped[str | None] = mapped_column(String(80))
     user_agent: Mapped[str | None] = mapped_column(String(255))
     version: Mapped[str] = mapped_column(String(40), nullable=False)
+
+
+class LGPDTermsVersion(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "lgpd_terms_versions"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("tenants.id"), index=True, nullable=False
+    )
+    term_type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    version: Mapped[str] = mapped_column(String(40), nullable=False)
+    title: Mapped[str] = mapped_column(String(180), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    summary: Mapped[str | None] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False, index=True, nullable=False)
+    published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+
+
+class LGPDDataSubjectRequest(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "lgpd_data_subject_requests"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("tenants.id"), index=True, nullable=False
+    )
+    requester_type: Mapped[str] = mapped_column(String(40), index=True, nullable=False)
+    worker_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("workers.id"), index=True)
+    company_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("companies.id"), index=True)
+    requester_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    requester_name: Mapped[str] = mapped_column(String(180), nullable=False)
+    requester_email: Mapped[str] = mapped_column(String(255), nullable=False)
+    requester_document: Mapped[str | None] = mapped_column(String(40))
+    request_type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(60), default="aberta", index=True, nullable=False)
+    priority: Mapped[str] = mapped_column(String(30), default="normal", nullable=False)
+    due_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    response_text: Mapped[str | None] = mapped_column(Text)
+    internal_notes: Mapped[str | None] = mapped_column(Text)
+    assigned_to_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    resolved_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class LGPDRequestEvent(UUIDMixin, Base):
+    __tablename__ = "lgpd_request_events"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    request_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("lgpd_data_subject_requests.id", ondelete="CASCADE"), index=True, nullable=False)
+    actor_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    event_type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    previous_status: Mapped[str | None] = mapped_column(String(60))
+    new_status: Mapped[str | None] = mapped_column(String(60))
+    message: Mapped[str | None] = mapped_column(Text)
+    metadata_json: Mapped[dict | None] = mapped_column(JSON)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class LGPDConsentHistory(UUIDMixin, Base):
+    __tablename__ = "lgpd_consent_history"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    worker_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("workers.id"), index=True)
+    company_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("companies.id"), index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    term_version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("lgpd_terms_versions.id"), index=True, nullable=False)
+    consent_type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    consent_status: Mapped[str] = mapped_column(String(30), default="accepted", index=True, nullable=False)
+    accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    ip_address: Mapped[str | None] = mapped_column(String(80))
+    user_agent: Mapped[str | None] = mapped_column(Text)
+    legal_basis: Mapped[str | None] = mapped_column(String(80))
+    purpose: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class LGPDDataSharingRecord(UUIDMixin, Base):
+    __tablename__ = "lgpd_data_sharing_records"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    worker_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workers.id"), index=True, nullable=False)
+    company_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("companies.id"), index=True, nullable=False)
+    job_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("jobs.id"), index=True)
+    referral_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("referrals.id"), index=True)
+    shared_by_user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("users.id"), index=True, nullable=False)
+    shared_with_company_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    data_categories: Mapped[dict | list | None] = mapped_column(JSON)
+    purpose: Mapped[str] = mapped_column(Text, nullable=False)
+    legal_basis: Mapped[str] = mapped_column(String(80), nullable=False)
+    shared_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+
+class LGPDRetentionPolicy(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "lgpd_retention_policies"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    retention_days: Mapped[int] = mapped_column(Integer, nullable=False)
+    action_after_retention: Mapped[str] = mapped_column(String(40), nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True, nullable=False)
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+
+
+class LGPDRetentionReview(UUIDMixin, Base):
+    __tablename__ = "lgpd_retention_reviews"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    entity_type: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+    entity_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True, nullable=False)
+    policy_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("lgpd_retention_policies.id"), index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(40), default="pendente", index=True, nullable=False)
+    reason: Mapped[str | None] = mapped_column(Text)
+    reviewed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+
+class LGPDIncident(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "lgpd_incidents"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(180), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    severity: Mapped[str] = mapped_column(String(30), index=True, nullable=False)
+    status: Mapped[str] = mapped_column(String(40), default="registrado", index=True, nullable=False)
+    detected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    reported_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    affected_data_categories: Mapped[dict | list | None] = mapped_column(JSON)
+    affected_subjects_estimate: Mapped[int | None] = mapped_column(Integer)
+    containment_actions: Mapped[str | None] = mapped_column(Text)
+    notification_required: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    notified_authority_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notified_subjects_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    closed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class LGPDProcessingActivity(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "lgpd_processing_activities"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(180), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    data_categories: Mapped[dict | list | None] = mapped_column(JSON)
+    data_subjects: Mapped[dict | list | None] = mapped_column(JSON)
+    purpose: Mapped[str] = mapped_column(Text, nullable=False)
+    legal_basis: Mapped[str] = mapped_column(String(80), nullable=False)
+    retention_info: Mapped[str] = mapped_column(Text, nullable=False)
+    sharing_info: Mapped[str | None] = mapped_column(Text)
+    security_measures: Mapped[str | None] = mapped_column(Text)
+    responsible_area: Mapped[str | None] = mapped_column(String(120))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, index=True, nullable=False)
 
 
 class AuditLog(UUIDMixin, Base):

@@ -65,6 +65,12 @@ const items = [
     roles: ["company_user"],
   },
   {
+    to: "/empresa/privacidade",
+    label: "Privacidade e dados",
+    icon: ShieldCheck,
+    roles: ["company_user"],
+  },
+  {
     to: "/meu-curriculo",
     label: "Meu Currículo",
     icon: UserRound,
@@ -74,6 +80,12 @@ const items = [
     to: "/vagas-abertas",
     label: "Vagas abertas",
     icon: BriefcaseBusiness,
+    roles: ["worker"],
+  },
+  {
+    to: "/trabalhador/privacidade",
+    label: "Privacidade e meus dados",
+    icon: ShieldCheck,
     roles: ["worker"],
   },
   {
@@ -129,6 +141,12 @@ const items = [
     label: "Auditoria LGPD",
     icon: LockKeyhole,
     roles: ["super_admin", "tenant_admin", "sine_manager"],
+  },
+  {
+    to: "/lgpd",
+    label: "LGPD",
+    icon: ShieldCheck,
+    roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
   },
   {
     to: "/relatorios",

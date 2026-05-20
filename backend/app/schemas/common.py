@@ -562,3 +562,248 @@ class CandidateResumeDetailOut(BaseModel):
     applications: list[dict] = []
     referrals: list[dict] = []
     access_logs: list[DataAccessLogOut] = []
+
+
+LgpdRequesterType = Literal["worker", "company_user", "public", "internal"]
+LgpdRequestType = Literal[
+    "confirm_processing",
+    "access_data",
+    "correct_data",
+    "anonymize_data",
+    "block_data",
+    "delete_data",
+    "portability",
+    "revoke_consent",
+    "information_sharing",
+    "review_automated_decision",
+    "other",
+]
+LgpdRequestStatus = Literal[
+    "aberta",
+    "em_analise",
+    "aguardando_confirmacao_identidade",
+    "aguardando_area_responsavel",
+    "deferida",
+    "indeferida",
+    "concluida",
+    "cancelada",
+]
+
+
+class LgpdTermIn(BaseModel):
+    term_type: str = Field(min_length=3, max_length=80)
+    version: str = Field(min_length=1, max_length=40)
+    title: str = Field(min_length=3, max_length=180)
+    content: str = Field(min_length=10)
+    summary: str | None = None
+    is_active: bool = False
+
+
+class LgpdTermPatchIn(BaseModel):
+    version: str | None = Field(default=None, min_length=1, max_length=40)
+    title: str | None = Field(default=None, min_length=3, max_length=180)
+    content: str | None = Field(default=None, min_length=10)
+    summary: str | None = None
+    is_active: bool | None = None
+
+
+class LgpdTermOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    tenant_id: UUID
+    term_type: str
+    version: str
+    title: str
+    content: str
+    summary: str | None = None
+    is_active: bool
+    published_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class LgpdPublicRequestIn(BaseModel):
+    requester_name: str = Field(min_length=3, max_length=180)
+    requester_email: EmailStr
+    requester_document: str | None = Field(default=None, max_length=40)
+    requester_type: Literal["worker", "company_user", "public", "other"] = "public"
+    request_type: LgpdRequestType
+    description: str = Field(min_length=10, max_length=5000)
+    confirmation: bool
+
+
+class LgpdOwnRequestIn(BaseModel):
+    request_type: LgpdRequestType
+    description: str = Field(min_length=10, max_length=5000)
+
+
+class LgpdRequestPatchIn(BaseModel):
+    priority: Literal["baixa", "normal", "alta", "urgente"] | None = None
+    internal_notes: str | None = None
+    response_text: str | None = None
+
+
+class LgpdRequestStatusIn(BaseModel):
+    status: LgpdRequestStatus
+    message: str | None = None
+
+
+class LgpdRequestAssignIn(BaseModel):
+    assigned_to_user_id: UUID
+    message: str | None = None
+
+
+class LgpdRequestResponseIn(BaseModel):
+    response_text: str = Field(min_length=3)
+    internal_notes: str | None = None
+
+
+class LgpdCorrectionIn(BaseModel):
+    entity_type: Literal["worker", "company"] = "worker"
+    entity_id: UUID
+    field: str = Field(min_length=2, max_length=80)
+    old_value: str | None = None
+    new_value: str | None = None
+    reason: str = Field(min_length=5)
+
+
+class LgpdJustificationIn(BaseModel):
+    justification: str = Field(min_length=5)
+
+
+class LgpdRequestOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    tenant_id: UUID
+    requester_type: str
+    worker_id: UUID | None = None
+    company_id: UUID | None = None
+    requester_user_id: UUID | None = None
+    requester_name: str
+    requester_email: EmailStr
+    requester_document: str | None = None
+    request_type: str
+    description: str
+    status: str
+    priority: str
+    due_date: datetime | None = None
+    response_text: str | None = None
+    internal_notes: str | None = None
+    assigned_to_user_id: UUID | None = None
+    resolved_by_user_id: UUID | None = None
+    resolved_at: datetime | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class LgpdRequestEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    request_id: UUID
+    actor_user_id: UUID | None = None
+    event_type: str
+    previous_status: str | None = None
+    new_status: str | None = None
+    message: str | None = None
+    metadata_json: dict | None = None
+    created_at: datetime
+
+
+class LgpdConsentOut(BaseModel):
+    id: UUID
+    consent_type: str
+    consent_status: str
+    term_title: str
+    term_version: str
+    legal_basis: str | None = None
+    purpose: str
+    accepted_at: datetime | None = None
+    revoked_at: datetime | None = None
+    created_at: datetime
+
+
+class LgpdDataSharingOut(BaseModel):
+    id: UUID
+    worker_id: UUID
+    company_id: UUID
+    worker_name: str | None = None
+    company_name: str | None = None
+    job_id: UUID | None = None
+    job_title: str | None = None
+    referral_id: UUID | None = None
+    data_categories: list[str] | dict | None = None
+    purpose: str
+    legal_basis: str
+    shared_at: datetime
+    revoked_at: datetime | None = None
+    notes: str | None = None
+
+
+class LgpdRetentionPolicyIn(BaseModel):
+    entity_type: Literal["worker", "resume", "referral", "company", "communication", "audit_log", "data_access_log"]
+    retention_days: int = Field(ge=1)
+    action_after_retention: Literal["review", "anonymize", "delete", "archive"] = "review"
+    is_active: bool = True
+
+
+class LgpdRetentionPolicyPatchIn(BaseModel):
+    retention_days: int | None = Field(default=None, ge=1)
+    action_after_retention: Literal["review", "anonymize", "delete", "archive"] | None = None
+    is_active: bool | None = None
+
+
+class LgpdRetentionReviewResolveIn(BaseModel):
+    status: Literal["revisado", "anonimizado", "mantido", "excluido", "arquivado"]
+    reason: str | None = None
+
+
+class LgpdIncidentIn(BaseModel):
+    title: str = Field(min_length=3, max_length=180)
+    description: str = Field(min_length=10)
+    severity: Literal["baixa", "media", "alta", "critica"]
+    detected_at: datetime | None = None
+    affected_data_categories: list[str] | dict | None = None
+    affected_subjects_estimate: int | None = Field(default=None, ge=0)
+    containment_actions: str | None = None
+    notification_required: bool = False
+
+
+class LgpdIncidentPatchIn(BaseModel):
+    title: str | None = Field(default=None, min_length=3, max_length=180)
+    description: str | None = Field(default=None, min_length=10)
+    severity: Literal["baixa", "media", "alta", "critica"] | None = None
+    status: Literal["registrado", "em_investigacao", "contido", "comunicado", "encerrado"] | None = None
+    affected_data_categories: list[str] | dict | None = None
+    affected_subjects_estimate: int | None = Field(default=None, ge=0)
+    containment_actions: str | None = None
+    notification_required: bool | None = None
+    notified_authority_at: datetime | None = None
+    notified_subjects_at: datetime | None = None
+
+
+class LgpdProcessingActivityIn(BaseModel):
+    name: str = Field(min_length=3, max_length=180)
+    description: str = Field(min_length=10)
+    data_categories: list[str] | dict | None = None
+    data_subjects: list[str] | dict | None = None
+    purpose: str = Field(min_length=10)
+    legal_basis: str = Field(min_length=3, max_length=80)
+    retention_info: str = Field(min_length=3)
+    sharing_info: str | None = None
+    security_measures: str | None = None
+    responsible_area: str | None = None
+    is_active: bool = True
+
+
+class LgpdProcessingActivityPatchIn(BaseModel):
+    name: str | None = Field(default=None, min_length=3, max_length=180)
+    description: str | None = Field(default=None, min_length=10)
+    data_categories: list[str] | dict | None = None
+    data_subjects: list[str] | dict | None = None
+    purpose: str | None = Field(default=None, min_length=10)
+    legal_basis: str | None = Field(default=None, min_length=3, max_length=80)
+    retention_info: str | None = Field(default=None, min_length=3)
+    sharing_info: str | None = None
+    security_measures: str | None = None
+    responsible_area: str | None = None
+    is_active: bool | None = None

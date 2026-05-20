@@ -15,6 +15,7 @@ from app.routers import (
     company_portal,
     feedbacks,
     jobs,
+    lgpd,
     notifications,
     profile,
     public,
@@ -93,3 +94,4 @@ app.include_router(communications.router, prefix="/api")
 app.include_router(resumes.router, prefix="/api")
 app.include_router(ai_analysis.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(lgpd.router, prefix="/api")

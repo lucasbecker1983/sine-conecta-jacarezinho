@@ -12,6 +12,7 @@ import {
   CompanyProfilePage,
   CompanyReferralsPage,
 } from "./pages/CompanyDashboard";
+import { CompanyPrivacyPage } from "./pages/CompanyPrivacyPage";
 import { AuditLgpdPage, CommunicationPage } from "./pages/CommunicationPage";
 import { CollaboratorsPage } from "./pages/CollaboratorsPage";
 import { ChangePasswordPage } from "./pages/ChangePasswordPage";
@@ -20,10 +21,14 @@ import { Login } from "./pages/Login";
 import { ProfilePage } from "./pages/ProfilePage";
 import { PublicJobDetailsPage } from "./pages/PublicJobDetailsPage";
 import { PublicJobsPage } from "./pages/PublicJobsPage";
+import { LgpdAdminPage } from "./pages/LgpdAdminPage";
+import { LgpdRequestPage } from "./pages/LgpdRequestPage";
+import { LgpdRightsPage } from "./pages/LgpdRightsPage";
 import { ReportsPage } from "./pages/ReportsPage";
 import { SineJobTriagePage } from "./pages/SineJobTriagePage";
 import { SystemStatusPage } from "./pages/SystemStatusPage";
 import { WorkerJobsPage } from "./pages/WorkerJobsPage";
+import { WorkerPrivacyPage } from "./pages/WorkerPrivacyPage";
 import { WorkerRegisterPage } from "./pages/WorkerRegisterPage";
 import { WorkerResumePage } from "./pages/WorkerResumePage";
 
@@ -43,6 +48,8 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       <Routes>
         <Route path="/vagas" element={<PublicJobsPage />} />
         <Route path="/vagas/:jobId" element={<PublicJobDetailsPage />} />
+        <Route path="/privacidade/direitos" element={<LgpdRightsPage />} />
+        <Route path="/privacidade/solicitacao" element={<LgpdRequestPage />} />
         <Route path="/trabalhador/cadastro" element={<WorkerRegisterPage />} />
         <Route path="/login" element={<Login />} />
         <Route element={<ProtectedRoute />}>
@@ -71,6 +78,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               element={only(companyRoles, <CommunicationPage mode="company" />)}
             />
             <Route
+              path="empresa/privacidade"
+              element={only(companyRoles, <CompanyPrivacyPage />)}
+            />
+            <Route
               path="trabalhadores"
               element={only(
                 sineRoles,
@@ -89,6 +100,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route
               path="vagas-abertas"
               element={only(workerRoles, <WorkerJobsPage />)}
+            />
+            <Route
+              path="trabalhador/privacidade"
+              element={only(workerRoles, <WorkerPrivacyPage />)}
             />
             <Route
               path="curriculos"
@@ -149,6 +164,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 ["super_admin", "tenant_admin", "sine_manager"],
                 <AuditLgpdPage />,
               )}
+            />
+            <Route
+              path="lgpd"
+              element={only(sineRoles, <LgpdAdminPage />)}
             />
             <Route
               path="relatorios"

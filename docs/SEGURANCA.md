@@ -37,3 +37,15 @@ Produção não aceita CORS `*`. Headers básicos de segurança são aplicados n
 ## LGPD
 
 Aceite LGPD fica em `lgpd_consents`. Dados pessoais não devem ser exportados sem finalidade operacional clara.
+
+## Módulo LGPD avançado
+
+- `/api/lgpd/public/terms` e `/api/lgpd/public/requests` são os únicos endpoints públicos do módulo.
+- Endpoints administrativos exigem autenticação e perfil SINE autorizado.
+- Trabalhador acessa somente `/api/lgpd/me/*`.
+- Empresa acessa somente `/api/lgpd/company/*`.
+- `tenant_admin` e `sine_manager` exportam dados do titular em solicitações de acesso ou portabilidade.
+- Anonimização é restrita a `tenant_admin` e `super_admin`.
+- Exportação, correção, anonimização, incidente e mudança relevante de solicitação geram `audit_log`.
+- Eventos da solicitação são gravados em `lgpd_request_events`.
+- Compartilhamento com empresa é auditável em `lgpd_data_sharing_records` e vinculado a vaga/encaminhamento.
