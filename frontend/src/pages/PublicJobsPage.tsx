@@ -88,14 +88,15 @@ export function PublicJobsPage() {
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <PublicHeader />
       <main>
-        <section className="relative overflow-hidden border-b border-emerald-100 bg-emerald-50">
-          <PublicJobsCanvas className="absolute inset-0 h-full w-full opacity-80" />
-          <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[1.08fr_0.92fr] lg:py-16">
+        <section className="relative overflow-hidden border-b border-emerald-100 bg-[linear-gradient(135deg,#ecfdf5_0%,#f8fafc_48%,#e0f2fe_100%)]">
+          <PublicJobsCanvas className="absolute inset-0 h-full w-full opacity-45" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(245,158,11,0.16),transparent_34%),linear-gradient(90deg,rgba(255,255,255,0.9),rgba(255,255,255,0.58)_58%,rgba(255,255,255,0.3))]" />
+          <div className="relative mx-auto grid max-w-7xl gap-8 px-5 py-12 lg:grid-cols-[1.02fr_0.98fr] lg:py-16">
             <div>
-              <span className="inline-flex rounded-full bg-white/80 px-3 py-1 text-xs font-bold text-emerald-900 shadow-sm">
+              <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-emerald-900 shadow-sm ring-1 ring-emerald-100">
                 Portal Público de Vagas
               </span>
-              <h1 className="mt-5 max-w-3xl text-4xl font-bold leading-tight text-slate-950 lg:text-5xl">
+              <h1 className="mt-5 max-w-3xl text-4xl font-black leading-[1.04] tracking-tight text-slate-950 lg:text-6xl">
                 Encontre oportunidades de trabalho em Jacarezinho e região
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
@@ -117,27 +118,31 @@ export function PublicJobsPage() {
                 </Link>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <HeroMetric
-                icon={BriefcaseBusiness}
-                label="Atendimento pelo SINE"
-                value={jobs.length}
-              />
-              <HeroMetric
-                icon={Building2}
-                label="Empresas parceiras"
-                value="SINE"
-              />
-              <HeroMetric
-                icon={UsersRound}
-                label="Candidatura segura"
-                value="LGPD"
-              />
-              <HeroMetric
-                icon={HandHeart}
-                label="Seus dados protegidos"
-                value="SINE"
-              />
+            <div className="relative min-h-[300px]">
+              <div className="absolute inset-0 rounded-[2rem] border border-white/80 bg-white/35 shadow-2xl shadow-emerald-900/10 backdrop-blur-sm" />
+              <PublicJobsCanvas className="absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)] rounded-[1.5rem] opacity-95" />
+              <div className="relative grid h-full gap-3 p-5 sm:grid-cols-2">
+                <HeroMetric
+                  icon={BriefcaseBusiness}
+                  label="Atendimento pelo SINE"
+                  value={jobs.length}
+                />
+                <HeroMetric
+                  icon={Building2}
+                  label="Empresas parceiras"
+                  value="SINE"
+                />
+                <HeroMetric
+                  icon={UsersRound}
+                  label="Candidatura segura"
+                  value="LGPD"
+                />
+                <HeroMetric
+                  icon={HandHeart}
+                  label="Seus dados protegidos"
+                  value="SINE"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -317,7 +322,7 @@ function HeroMetric({
   value: number | string;
 }) {
   return (
-    <div className="rounded-md border border-white/80 bg-white/85 p-4 shadow-sm">
+    <div className="rounded-2xl border border-white/80 bg-white/88 p-4 shadow-lg shadow-emerald-950/10 backdrop-blur-md">
       <Icon className="text-emerald-700" size={20} />
       <div className="mt-3 text-2xl font-bold text-slate-950">{value}</div>
       <div className="mt-1 text-sm text-slate-600">{label}</div>

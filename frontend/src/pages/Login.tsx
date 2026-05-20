@@ -94,44 +94,72 @@ export function Login() {
   }
 
   return (
-    <div className="login-page min-h-screen bg-[#eef5f1] px-3 py-3 text-slate-950 sm:px-4 sm:py-4 lg:h-screen lg:overflow-hidden">
-      <div className="login-shell mx-auto flex min-h-[calc(100vh-24px)] w-full max-w-7xl flex-col overflow-hidden rounded-md border border-white/70 bg-white shadow-soft lg:h-[calc(100vh-32px)] lg:min-h-0">
-        <div className="grid min-h-0 flex-1 lg:grid-cols-[1.03fr_0.97fr]">
-          <section className="login-hero relative min-h-[300px] overflow-hidden p-5 text-white sm:p-7 lg:min-h-0">
+    <div className="login-page min-h-screen bg-[radial-gradient(circle_at_top_left,#dff7ee_0,#eef7f3_36%,#f8fafc_100%)] px-3 py-3 text-slate-950 sm:px-4 sm:py-4 lg:h-screen lg:overflow-hidden">
+      <div className="login-shell mx-auto flex min-h-[calc(100vh-24px)] w-full max-w-7xl flex-col overflow-hidden rounded-[1.75rem] border border-white/80 bg-white shadow-[0_24px_80px_rgba(15,23,42,0.16)] lg:h-[calc(100vh-32px)] lg:min-h-0">
+        <div className="grid min-h-0 flex-1 lg:grid-cols-[1.12fr_0.88fr]">
+          <section className="login-hero relative min-h-[420px] overflow-hidden p-5 text-white sm:p-8 lg:min-h-0 xl:p-10">
             <LoginNetworkCanvas />
-            <div className="login-hero-content relative z-10 flex h-full min-h-[300px] flex-col justify-between lg:min-h-0">
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,44,34,0.18),rgba(2,44,34,0.72)_68%,rgba(2,44,34,0.28))]" />
+            <div className="absolute inset-x-8 top-8 h-px bg-white/25" />
+            <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-emerald-950/70 to-transparent" />
+            <div className="login-hero-content relative z-10 flex h-full min-h-[390px] flex-col justify-between lg:min-h-0">
               <div>
-                <div className="inline-flex rounded-md bg-white/94 p-2 shadow-lg sm:p-2.5">
+                <div className="inline-flex rounded-2xl bg-white/96 p-2 shadow-2xl shadow-emerald-950/30 ring-1 ring-white/70 sm:p-2.5">
                   <Logo className="login-logo h-14 w-48 object-contain sm:h-20 sm:w-64" />
                 </div>
-                <div className="login-intro mt-7 max-w-xl">
-                  <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/16 px-3 py-1 text-sm font-semibold text-white ring-1 ring-white/28">
+                <div className="login-intro mt-8 max-w-2xl">
+                  <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/18 px-3 py-1.5 text-sm font-semibold text-white shadow-sm ring-1 ring-white/30 backdrop-blur">
                     <ShieldCheck size={16} />
                     Atendimento público com LGPD
                   </div>
-                  <h1 className="text-3xl font-bold leading-tight sm:text-5xl">
+                  <h1 className="text-4xl font-black leading-[1.02] tracking-tight drop-shadow-sm sm:text-6xl">
                     {defaultTenantTheme.visibleName}
                   </h1>
-                  <p className="login-copy mt-3 max-w-lg text-base leading-7 text-white/88 sm:text-lg">
+                  <p className="login-copy mt-5 max-w-xl text-base leading-7 text-emerald-50/92 sm:text-lg">
                     {defaultTenantTheme.tagline}
                   </p>
+                  <div className="mt-7 flex flex-wrap gap-3">
+                    <Link
+                      to="/vagas"
+                      className="rounded-full bg-white px-5 py-2.5 text-sm font-bold text-emerald-950 shadow-lg shadow-emerald-950/20 transition hover:-translate-y-0.5 hover:bg-emerald-50"
+                    >
+                      Explorar vagas abertas
+                    </Link>
+                    <Link
+                      to="/privacidade/direitos"
+                      className="rounded-full border border-white/35 bg-white/12 px-5 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
+                    >
+                      Privacidade e LGPD
+                    </Link>
+                  </div>
                 </div>
               </div>
-              <div className="login-badges grid gap-2 text-sm text-white/90 sm:grid-cols-3">
-                <div className="rounded-md bg-white/12 p-3 ring-1 ring-white/18">
-                  Vagas recebidas e acompanhadas
+              <div className="grid gap-4 xl:grid-cols-[1fr_260px] xl:items-end">
+                <div className="login-badges grid gap-3 text-sm text-white/92 sm:grid-cols-3">
+                  <HeroBadge title="Vagas" text="recebidas e acompanhadas" />
+                  <HeroBadge title="IA interna" text="apoio à triagem humana" />
+                  <HeroBadge title="LGPD" text="encaminhamentos auditáveis" />
                 </div>
-                <div className="rounded-md bg-white/12 p-3 ring-1 ring-white/18">
-                  Currículos analisados com apoio de IA
-                </div>
-                <div className="rounded-md bg-white/12 p-3 ring-1 ring-white/18">
-                  Encaminhamentos auditáveis
+                <div className="hidden rounded-2xl border border-white/20 bg-white/14 p-4 shadow-2xl shadow-emerald-950/30 backdrop-blur-md xl:block">
+                  <div className="text-xs font-bold uppercase tracking-wide text-emerald-50/80">
+                    Fluxo seguro
+                  </div>
+                  <div className="mt-3 space-y-2 text-sm text-white">
+                    {["Empresa solicita", "SINE tria", "Trabalhador acompanha"].map((item, index) => (
+                      <div key={item} className="flex items-center gap-3">
+                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-xs font-black text-emerald-900">
+                          {index + 1}
+                        </span>
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </section>
 
-          <section className="login-panel flex min-h-0 flex-col justify-center overflow-hidden p-4 sm:p-6 lg:p-6 xl:p-7">
+          <section className="login-panel flex min-h-0 flex-col justify-center overflow-hidden bg-white p-4 sm:p-6 lg:p-6 xl:p-8">
             <div className="login-heading mb-4">
               <div className="text-sm font-semibold uppercase tracking-wide text-emerald-700">
                 Escolha seu acesso
@@ -179,7 +207,7 @@ export function Login() {
 
             <form
               onSubmit={submit}
-              className="login-form rounded-md border border-slate-200 bg-slate-50 p-4"
+              className="login-form rounded-2xl border border-slate-200 bg-slate-50/80 p-4 shadow-sm"
             >
               <div className="mb-4 flex items-start justify-between gap-3">
                 <div>
@@ -301,6 +329,15 @@ export function Login() {
           </span>
         </footer>
       </div>
+    </div>
+  );
+}
+
+function HeroBadge({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="rounded-2xl border border-white/18 bg-white/12 p-4 shadow-lg shadow-emerald-950/15 backdrop-blur-md">
+      <div className="text-lg font-black text-white">{title}</div>
+      <div className="mt-1 text-xs leading-5 text-emerald-50/85">{text}</div>
     </div>
   );
 }
