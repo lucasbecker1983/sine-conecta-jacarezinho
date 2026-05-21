@@ -1284,6 +1284,22 @@ Validação:
 - `cd /opt/saas_sine/frontend && npm run test`: 7 arquivos, 19 testes, todos passaram;
 - `cd /opt/saas_sine/frontend && npm run build`: OK.
 
+### Ajuste fino — Login institucional no rodapé do quadro
+
+Objetivo:
+
+- mover as informações `Portal oficial com LGPD e auditoria`, `SINE Conecta Jacarezinho` e a frase institucional para o final do quadro visual da página de login.
+
+Melhorias aplicadas:
+
+- `frontend/src/pages/Login.tsx`: o logo permanece no topo do quadro e o bloco institucional passa a fechar a área visual inferior;
+- `frontend/src/index.css`: margens responsivas antigas do bloco institucional foram zeradas para manter o alinhamento correto em telas baixas.
+
+Validação:
+
+- `cd /opt/saas_sine/frontend && npm run test`: 7 arquivos, 19 testes, todos passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK.
+
 ### Ajuste textual — LGPD e Candidato
 
 Objetivo:

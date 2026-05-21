@@ -114,11 +114,18 @@ export function Login() {
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(2,44,34,0.14),rgba(2,44,34,0.72))]" />
             <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-emerald-950 to-transparent" />
             <div className="login-hero-content relative z-10 flex h-full min-h-[330px] flex-col justify-between lg:min-h-0">
-              <div>
+              <div className="flex items-start">
                 <div className="inline-flex rounded-xl bg-white p-2 shadow-lg ring-1 ring-white/80 sm:p-2.5">
                   <Logo className="login-logo h-12 w-44 object-contain sm:h-16 sm:w-56" />
                 </div>
-                <div className="login-intro mt-8 max-w-xl">
+              </div>
+              <div className="space-y-6">
+                <div className="login-badges grid gap-2 text-sm text-emerald-50/90 sm:grid-cols-3">
+                  <HeroBadge title="SINE" text="triagem humana" />
+                  <HeroBadge title="Empresas" text="candidatos encaminhados" />
+                  <HeroBadge title="Candidatos" text="dados protegidos" />
+                </div>
+                <div className="login-intro max-w-xl">
                   <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-semibold text-emerald-50 ring-1 ring-white/20">
                     <ShieldCheck size={16} />
                     Portal oficial com LGPD e auditoria
@@ -130,11 +137,6 @@ export function Login() {
                     {defaultTenantTheme.tagline}
                   </p>
                 </div>
-              </div>
-              <div className="login-badges grid gap-2 text-sm text-emerald-50/90 sm:grid-cols-3">
-                <HeroBadge title="SINE" text="triagem humana" />
-                <HeroBadge title="Empresas" text="candidatos encaminhados" />
-                <HeroBadge title="Candidatos" text="dados protegidos" />
               </div>
             </div>
           </section>

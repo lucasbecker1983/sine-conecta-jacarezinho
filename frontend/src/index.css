@@ -68,7 +68,7 @@ a, button {
   }
 
   .login-intro {
-    margin-top: 22px;
+    margin-top: 0;
   }
 
   .login-copy {
@@ -140,7 +140,7 @@ a, button {
   }
 
   .login-intro {
-    margin-top: 16px;
+    margin-top: 0;
   }
 
   .login-intro h1 {
