@@ -53,6 +53,7 @@ from app.schemas.common import (
     ReferralIn,
     ReferralOut,
     ResumeOut,
+    SineReferralOut,
     WorkerIn,
     WorkerOut,
     WorkerProfileIn,
@@ -1303,6 +1304,62 @@ def create_referral(
     db.commit()
     db.refresh(referral)
     return referral
+
+
+@router.get(
+    "/referrals",
+    response_model=list[SineReferralOut],
+    dependencies=[Depends(require_permissions("referrals:manage"))],
+)
+def list_referrals(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    tenant_id = tenant_scope(user, db)
+    rows = db.execute(
+        select(Referral, Job, Company, Worker, Resume)
+        .join(Job, Job.id == Referral.job_id)
+        .join(Company, Company.id == Job.company_id)
+        .join(Worker, Worker.id == Referral.worker_id)
+        .outerjoin(Resume, Resume.id == Referral.resume_id)
+        .where(Referral.tenant_id == tenant_id)
+        .order_by(Referral.created_at.desc())
+    ).all()
+    audit(
+        db,
+        tenant_id,
+        user.id,
+        "referrals.list",
+        "Referral",
+        None,
+        {"count": len(rows)},
+        request.client.host if request.client else None,
+    )
+    db.commit()
+    return [
+        SineReferralOut(
+            id=referral.id,
+            job_id=job.id,
+            job_title=job.title,
+            company_id=company.id,
+            company_name=company.trade_name or company.legal_name,
+            worker_id=worker.id,
+            worker_name=worker.full_name,
+            worker_email=worker.email,
+            worker_phone=worker.phone,
+            worker_whatsapp=worker.whatsapp,
+            resume_id=resume.id if resume else None,
+            resume_filename=resume.original_filename if resume else None,
+            status=referral.status,
+            match_score=referral.match_score,
+            notes=referral.notes,
+            triage_notes=referral.triage_notes,
+            created_at=referral.created_at,
+            referred_at=referral.referred_at,
+        )
+        for referral, job, company, worker, resume in rows
+    ]
 
 
 @router.post(

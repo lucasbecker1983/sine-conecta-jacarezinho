@@ -397,6 +397,27 @@ class ReferralOut(ReferralIn):
     created_at: datetime
 
 
+class SineReferralOut(BaseModel):
+    id: UUID
+    job_id: UUID
+    job_title: str
+    company_id: UUID
+    company_name: str
+    worker_id: UUID
+    worker_name: str
+    worker_email: EmailStr | None = None
+    worker_phone: str | None = None
+    worker_whatsapp: str | None = None
+    resume_id: UUID | None = None
+    resume_filename: str | None = None
+    status: str
+    match_score: int | None = None
+    notes: str | None = None
+    triage_notes: str | None = None
+    created_at: datetime
+    referred_at: datetime | None = None
+
+
 class FeedbackIn(BaseModel):
     referral_id: UUID
     company_id: UUID

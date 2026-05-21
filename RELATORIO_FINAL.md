@@ -1300,6 +1300,30 @@ Validação:
 - `cd /opt/saas_sine/frontend && npm run build`: OK;
 - backend não foi alterado, portanto `python -m compileall app` e `pytest -q` não se aplicaram nesta rodada.
 
+### Correção operacional — módulo Encaminhamentos do SINE
+
+Problema identificado:
+
+- a triagem de vaga gravava o encaminhamento corretamente via `/jobs/{job_id}/refer-candidates`, mas o módulo interno `Encaminhamentos` não exibia o candidato porque a rota frontend usava `EntityPage` sem `endpoint`;
+- também não existia listagem `GET /referrals` para o SINE consultar os encaminhamentos já registrados.
+
+Correções aplicadas:
+
+- criado `GET /referrals` para colaboradores do SINE com permissão `referrals:manage`, retornando candidato, vaga, empresa, currículo, status, score, observações e datas do encaminhamento;
+- `frontend/src/main.tsx` passou a ligar o módulo `Encaminhamentos` ao endpoint `/referrals`;
+- `EntityPage` passou a exibir corretamente registros com `worker_name`, `job_title` e `company_name`;
+- adicionado teste backend garantindo que um candidato com status `encaminhado` aparece na listagem do SINE;
+- backend reiniciado via `systemctl restart saas-sine-backend` após validação.
+
+Validação:
+
+- `cd /opt/saas_sine/backend && .venv/bin/python -m compileall app`: OK;
+- `cd /opt/saas_sine/backend && .venv/bin/pytest -q`: 32 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run test`: 8 arquivos, 24 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK;
+- `curl http://127.0.0.1:18743/api/health`: OK;
+- `GET /api/referrals` publicado e respondendo 401 sem token, confirmando rota ativa e protegida.
+
 ### Ajuste pós-Sprint 9 — Auditoria de botões e ações visíveis
 
 Objetivo:

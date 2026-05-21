@@ -143,6 +143,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 <EntityPage
                   title="Encaminhamentos"
                   description="Candidatos formalmente enviados para empresas."
+                  endpoint="/referrals"
                   actionLabel="Encaminhar candidato"
                 />,
               )}

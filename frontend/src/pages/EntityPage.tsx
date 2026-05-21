@@ -32,6 +32,9 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
     [
       item.legal_name,
       item.full_name,
+      item.worker_name,
+      item.job_title,
+      item.company_name,
       item.title,
       item.original_filename,
       item.status,
@@ -106,9 +109,17 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
               <span className="font-medium text-slate-900">
                 {item.legal_name ||
                   item.full_name ||
+                  item.worker_name ||
                   item.title ||
+                  item.job_title ||
                   item.original_filename ||
                   item.id}
+                {item.worker_name && item.job_title ? (
+                  <span className="mt-1 block text-xs font-normal text-slate-500">
+                    {item.job_title}
+                    {item.company_name ? ` · ${item.company_name}` : ""}
+                  </span>
+                ) : null}
               </span>
             ),
           },
