@@ -65,18 +65,28 @@ export type Job = {
   desired_courses?: string | null;
   cnh_required?: string | null;
   travel_required: boolean;
+  is_confidential: boolean;
   contract_type?: string | null;
   notes?: string | null;
   start_date?: string | null;
   closing_deadline?: string | null;
   status: string;
   created_at: string;
+  company_name?: string;
+  company_legal_name?: string;
+  company_trade_name?: string | null;
+  company_cnpj?: string;
+  company_email?: string | null;
+  company_phone?: string | null;
+  company_whatsapp?: string | null;
+  company_responsible_name?: string | null;
 };
 
 export type PublicJob = {
   id: string;
   title: string;
   company_name: string;
+  is_confidential: boolean;
   city?: string | null;
   state?: string | null;
   vacancies: number;

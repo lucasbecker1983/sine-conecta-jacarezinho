@@ -14,6 +14,7 @@ vi.mock("../services/api", () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),
+    patch: vi.fn(),
   },
 }));
 
@@ -28,6 +29,10 @@ const openJobs = [
     modality: "presencial",
     minimum_education: "Ensino médio",
     status: "publicada",
+    is_confidential: true,
+    company_name: "Empresa confidencial",
+    city: "Jacarezinho",
+    state: "PR",
   },
 ];
 
@@ -57,9 +62,11 @@ function renderWithRoutes(element: React.ReactElement) {
 function mockCompanyPortal({
   pendingReturns = 0,
   referrals = [],
+  jobs = [],
 }: {
   pendingReturns?: number;
   referrals?: any[];
+  jobs?: any[];
 }) {
   vi.mocked(api.get).mockImplementation((url: string) => {
     if (url === "/company-portal/status") {
@@ -87,7 +94,7 @@ function mockCompanyPortal({
     if (url === "/company-portal/profile") {
       return Promise.resolve({ data: { legal_name: "Empresa", lgpd_accepted: true } });
     }
-    if (url === "/company-portal/jobs") return Promise.resolve({ data: [] });
+    if (url === "/company-portal/jobs") return Promise.resolve({ data: jobs });
     if (url === "/company-portal/referrals") return Promise.resolve({ data: referrals });
     return Promise.resolve({ data: [] });
   });
@@ -145,12 +152,52 @@ describe("WorkerJobsPage", () => {
     expect(await screen.findByText(/aguardando retorno da empresa/i)).toBeInTheDocument();
     expect(screen.queryByText("aguardando_retorno_empresa")).not.toBeInTheDocument();
   });
+
+  it("não exibe nome real da empresa quando a vaga é confidencial", async () => {
+    renderWithRoutes(<WorkerJobsPage />);
+
+    expect((await screen.findAllByText(/empresa confidencial/i)).length).toBeGreaterThan(0);
+    expect(screen.queryByText(/empresa real ltda/i)).not.toBeInTheDocument();
+  });
 });
 
 describe("Company portal pages", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(api.post).mockResolvedValue({ data: { status: "ok" } });
+    vi.mocked(api.patch).mockResolvedValue({ data: { status: "ok" } });
+  });
+
+  it("CompanyJobsPage exibe opção de confidencialidade no formulário", async () => {
+    mockCompanyPortal({});
+
+    render(<CompanyJobsPage />, { wrapper: MemoryRouter });
+
+    expect(await screen.findByText(/confidencialidade da vaga/i)).toBeInTheDocument();
+    expect(screen.getByText(/manter empresa confidencial/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/manter empresa confidencial/i)).toBeChecked();
+  });
+
+  it("CompanyJobsPage mostra badge de confidencialidade no histórico", async () => {
+    mockCompanyPortal({
+      jobs: [
+        {
+          id: "job-1",
+          title: "Atendente",
+          description: "Atendimento",
+          vacancies: 1,
+          modality: "presencial",
+          status: "publicada",
+          is_confidential: true,
+          travel_required: false,
+          created_at: "2026-05-20T00:00:00Z",
+        },
+      ],
+    });
+
+    render(<CompanyJobsPage />, { wrapper: MemoryRouter });
+
+    expect(await screen.findByText(/confidencial para candidatos/i)).toBeInTheDocument();
   });
 
   it("CompanyJobsPage mostra bloqueio quando há pending_returns", async () => {

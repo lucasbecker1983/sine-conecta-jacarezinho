@@ -87,6 +87,11 @@ export function PublicJobDetailsPage() {
             <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
               Vaga publicada pelo SINE
             </span>
+            {job.is_confidential && (
+              <span className="ml-2 inline-flex rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
+                Empresa confidencial
+              </span>
+            )}
             <h1 className="mt-4 text-3xl font-bold text-slate-950">
               {job.title}
             </h1>

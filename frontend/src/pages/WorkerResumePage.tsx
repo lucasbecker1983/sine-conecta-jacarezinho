@@ -56,6 +56,10 @@ type Job = {
   salary_range?: string;
   workplace?: string;
   modality: string;
+  is_confidential: boolean;
+  company_name: string;
+  city?: string | null;
+  state?: string | null;
 };
 
 type Application = {
@@ -306,7 +310,9 @@ export function WorkerResumePage() {
               {selectedJob?.title ?? "Escolha uma vaga"}
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              O SINE recebe sua candidatura vinculada a essa oportunidade.
+              {selectedJob
+                ? `${selectedJob.company_name} · ${selectedJob.city || selectedJob.workplace || "Jacarezinho"}`
+                : "O SINE recebe sua candidatura vinculada a essa oportunidade."}
             </p>
           </AppCard>
           <AppCard className="p-4">
@@ -345,7 +351,7 @@ export function WorkerResumePage() {
           <div className="text-sm leading-6">
             <strong>{selectedJob?.title ?? "Como funciona"}:</strong>{" "}
             {selectedJob
-              ? `${selectedJob.vacancies} vaga(s), ${friendlyStatus(selectedJob.modality)} em ${selectedJob.workplace || "local a combinar"}.`
+              ? `${selectedJob.vacancies} vaga(s), ${friendlyStatus(selectedJob.modality)} em ${selectedJob.workplace || selectedJob.city || "local a combinar"}. Empresa: ${selectedJob.company_name}.`
               : "Escolha a vaga, atualize seus dados ou envie o PDF e confirme o interesse."}{" "}
             O SINE fará a análise e poderá encaminhar seu perfil para a empresa.
           </div>

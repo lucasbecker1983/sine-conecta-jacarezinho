@@ -57,6 +57,7 @@ export const emptyJob: JobForm = {
   contract_type: "",
   notes: "",
   travel_required: false,
+  is_confidential: true,
 };
 
 export const finalFeedbackOptions = [

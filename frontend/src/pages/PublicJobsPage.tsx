@@ -356,6 +356,9 @@ function PublicJobCard({ job }: { job: PublicJob }) {
       <div className="flex flex-wrap gap-2">
         <AppBadge tone="success">Publicada</AppBadge>
         <AppBadge tone="info">{job.modality || "Presencial"}</AppBadge>
+        {job.is_confidential && (
+          <AppBadge tone="warning">Empresa confidencial</AppBadge>
+        )}
         {job.salary_range && (
           <AppBadge tone="warning">Salário informado</AppBadge>
         )}

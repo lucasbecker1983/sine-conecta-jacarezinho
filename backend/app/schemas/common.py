@@ -296,6 +296,7 @@ class JobIn(BaseModel):
     desired_courses: str | None = None
     cnh_required: str | None = None
     travel_required: bool = False
+    is_confidential: bool = False
     contract_type: str | None = None
     notes: str | None = None
     start_date: date | None = None
@@ -310,10 +311,22 @@ class JobOut(JobIn):
     created_at: datetime
 
 
+class SineJobOut(JobOut):
+    company_name: str
+    company_legal_name: str
+    company_trade_name: str | None = None
+    company_cnpj: str
+    company_email: EmailStr | None = None
+    company_phone: str | None = None
+    company_whatsapp: str | None = None
+    company_responsible_name: str | None = None
+
+
 class PublicJobOut(BaseModel):
     id: UUID
     title: str
     company_name: str
+    is_confidential: bool = False
     city: str | None = "Jacarezinho"
     state: str | None = "PR"
     vacancies: int
@@ -332,6 +345,32 @@ class PublicJobOut(BaseModel):
     expires_at: date | None = None
 
 
+class WorkerPortalJobOut(BaseModel):
+    id: UUID
+    title: str
+    description: str
+    vacancies: int
+    salary_range: str | None = None
+    benefits: str | None = None
+    workday: str | None = None
+    schedule: str | None = None
+    workplace: str | None = None
+    modality: str
+    minimum_education: str | None = None
+    required_experience: str | None = None
+    desired_courses: str | None = None
+    cnh_required: str | None = None
+    travel_required: bool = False
+    contract_type: str | None = None
+    status: str
+    is_confidential: bool = False
+    company_name: str
+    city: str | None = "Jacarezinho"
+    state: str | None = "PR"
+    created_at: datetime
+    closing_deadline: date | None = None
+
+
 class CompanyPortalJobIn(BaseModel):
     title: str
     description: str
@@ -347,6 +386,7 @@ class CompanyPortalJobIn(BaseModel):
     desired_courses: str | None = None
     cnh_required: str | None = None
     travel_required: bool = False
+    is_confidential: bool = False
     contract_type: str | None = None
     notes: str | None = None
     start_date: date | None = None

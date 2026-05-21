@@ -16,6 +16,7 @@ from app.schemas.common import (
     JobOut,
     ReferCandidatesIn,
     ReferCandidatesOut,
+    SineJobOut,
 )
 from app.services.audit import audit
 from app.services.job_triage_service import (
@@ -39,7 +40,7 @@ router.add_api_route(
     "/jobs",
     crud.list_jobs,
     methods=["GET"],
-    response_model=list[JobOut],
+    response_model=list[SineJobOut],
     dependencies=[Depends(require_permissions("jobs:manage"))],
 )
 router.add_api_route(

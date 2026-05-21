@@ -53,10 +53,16 @@ def public_tenant(request: Request, db: Session) -> Tenant:
 
 
 def serialize_public_job(job: Job, company: Company) -> PublicJobOut:
+    company_name = (
+        "Empresa confidencial"
+        if job.is_confidential
+        else company.trade_name or "Empresa cadastrada no SINE Jacarezinho"
+    )
     return PublicJobOut(
         id=job.id,
         title=job.title,
-        company_name=company.trade_name or "Empresa parceira do SINE",
+        company_name=company_name,
+        is_confidential=job.is_confidential,
         city=company.city or job.workplace or "Jacarezinho",
         state=company.state or "PR",
         vacancies=job.vacancies,

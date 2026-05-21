@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.core.permissions import get_current_user
 from app.models import Job, Referral, Resume, User
 from app.routers import crud
-from app.schemas.common import JobOut, ResumeOut, WorkerOut
+from app.schemas.common import ResumeOut, WorkerOut, WorkerPortalJobOut
 from app.services.audit import audit, log_resume_access
 
 
@@ -37,7 +37,7 @@ router.add_api_route(
     "/worker-portal/open-jobs",
     crud.worker_open_jobs,
     methods=["GET"],
-    response_model=list[JobOut],
+    response_model=list[WorkerPortalJobOut],
 )
 router.add_api_route(
     "/worker-portal/resumes",

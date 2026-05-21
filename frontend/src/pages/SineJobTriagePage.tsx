@@ -283,6 +283,13 @@ export function SineJobTriagePage() {
                   selectedJob.workplace ??
                   "Jacarezinho"}
               </div>
+              {selectedJob.is_confidential && (
+                <div className="mt-3">
+                  <AppBadge tone="warning">
+                    Vaga confidencial para candidatos
+                  </AppBadge>
+                </div>
+              )}
               <div className="mt-3 grid gap-2 text-sm text-slate-600">
                 <span>Vagas: {selectedJob.vacancies}</span>
                 <span>Status: {friendlyStatus(selectedJob.status)}</span>

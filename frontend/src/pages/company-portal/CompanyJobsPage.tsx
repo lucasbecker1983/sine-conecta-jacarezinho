@@ -3,6 +3,7 @@ import { Send } from "lucide-react";
 import { api } from "../../services/api";
 import {
   AppAlert,
+  AppBadge,
   AppButton,
   AppCard,
   AppEmptyState,
@@ -20,6 +21,7 @@ import type { Job, JobForm } from "./types";
 export function CompanyJobsPage() {
   const { jobs, status, error, refresh, setError } = useCompanyPortal();
   const [form, setForm] = useState<JobForm>(emptyJob);
+  const [updatingJobId, setUpdatingJobId] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const lockedReason = !status.profile_complete
@@ -50,6 +52,48 @@ export function CompanyJobsPage() {
       );
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function updateConfidentiality(job: Job, isConfidential: boolean) {
+    setUpdatingJobId(job.id);
+    setError("");
+    setMessage("");
+    try {
+      await api.patch<Job>(`/company-portal/jobs/${job.id}`, {
+        title: job.title,
+        description: job.description,
+        vacancies: job.vacancies,
+        start_date: job.start_date ?? "",
+        closing_deadline: job.closing_deadline ?? "",
+        salary_range: job.salary_range ?? "",
+        benefits: job.benefits ?? "",
+        workday: job.workday ?? "",
+        schedule: job.schedule ?? "",
+        workplace: job.workplace ?? "",
+        modality: job.modality,
+        minimum_education: job.minimum_education ?? "",
+        required_experience: job.required_experience ?? "",
+        desired_courses: job.desired_courses ?? "",
+        cnh_required: job.cnh_required ?? "",
+        contract_type: job.contract_type ?? "",
+        notes: job.notes ?? "",
+        travel_required: job.travel_required,
+        is_confidential: isConfidential,
+      });
+      setMessage(
+        isConfidential
+          ? "Vaga marcada como confidencial para candidatos."
+          : "Nome da empresa liberado para candidatos nesta vaga.",
+      );
+      refresh();
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail ??
+          "Não foi possível atualizar a confidencialidade da vaga.",
+      );
+    } finally {
+      setUpdatingJobId("");
     }
   }
 
@@ -103,6 +147,38 @@ export function CompanyJobsPage() {
               <AppTextarea label="Cursos desejados" value={form.desired_courses} onChange={(e) => setForm({ ...form, desired_courses: e.target.value })} rows={2} className="md:col-span-2" />
               <AppTextarea label="Benefícios e observações" value={form.benefits} onChange={(e) => setForm({ ...form, benefits: e.target.value })} rows={2} className="md:col-span-2" />
             </div>
+            <fieldset className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-4">
+              <legend className="px-1 text-sm font-bold text-slate-950">
+                Confidencialidade da vaga
+              </legend>
+              <p className="mt-2 text-sm leading-6 text-slate-700">
+                Algumas empresas preferem não divulgar o nome da empresa aos
+                candidatos. O SINE continuará visualizando todos os dados da
+                empresa para análise, encaminhamento e auditoria.
+              </p>
+              <div className="mt-3 grid gap-2">
+                <label className="flex items-start gap-3 rounded-md bg-white p-3 text-sm text-slate-700 ring-1 ring-emerald-100">
+                  <input
+                    type="radio"
+                    name="is_confidential"
+                    className="mt-1"
+                    checked={!form.is_confidential}
+                    onChange={() => setForm({ ...form, is_confidential: false })}
+                  />
+                  <span>Pode divulgar o nome da empresa aos candidatos</span>
+                </label>
+                <label className="flex items-start gap-3 rounded-md bg-white p-3 text-sm text-slate-700 ring-1 ring-emerald-100">
+                  <input
+                    type="radio"
+                    name="is_confidential"
+                    className="mt-1"
+                    checked={form.is_confidential}
+                    onChange={() => setForm({ ...form, is_confidential: true })}
+                  />
+                  <span>Manter empresa confidencial para os candidatos</span>
+                </label>
+              </div>
+            </fieldset>
             <AppButton
               type="submit"
               disabled={!status.can_open_job || saving}
@@ -124,13 +200,40 @@ export function CompanyJobsPage() {
             )}
             {jobs.map((job) => (
               <div key={job.id} className="rounded-md border border-slate-100 bg-slate-50 p-3">
-                <div className="font-semibold text-slate-950">{job.title}</div>
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="font-semibold text-slate-950">{job.title}</div>
+                  {job.is_confidential ? (
+                    <AppBadge tone="warning">Confidencial para candidatos</AppBadge>
+                  ) : (
+                    <AppBadge tone="success">Nome divulgado</AppBadge>
+                  )}
+                </div>
                 <div className="mt-1 text-xs text-slate-500">
                   {friendlyStatus(job.status)} ·{" "}
                   {job.start_date
                     ? new Date(job.start_date).toLocaleDateString("pt-BR")
                     : "início a combinar"}
                 </div>
+                {!["encerrada", "cancelada"].includes(job.status) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <AppButton
+                      type="button"
+                      variant={job.is_confidential ? "secondary" : "ghost"}
+                      disabled={updatingJobId === job.id || job.is_confidential}
+                      onClick={() => updateConfidentiality(job, true)}
+                    >
+                      Tornar confidencial
+                    </AppButton>
+                    <AppButton
+                      type="button"
+                      variant={!job.is_confidential ? "secondary" : "ghost"}
+                      disabled={updatingJobId === job.id || !job.is_confidential}
+                      onClick={() => updateConfidentiality(job, false)}
+                    >
+                      Divulgar empresa
+                    </AppButton>
+                  </div>
+                )}
               </div>
             ))}
           </div>

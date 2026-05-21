@@ -1324,6 +1324,45 @@ Validação:
 - `curl http://127.0.0.1:18743/api/health`: OK;
 - `GET /api/referrals` publicado e respondendo 401 sem token, confirmando rota ativa e protegida.
 
+### Regra de negócio — Confidencialidade da vaga
+
+Objetivo:
+
+- permitir que empresas indiquem se o nome da empresa pode ser divulgado aos candidatos;
+- manter dados reais sempre disponíveis para o SINE e para a própria empresa;
+- ocultar razão social, nome fantasia, CNPJ, contatos e responsáveis em todas as visões públicas/candidato quando a vaga estiver confidencial.
+
+Backend:
+
+- adicionado `jobs.is_confidential` com default `false` no model `Job`;
+- criada a migration Alembic `20260521_0009_job_confidentiality.py`, aplicada em produção com `alembic upgrade head`;
+- schemas de vagas atualizados com `is_confidential`;
+- criado DTO específico `WorkerPortalJobOut` para o portal do candidato, sem `company_id` e com `company_name` mascarado quando necessário;
+- `/public/jobs` e `/public/jobs/{job_id}` passam a retornar `Empresa confidencial` quando `is_confidential=true`;
+- `/worker-portal/open-jobs` passa a mascarar a empresa para candidatos e não retorna identificadores internos da empresa;
+- `/lgpd/me/data-sharing` também mascara a empresa para o trabalhador quando o compartilhamento estiver vinculado a vaga confidencial;
+- `/jobs` para o SINE passa a retornar dados reais da empresa, incluindo CNPJ e contatos principais, além do flag de confidencialidade;
+- `/company-portal/jobs` mantém dados completos da própria empresa;
+- adicionado `PATCH /company-portal/jobs/{job_id}` para a empresa editar os dados da vaga e alterar `is_confidential` enquanto a vaga não estiver encerrada/cancelada;
+- auditoria registra criação e alteração de confidencialidade da vaga.
+
+Frontend:
+
+- `CompanyJobsPage`: adicionada seção `Confidencialidade da vaga`, com as opções `Pode divulgar o nome da empresa aos candidatos` e `Manter empresa confidencial para os candidatos`; o formulário inicia com confidencialidade marcada por segurança, sem alterar o default do banco;
+- histórico de vagas da empresa mostra badge `Confidencial para candidatos` ou `Nome divulgado` e permite alternar a confidencialidade;
+- `WorkerJobsPage`, `WorkerResumePage`, `PublicJobsPage` e `PublicJobDetailsPage` mostram `Empresa confidencial` quando aplicável e não exibem nome real;
+- `SineJobTriagePage` e `EntityPage` mostram badge `Vaga confidencial para candidatos`, mantendo nome real da empresa para usuários SINE.
+
+Testes e validações:
+
+- `cd /opt/saas_sine/backend && .venv/bin/alembic upgrade head`: OK, banco em `20260521_0009`;
+- `cd /opt/saas_sine/backend && .venv/bin/python -m compileall app`: OK;
+- `cd /opt/saas_sine/backend && .venv/bin/pytest -q`: 41 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run test`: 8 arquivos, 28 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK;
+- `systemctl restart saas-sine-backend`: OK;
+- `curl http://127.0.0.1:18743/api/health`: OK.
+
 ### Ajuste pós-Sprint 9 — Auditoria de botões e ações visíveis
 
 Objetivo:

@@ -36,6 +36,13 @@ router.add_api_route(
     dependencies=[Depends(require_permissions("company:portal"))],
 )
 router.add_api_route(
+    "/company-portal/jobs/{job_id}",
+    crud.update_company_portal_job,
+    methods=["PATCH"],
+    response_model=JobOut,
+    dependencies=[Depends(require_permissions("company:portal"))],
+)
+router.add_api_route(
     "/company-portal/status",
     crud.company_portal_status,
     methods=["GET"],

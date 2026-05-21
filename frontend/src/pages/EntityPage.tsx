@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 import {
   AppButton,
+  AppBadge,
   AppCard,
   AppEmptyState,
   AppErrorState,
@@ -35,6 +36,7 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
       item.worker_name,
       item.job_title,
       item.company_name,
+      item.company_cnpj,
       item.title,
       item.original_filename,
       item.status,
@@ -118,6 +120,19 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
                   <span className="mt-1 block text-xs font-normal text-slate-500">
                     {item.job_title}
                     {item.company_name ? ` · ${item.company_name}` : ""}
+                  </span>
+                ) : null}
+                {item.title && item.company_name ? (
+                  <span className="mt-1 block text-xs font-normal text-slate-500">
+                    {item.company_name}
+                    {item.company_cnpj ? ` · ${item.company_cnpj}` : ""}
+                  </span>
+                ) : null}
+                {item.is_confidential ? (
+                  <span className="mt-2 block">
+                    <AppBadge tone="warning">
+                      Vaga confidencial para candidatos
+                    </AppBadge>
                   </span>
                 ) : null}
               </span>

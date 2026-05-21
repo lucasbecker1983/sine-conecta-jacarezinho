@@ -298,6 +298,7 @@ class Job(UUIDMixin, TimestampMixin, Base):
     desired_courses: Mapped[str | None] = mapped_column(Text)
     cnh_required: Mapped[str | None] = mapped_column(String(20))
     travel_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_confidential: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     contract_type: Mapped[str | None] = mapped_column(String(80))
     notes: Mapped[str | None] = mapped_column(Text)
     start_date: Mapped[date | None] = mapped_column(Date)

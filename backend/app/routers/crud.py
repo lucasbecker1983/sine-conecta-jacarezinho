@@ -53,9 +53,11 @@ from app.schemas.common import (
     ReferralIn,
     ReferralOut,
     ResumeOut,
+    SineJobOut,
     SineReferralOut,
     WorkerIn,
     WorkerOut,
+    WorkerPortalJobOut,
     WorkerProfileIn,
 )
 from app.services.audit import audit, log_resume_access
@@ -745,15 +747,38 @@ def create_worker(
 
 @router.get(
     "/jobs",
-    response_model=list[JobOut],
+    response_model=list[SineJobOut],
     dependencies=[Depends(require_permissions("jobs:manage"))],
 )
 def list_jobs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    return db.scalars(
-        select(Job)
-        .where(Job.tenant_id == tenant_scope(user, db), Job.deleted_at.is_(None))
+    tenant_id = tenant_scope(user, db)
+    rows = db.execute(
+        select(Job, Company)
+        .join(Company, Company.id == Job.company_id)
+        .where(
+            Job.tenant_id == tenant_id,
+            Job.deleted_at.is_(None),
+            Company.deleted_at.is_(None),
+        )
         .order_by(Job.created_at.desc())
     ).all()
+    return [
+        SineJobOut(
+            **{
+                **JobOut.model_validate(job).model_dump(),
+                "company_name": company.trade_name or company.legal_name,
+                "company_legal_name": company.legal_name,
+                "company_trade_name": company.trade_name,
+                "company_cnpj": company.cnpj,
+                "company_email": company.email,
+                "company_phone": company.phone,
+                "company_whatsapp": company.whatsapp,
+                "company_responsible_name": company.responsible_name
+                or company.hr_responsible_name,
+            }
+        )
+        for job, company in rows
+    ]
 
 
 @router.post(
@@ -781,6 +806,7 @@ def create_job(
         "job.create",
         "Job",
         job.id,
+        {"is_confidential": job.is_confidential},
         ip_address=request.client.host if request.client else None,
     )
     db.commit()
@@ -975,7 +1001,60 @@ def create_company_portal_job(
         "company_portal.job.request",
         "Job",
         job.id,
-        {"company_id": str(company.id), "ai_scope": "sine_only"},
+        {
+            "company_id": str(company.id),
+            "ai_scope": "sine_only",
+            "is_confidential": job.is_confidential,
+        },
+        request.client.host if request.client else None,
+    )
+    db.commit()
+    db.refresh(job)
+    return job
+
+
+@router.patch(
+    "/company-portal/jobs/{job_id}",
+    response_model=JobOut,
+    dependencies=[Depends(require_permissions("company:portal"))],
+)
+def update_company_portal_job(
+    job_id: UUID,
+    payload: CompanyPortalJobIn,
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    require_company_user(user)
+    tenant_id = tenant_scope(user, db)
+    company = current_company(db, user)
+    if not company:
+        raise HTTPException(status_code=400, detail="Cadastro da empresa nao encontrado")
+    job = db.get(Job, job_id)
+    if (
+        not job
+        or job.tenant_id != tenant_id
+        or job.company_id != company.id
+        or job.deleted_at is not None
+    ):
+        raise HTTPException(status_code=404, detail="Vaga nao encontrada")
+    if job.status in {"encerrada", "cancelada"}:
+        raise HTTPException(status_code=409, detail="Vaga encerrada nao pode ser editada")
+    previous_confidentiality = job.is_confidential
+    for key, value in payload.model_dump().items():
+        setattr(job, key, value)
+    audit_details = {"job_id": str(job.id)}
+    if previous_confidentiality != job.is_confidential:
+        audit_details["is_confidential"] = job.is_confidential
+        audit_details["previous_is_confidential"] = previous_confidentiality
+    audit(
+        db,
+        tenant_id,
+        user.id,
+        "company_portal.job.update",
+        "Job",
+        job.id,
+        audit_details,
         request.client.host if request.client else None,
     )
     db.commit()
@@ -2032,23 +2111,63 @@ def save_worker_profile(
     return worker
 
 
-@router.get("/worker-portal/open-jobs", response_model=list[JobOut])
+def serialize_worker_portal_job(job: Job, company: Company | None) -> WorkerPortalJobOut:
+    is_confidential = bool(job.is_confidential)
+    visible_company_name = (
+        "Empresa confidencial"
+        if is_confidential
+        else (
+            (company.trade_name or company.legal_name)
+            if company
+            else "Empresa cadastrada no SINE Jacarezinho"
+        )
+    )
+    return WorkerPortalJobOut(
+        id=job.id,
+        title=job.title,
+        description=job.description,
+        vacancies=job.vacancies,
+        salary_range=job.salary_range,
+        benefits=job.benefits,
+        workday=job.workday,
+        schedule=job.schedule,
+        workplace=job.workplace,
+        modality=job.modality,
+        minimum_education=job.minimum_education,
+        required_experience=job.required_experience,
+        desired_courses=job.desired_courses,
+        cnh_required=job.cnh_required,
+        travel_required=job.travel_required,
+        contract_type=job.contract_type,
+        status=job.status,
+        is_confidential=is_confidential,
+        company_name=visible_company_name,
+        city=(company.city if company else None) or job.workplace or "Jacarezinho",
+        state=(company.state if company else None) or "PR",
+        created_at=job.created_at,
+        closing_deadline=job.closing_deadline,
+    )
+
+
+@router.get("/worker-portal/open-jobs", response_model=list[WorkerPortalJobOut])
 def worker_open_jobs(
     db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ):
     require_worker_user(user)
     tenant_id = tenant_scope(user, db)
     open_statuses = ["aprovada", "publicada", "em_triagem", "encaminhando_candidatos"]
-    return db.scalars(
-        select(Job)
+    rows = db.execute(
+        select(Job, Company)
+        .join(Company, Company.id == Job.company_id)
         .where(
             Job.tenant_id == tenant_id,
             Job.deleted_at.is_(None),
             Job.status.in_(open_statuses),
+            Company.deleted_at.is_(None),
         )
         .order_by(Job.created_at.desc())
     ).all()
-
+    return [serialize_worker_portal_job(job, company) for job, company in rows]
 
 @router.get("/worker-portal/resumes", response_model=list[ResumeOut])
 def worker_resumes(

@@ -14,6 +14,7 @@ const jobs = [
     id: "job-1",
     title: "Atendente",
     company_name: "Empresa",
+    is_confidential: false,
     city: "Jacarezinho",
     state: "PR",
     vacancies: 1,
@@ -42,5 +43,14 @@ describe("PublicJobsPage", () => {
     await screen.findByText("Atendente");
     await userEvent.type(screen.getByPlaceholderText(/buscar por cargo/i), "motorista");
     await waitFor(() => expect(screen.queryByText("Atendente")).not.toBeInTheDocument());
+  });
+
+  it("mostra empresa confidencial sem expor nome real", async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: [{ ...jobs[0], company_name: "Empresa confidencial", is_confidential: true }],
+    });
+    render(<PublicJobsPage />, { wrapper: MemoryRouter });
+    expect((await screen.findAllByText(/empresa confidencial/i)).length).toBeGreaterThan(0);
+    expect(screen.queryByText("Empresa Teste LTDA")).not.toBeInTheDocument();
   });
 });

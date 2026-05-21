@@ -25,6 +25,10 @@ type Job = {
   modality: string;
   minimum_education?: string;
   status: string;
+  is_confidential: boolean;
+  company_name: string;
+  city?: string | null;
+  state?: string | null;
 };
 
 type Application = {
@@ -170,11 +174,17 @@ export function WorkerJobsPage() {
                       <AppBadge tone={active ? "success" : "neutral"}>
                         {active ? "Selecionada" : friendlyStatus(job.status)}
                       </AppBadge>
+                      {job.is_confidential ? (
+                        <AppBadge tone="warning">Empresa confidencial</AppBadge>
+                      ) : null}
                     </div>
                   </div>
                   <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                    <span>Empresa: {job.company_name}</span>
                     <span>Cargo: {job.title}</span>
-                    <span>Local: {job.workplace || "Não informado"}</span>
+                    <span>
+                      Local: {job.workplace || job.city || "Não informado"}
+                    </span>
                     <span>Modalidade: {friendlyStatus(job.modality)}</span>
                     <span>Salário: {job.salary_range || "A combinar"}</span>
                     <span>

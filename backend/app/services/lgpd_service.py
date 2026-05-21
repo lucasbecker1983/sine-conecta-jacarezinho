@@ -244,25 +244,32 @@ def sharing_rows(db: Session, tenant_id: UUID, worker_id: UUID | None = None, co
         query = query.where(LGPDDataSharingRecord.worker_id == worker_id)
     if company_id:
         query = query.where(LGPDDataSharingRecord.company_id == company_id)
-    return [
-        {
-            "id": record.id,
-            "worker_id": record.worker_id,
-            "company_id": record.company_id,
-            "worker_name": worker.full_name,
-            "company_name": company.trade_name or company.legal_name,
-            "job_id": record.job_id,
-            "job_title": job.title if job else None,
-            "referral_id": record.referral_id,
-            "data_categories": record.data_categories,
-            "purpose": record.purpose,
-            "legal_basis": record.legal_basis,
-            "shared_at": record.shared_at,
-            "revoked_at": record.revoked_at,
-            "notes": record.notes,
-        }
-        for record, worker, company, job in db.execute(query).all()
-    ]
+    rows = []
+    for record, worker, company, job in db.execute(query).all():
+        mask_company = bool(worker_id and job and job.is_confidential)
+        rows.append(
+            {
+                "id": record.id,
+                "worker_id": record.worker_id,
+                "company_id": None if mask_company else record.company_id,
+                "worker_name": worker.full_name,
+                "company_name": (
+                    "Empresa confidencial"
+                    if mask_company
+                    else company.trade_name or company.legal_name
+                ),
+                "job_id": record.job_id,
+                "job_title": job.title if job else None,
+                "referral_id": record.referral_id,
+                "data_categories": record.data_categories,
+                "purpose": record.purpose,
+                "legal_basis": record.legal_basis,
+                "shared_at": record.shared_at,
+                "revoked_at": record.revoked_at,
+                "notes": record.notes,
+            }
+        )
+    return rows
 
 
 def export_subject_data(db: Session, tenant_id: UUID, lgpd_request: LGPDDataSubjectRequest) -> dict:

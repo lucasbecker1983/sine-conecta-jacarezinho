@@ -40,6 +40,7 @@ export type JobForm = {
   contract_type: string;
   notes: string;
   travel_required: boolean;
+  is_confidential: boolean;
 };
 
 export type PendingFeedback = {
