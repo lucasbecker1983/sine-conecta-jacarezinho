@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   Bot,
   BriefcaseBusiness,
@@ -33,6 +33,7 @@ type CandidateView = JobCandidate &
 
 export function SineJobTriagePage() {
   const { jobId } = useParams();
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedJobId, setSelectedJobId] = useState(jobId ?? "");
@@ -53,6 +54,7 @@ export function SineJobTriagePage() {
   );
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [matchingResumeBank, setMatchingResumeBank] = useState(false);
   const selectedJob = jobs.find((item) => item.id === selectedJobId);
   const selectedCompany = companies.find(
     (item) => item.id === selectedJob?.company_id,
@@ -169,6 +171,29 @@ export function SineJobTriagePage() {
       setError(
         err.response?.data?.detail ?? "Não foi possível executar a análise IA.",
       );
+    }
+  }
+
+  async function findResumeBankMatches() {
+    if (!selectedJobId) return;
+    setMatchingResumeBank(true);
+    setError("");
+    setMessage("");
+    try {
+      const { data } = await api.post(`/resume-bank/match-job/${selectedJobId}`, {
+        limit: 20,
+      });
+      setMessage(
+        `A IA encontrou ${data.total_suggestions} currículo(s) compatível(is) no Banco de Currículos para revisão do SINE.`,
+      );
+      navigate(`/banco-curriculos/vaga/${selectedJobId}/sugestoes`);
+    } catch (err: any) {
+      setError(
+        err.response?.data?.detail ??
+          "Não foi possível buscar currículos compatíveis no Banco de Currículos.",
+      );
+    } finally {
+      setMatchingResumeBank(false);
     }
   }
 
@@ -316,6 +341,13 @@ export function SineJobTriagePage() {
                   onClick={() => updateStatus("em_triagem")}
                 >
                   Iniciar triagem
+                </button>
+                <button
+                  className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900 disabled:opacity-60"
+                  onClick={findResumeBankMatches}
+                  disabled={matchingResumeBank}
+                >
+                  Buscar currículos compatíveis com IA
                 </button>
                 <button
                   className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900"

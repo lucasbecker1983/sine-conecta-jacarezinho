@@ -1437,3 +1437,56 @@ Melhorias aplicadas:
 Validação:
 
 - `cd /opt/saas_sine/frontend && npm run build`: OK.
+
+### Módulo — Banco de Currículos com busca ativa por IA
+
+Objetivo:
+
+- criar o módulo oficial `Banco de Currículos`, sem usar o nome Banco de Talentos;
+- permitir ao SINE manter currículos reais disponíveis para futuras oportunidades;
+- buscar currículos compatíveis por IA/fallback a partir de vagas reais;
+- manter a decisão humana do SINE como etapa obrigatória antes de qualquer encaminhamento à empresa.
+
+Backend:
+
+- criada a migration Alembic `20260521_0010_resume_bank.py`;
+- criadas as tabelas `resume_bank_entries` e `resume_bank_ai_suggestions`;
+- adicionados models SQLAlchemy, schemas Pydantic, serviço de matching e roteador `/resume-bank`;
+- adicionada permissão `resume_bank:manage` para Admin/Master/SINE;
+- criados endpoints administrativos para listar, criar, detalhar, editar, arquivar, mover de candidatura/encaminhamento, atualizar status/notas e consultar histórico;
+- criados endpoints de IA para buscar currículos compatíveis com vaga, listar sugestões, revisar e encaminhar oficialmente;
+- criado endpoint seguro do trabalhador `GET /worker-portal/resume-bank/me`;
+- reaproveitada a lógica existente de `analyze_candidate` e `refer_candidates`, com fallback por regras locais;
+- auditoria registrada para criação, atualização, arquivamento, status, movimentação, visualização, busca IA, sugestão, revisão e encaminhamento.
+
+Frontend:
+
+- criadas rotas `/banco-curriculos`, `/banco-curriculos/:id`, `/banco-curriculos/sugestoes`, `/banco-curriculos/vaga/:jobId/sugestoes` e `/meu-banco-curriculos`;
+- adicionado menu `Banco de Currículos` apenas para SINE/Admin/Master;
+- adicionada tela do trabalhador com status próprio, sem observações internas, score, ranking ou análise IA;
+- adicionada listagem com busca, filtros, métricas, cadastro manual, detalhe, status, arquivamento e observações internas;
+- adicionada tela de sugestões da IA com aprovação, recusa e encaminhamento oficial;
+- adicionada ação `Buscar currículos compatíveis com IA` na triagem da vaga;
+- atualizado Dashboard do SINE com atalho operacional para o Banco de Currículos;
+- status visíveis foram humanizados em `statusLabels.ts`.
+
+LGPD e regras de acesso:
+
+- empresa não lista Banco de Currículos e não acessa sugestões da IA;
+- trabalhador vê somente a própria situação no Banco de Currículos;
+- observações internas, histórico operacional, score e análise da IA ficam restritos ao SINE;
+- empresa só vê candidato após encaminhamento oficial explícito do SINE;
+- mensagens reforçam que os dados só são compartilhados com empresas mediante encaminhamento oficial.
+
+Validação:
+
+- `cd /opt/saas_sine/backend && .venv/bin/alembic upgrade head`: OK;
+- `cd /opt/saas_sine/backend && .venv/bin/python -m compileall app`: OK;
+- `cd /opt/saas_sine/backend && .venv/bin/pytest -q`: 47 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run test`: 9 arquivos, 32 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK.
+
+Limitações conhecidas:
+
+- a IA usa a camada local existente de matching por regras quando não houver provedor externo configurado;
+- o endpoint `move-from-application` aceita vínculo operacional por `worker_id`, `resume_id`, `job_id` e `source_application_id`, mas o projeto ainda não possui uma tabela formal separada de candidaturas além dos encaminhamentos existentes.

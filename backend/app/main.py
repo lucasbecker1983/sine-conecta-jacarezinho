@@ -21,6 +21,7 @@ from app.routers import (
     public,
     referrals,
     reports,
+    resume_bank,
     resumes,
     tenants,
     users,
@@ -89,6 +90,7 @@ app.include_router(notifications.router, prefix="/api")
 app.include_router(reports.router, prefix="/api")
 app.include_router(jobs.router, prefix="/api")
 app.include_router(referrals.router, prefix="/api")
+app.include_router(resume_bank.router, prefix="/api")
 app.include_router(feedbacks.router, prefix="/api")
 app.include_router(communications.router, prefix="/api")
 app.include_router(resumes.router, prefix="/api")

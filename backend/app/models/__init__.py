@@ -274,6 +274,50 @@ class Resume(UUIDMixin, TimestampMixin, Base):
     )
 
 
+class ResumeBankEntry(UUIDMixin, TimestampMixin, Base):
+    __tablename__ = "resume_bank_entries"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    worker_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workers.id"), index=True, nullable=False)
+    resume_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("resumes.id"), index=True)
+    source_job_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("jobs.id"), index=True)
+    source_application_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), index=True)
+    source_referral_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("referrals.id"), index=True)
+    status: Mapped[str] = mapped_column(String(60), default="ativo", index=True, nullable=False)
+    entry_reason: Mapped[str] = mapped_column(String(100), default="atualizacao_manual_sine", nullable=False)
+    tags: Mapped[list | None] = mapped_column(JSON)
+    desired_roles: Mapped[list | None] = mapped_column(JSON)
+    desired_sectors: Mapped[list | None] = mapped_column(JSON)
+    availability: Mapped[str | None] = mapped_column(String(160))
+    city: Mapped[str | None] = mapped_column(String(100), index=True)
+    education_level: Mapped[str | None] = mapped_column(String(120))
+    experience_summary: Mapped[str | None] = mapped_column(Text)
+    internal_notes: Mapped[str | None] = mapped_column(Text)
+    ai_summary: Mapped[str | None] = mapped_column(Text)
+    ai_keywords: Mapped[list | None] = mapped_column(JSON)
+    created_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    updated_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class ResumeBankAISuggestion(UUIDMixin, Base):
+    __tablename__ = "resume_bank_ai_suggestions"
+    tenant_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("tenants.id"), index=True, nullable=False)
+    job_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("jobs.id"), index=True, nullable=False)
+    resume_bank_entry_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("resume_bank_entries.id"), index=True, nullable=False)
+    worker_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("workers.id"), index=True, nullable=False)
+    resume_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("resumes.id"), index=True)
+    compatibility_score: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    compatibility_level: Mapped[str] = mapped_column(String(40), default="baixa", nullable=False)
+    matched_requirements: Mapped[list | None] = mapped_column(JSON)
+    missing_requirements: Mapped[list | None] = mapped_column(JSON)
+    ai_explanation: Mapped[str | None] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(60), default="pendente_revisao", index=True, nullable=False)
+    reviewed_by_user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id"), index=True)
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    forwarded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
 class Job(UUIDMixin, TimestampMixin, Base):
     __tablename__ = "jobs"
     tenant_id: Mapped[uuid.UUID] = mapped_column(

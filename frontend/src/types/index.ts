@@ -47,6 +47,23 @@ export type Company = {
   created_at: string;
 };
 
+export type Worker = {
+  id: string;
+  tenant_id: string;
+  cpf: string;
+  full_name: string;
+  email?: string | null;
+  phone?: string | null;
+  whatsapp?: string | null;
+  city?: string | null;
+  state?: string | null;
+  education_level?: string | null;
+  desired_role?: string | null;
+  availability?: string | null;
+  lgpd_accepted: boolean;
+  created_at: string;
+};
+
 export type Job = {
   id: string;
   tenant_id: string;
@@ -171,6 +188,64 @@ export type Resume = {
   status: string;
   analysis?: Record<string, unknown> | null;
   created_at: string;
+};
+
+export type ResumeBankEntry = {
+  id: string;
+  worker_id: string;
+  worker_name: string;
+  worker_cpf_masked?: string | null;
+  resume_id?: string | null;
+  resume_filename?: string | null;
+  status: string;
+  entry_reason: string;
+  tags: string[];
+  desired_roles: string[];
+  desired_sectors: string[];
+  availability?: string | null;
+  city?: string | null;
+  education_level?: string | null;
+  experience_summary?: string | null;
+  ai_summary?: string | null;
+  ai_keywords: string[];
+  internal_notes?: string | null;
+  worker?: Worker;
+  resume?: Resume | null;
+  created_at: string;
+  updated_at: string;
+  archived_at?: string | null;
+};
+
+export type ResumeBankSuggestion = {
+  id: string;
+  job_id: string;
+  job_title: string;
+  resume_bank_entry_id: string;
+  worker_id: string;
+  worker_name: string;
+  resume_id?: string | null;
+  resume_filename?: string | null;
+  desired_role?: string | null;
+  city?: string | null;
+  education_level?: string | null;
+  professional_summary?: string | null;
+  compatibility_score: number;
+  compatibility_level: string;
+  matched_requirements: string[];
+  missing_requirements: string[];
+  ai_explanation?: string | null;
+  status: string;
+  reviewed_at?: string | null;
+  created_at: string;
+  forwarded_at?: string | null;
+};
+
+export type WorkerResumeBankStatus = {
+  status?: string | null;
+  entered_at?: string | null;
+  updated_at?: string | null;
+  desired_roles: string[];
+  message: string;
 };
 
 export type JobCandidate = {

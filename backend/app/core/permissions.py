@@ -24,16 +24,16 @@ class RoleName(StrEnum):
 
 ROLE_PERMISSIONS: dict[str, set[str]] = {
     "super_admin": {"*"},
-    "tenant_admin": {"tenant:admin", "reports:view", "users:manage", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
-    "sine_manager": {"reports:view", "jobs:approve", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
-    "sine_staff": {"reports:view", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"},
+    "tenant_admin": {"tenant:admin", "reports:view", "users:manage", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage", "resume_bank:manage"},
+    "sine_manager": {"reports:view", "jobs:approve", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage", "resume_bank:manage"},
+    "sine_staff": {"reports:view", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage", "resume_bank:manage"},
     "company_user": {"company:portal"},
     "worker": {"worker:portal", "resume:own"},
 }
 
 SINE_ROLES = {"tenant_admin", "sine_manager", "sine_staff"}
 PORTAL_ROLES = {"company_user", "worker"}
-SINE_PERMISSIONS = {"tenant:admin", "reports:view", "users:manage", "jobs:approve", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage"}
+SINE_PERMISSIONS = {"tenant:admin", "reports:view", "users:manage", "jobs:approve", "jobs:manage", "workers:manage", "companies:manage", "resumes:view", "referrals:manage", "resume_bank:manage"}
 
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:

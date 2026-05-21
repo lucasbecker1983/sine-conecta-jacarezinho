@@ -7,6 +7,7 @@ import {
   ChevronDown,
   FileCheck2,
   FileText,
+  FolderSearch,
   KeyRound,
   LockKeyhole,
   LogOut,
@@ -85,6 +86,12 @@ const items = [
     roles: ["worker"],
   },
   {
+    to: "/meu-banco-curriculos",
+    label: "Meu Banco de Currículos",
+    icon: FolderSearch,
+    roles: ["worker"],
+  },
+  {
     to: "/trabalhador/privacidade",
     label: "Privacidade e meus dados",
     icon: ShieldCheck,
@@ -106,6 +113,12 @@ const items = [
     to: "/curriculos",
     label: "Currículos",
     icon: FileText,
+    roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
+  },
+  {
+    to: "/banco-curriculos",
+    label: "Banco de Currículos",
+    icon: FolderSearch,
     roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
   },
   {
@@ -185,12 +198,12 @@ const navGroups = [
   {
     title: "Candidato",
     roles: ["worker"],
-    items: ["/vagas-abertas", "/meu-curriculo", "/trabalhador/privacidade"],
+    items: ["/vagas-abertas", "/meu-curriculo", "/meu-banco-curriculos", "/trabalhador/privacidade"],
   },
   {
     title: "Operação SINE",
     roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
-    items: ["/empresas", "/trabalhadores", "/curriculos", "/sine/vagas", "/sine/triagem", "/encaminhamentos", "/comunicacao"],
+    items: ["/empresas", "/trabalhadores", "/curriculos", "/banco-curriculos", "/sine/vagas", "/sine/triagem", "/encaminhamentos", "/comunicacao"],
   },
   {
     title: "Gestão e conformidade",

@@ -391,6 +391,12 @@ export function Dashboard() {
             ],
             [
               "Média",
+              "Banco de Currículos",
+              "Revisar currículos disponíveis para futuras oportunidades e sugestões pendentes da IA.",
+              "/banco-curriculos",
+            ],
+            [
+              "Média",
               "Mensagens novas",
               "Verificar conversas abertas com empresas e registrar encaminhamentos.",
               "/comunicacao",

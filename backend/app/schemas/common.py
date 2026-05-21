@@ -545,6 +545,133 @@ class DataAccessLogOut(BaseModel):
     created_at: datetime
 
 
+class ResumeBankEntryCreate(BaseModel):
+    worker_id: UUID
+    resume_id: UUID | None = None
+    source_job_id: UUID | None = None
+    source_application_id: UUID | None = None
+    source_referral_id: UUID | None = None
+    status: str = "ativo"
+    entry_reason: str = "atualizacao_manual_sine"
+    tags: list[str] = Field(default_factory=list)
+    desired_roles: list[str] = Field(default_factory=list)
+    desired_sectors: list[str] = Field(default_factory=list)
+    availability: str | None = None
+    city: str | None = None
+    education_level: str | None = None
+    experience_summary: str | None = None
+    internal_notes: str | None = None
+
+
+class ResumeBankEntryUpdate(BaseModel):
+    status: str | None = None
+    entry_reason: str | None = None
+    tags: list[str] | None = None
+    desired_roles: list[str] | None = None
+    desired_sectors: list[str] | None = None
+    availability: str | None = None
+    city: str | None = None
+    education_level: str | None = None
+    experience_summary: str | None = None
+    internal_notes: str | None = None
+
+
+class ResumeBankMoveRequest(BaseModel):
+    worker_id: UUID | None = None
+    resume_id: UUID | None = None
+    job_id: UUID | None = None
+    source_application_id: UUID | None = None
+    referral_id: UUID | None = None
+    entry_reason: str = "nao_contratado_em_processo"
+    tags: list[str] = Field(default_factory=list)
+    internal_notes: str | None = None
+
+
+class ResumeBankStatusUpdate(BaseModel):
+    status: str
+    note: str | None = None
+
+
+class ResumeBankEntryListItem(BaseModel):
+    id: UUID
+    worker_id: UUID
+    worker_name: str
+    worker_cpf_masked: str | None = None
+    resume_id: UUID | None = None
+    resume_filename: str | None = None
+    status: str
+    entry_reason: str
+    tags: list[str] = Field(default_factory=list)
+    desired_roles: list[str] = Field(default_factory=list)
+    desired_sectors: list[str] = Field(default_factory=list)
+    availability: str | None = None
+    city: str | None = None
+    education_level: str | None = None
+    experience_summary: str | None = None
+    ai_summary: str | None = None
+    ai_keywords: list[str] = Field(default_factory=list)
+    created_at: datetime
+    updated_at: datetime
+    archived_at: datetime | None = None
+
+
+class ResumeBankEntryRead(ResumeBankEntryListItem):
+    worker: WorkerOut
+    resume: ResumeOut | None = None
+    internal_notes: str | None = None
+    source_job_id: UUID | None = None
+    source_application_id: UUID | None = None
+    source_referral_id: UUID | None = None
+
+
+class ResumeBankAISuggestionRead(BaseModel):
+    id: UUID
+    job_id: UUID
+    job_title: str
+    resume_bank_entry_id: UUID
+    worker_id: UUID
+    worker_name: str
+    resume_id: UUID | None = None
+    resume_filename: str | None = None
+    desired_role: str | None = None
+    city: str | None = None
+    education_level: str | None = None
+    professional_summary: str | None = None
+    compatibility_score: int
+    compatibility_level: str
+    matched_requirements: list[str] = Field(default_factory=list)
+    missing_requirements: list[str] = Field(default_factory=list)
+    ai_explanation: str | None = None
+    status: str
+    reviewed_at: datetime | None = None
+    created_at: datetime
+    forwarded_at: datetime | None = None
+
+
+class ResumeBankAISuggestionReview(BaseModel):
+    status: Literal["aprovado_pelo_sine", "recusado_pelo_sine"]
+    note: str | None = None
+
+
+class ResumeBankMatchRequest(BaseModel):
+    limit: int = Field(default=20, ge=1, le=100)
+
+
+class ResumeBankMatchResult(BaseModel):
+    job_id: UUID
+    job_title: str
+    total_suggestions: int
+    suggestions: list[ResumeBankAISuggestionRead]
+
+
+class WorkerResumeBankStatusOut(BaseModel):
+    status: str | None = None
+    entered_at: datetime | None = None
+    updated_at: datetime | None = None
+    desired_roles: list[str] = Field(default_factory=list)
+    message: str
+
+
 class NotificationOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID

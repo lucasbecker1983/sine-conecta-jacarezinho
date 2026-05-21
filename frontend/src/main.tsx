@@ -25,6 +25,12 @@ import { LgpdAdminPage } from "./pages/LgpdAdminPage";
 import { LgpdRequestPage } from "./pages/LgpdRequestPage";
 import { LgpdRightsPage } from "./pages/LgpdRightsPage";
 import { ReportsPage } from "./pages/ReportsPage";
+import {
+  ResumeBankDetailPage,
+  ResumeBankPage,
+  ResumeBankSuggestionsPage,
+  WorkerResumeBankPage,
+} from "./pages/ResumeBankPage";
 import { SineJobTriagePage } from "./pages/SineJobTriagePage";
 import { SystemStatusPage } from "./pages/SystemStatusPage";
 import { WorkerJobsPage } from "./pages/WorkerJobsPage";
@@ -98,6 +104,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               element={only(workerRoles, <WorkerResumePage />)}
             />
             <Route
+              path="meu-banco-curriculos"
+              element={only(workerRoles, <WorkerResumeBankPage />)}
+            />
+            <Route
               path="vagas-abertas"
               element={only(workerRoles, <WorkerJobsPage />)}
             />
@@ -115,6 +125,22 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                   actionLabel="Enviar PDF"
                 />,
               )}
+            />
+            <Route
+              path="banco-curriculos"
+              element={only(sineRoles, <ResumeBankPage />)}
+            />
+            <Route
+              path="banco-curriculos/sugestoes"
+              element={only(sineRoles, <ResumeBankSuggestionsPage />)}
+            />
+            <Route
+              path="banco-curriculos/vaga/:jobId/sugestoes"
+              element={only(sineRoles, <ResumeBankSuggestionsPage />)}
+            />
+            <Route
+              path="banco-curriculos/:id"
+              element={only(sineRoles, <ResumeBankDetailPage />)}
             />
             <Route
               path="sine/vagas"
