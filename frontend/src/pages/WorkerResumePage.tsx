@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../services/api";
+import {
+  AppAlert,
+  AppButton,
+  AppCard,
+  AppInput,
+  AppPageHeader,
+  AppSelect,
+  AppTextarea,
+} from "../components/ui";
 
 type WorkerProfile = {
   cpf: string;
@@ -256,57 +265,48 @@ export function WorkerResumePage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-950">
-          Concorrer a uma vaga
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Primeiro selecione a vaga aberta. Depois escolha preencher o currículo
-          no portal ou enviar o PDF.
-        </p>
+      <AppPageHeader
+        eyebrow="Portal do Trabalhador"
+        title="Concorrer a uma vaga"
+        description="Primeiro selecione a vaga aberta. Depois escolha preencher o currículo no portal ou enviar o PDF."
+        action={
         <Link
           to="/vagas"
-          className="mt-3 inline-flex rounded-md border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-900 hover:border-emerald-500"
+          className="inline-flex min-h-10 items-center justify-center rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm font-semibold text-emerald-900 transition hover:border-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
         >
           Ver vagas abertas no portal público
         </Link>
-      </div>
+        }
+      />
 
-      <section className="rounded-md border border-emerald-200 bg-emerald-50 p-5">
+      <AppAlert tone="info" title="Vaga obrigatória">
         <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-          <label className="block">
-            <span className="mb-1 block text-sm font-bold text-emerald-900">
-              1. Vaga obrigatória
-            </span>
-            <select
-              className="h-11 w-full rounded-md border border-emerald-300 bg-white px-3 outline-none focus:border-emerald-700"
-              value={selectedJobId}
-              onChange={(event) => setSelectedJobId(event.target.value)}
-              required
-            >
-              {jobs.length === 0 && (
-                <option value="">Nenhuma vaga aberta no momento</option>
-              )}
-              {jobs.map((job) => (
-                <option key={job.id} value={job.id}>
-                  {job.title}
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="text-sm leading-6 text-emerald-950">
+          <AppSelect
+            label="1. Vaga obrigatória"
+            value={selectedJobId}
+            onChange={(event) => setSelectedJobId(event.target.value)}
+            required
+          >
+            {jobs.length === 0 && (
+              <option value="">Nenhuma vaga aberta no momento</option>
+            )}
+            {jobs.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.title}
+              </option>
+            ))}
+          </AppSelect>
+          <div className="text-sm leading-6">
             <strong>Fluxo correto:</strong> o currículo só pode ser salvo ou
             enviado em PDF depois que a vaga for selecionada. Assim o SINE
             recebe a candidatura já vinculada à oportunidade desejada.
           </div>
         </div>
-      </section>
+      </AppAlert>
 
       <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-        <form
-          onSubmit={submit}
-          className="rounded-md border border-slate-200 bg-white p-5"
-        >
+        <AppCard>
+        <form onSubmit={submit}>
           <div className="mb-4">
             <h2 className="text-lg font-bold text-slate-950">
               2A. Preencher currículo no portal
@@ -318,74 +318,56 @@ export function WorkerResumePage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2">
             {fields.map(([key, label, type]) => (
-              <label key={key} className="block">
-                <span className="mb-1 block text-sm font-medium text-slate-700">
-                  {label}
-                </span>
-                <input
-                  className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-emerald-700"
-                  type={type}
-                  value={String(profile[key] ?? "")}
-                  onChange={(event) => update(key, event.target.value)}
-                  required={key === "cpf" || key === "full_name"}
-                />
-              </label>
+              <AppInput
+                key={key}
+                label={label}
+                type={type}
+                value={String(profile[key] ?? "")}
+                onChange={(event) => update(key, event.target.value)}
+                required={key === "cpf" || key === "full_name"}
+              />
             ))}
           </div>
 
           <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-slate-700">
-                Possui deficiência?
-              </span>
-              <select
-                className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-emerald-700"
-                value={
-                  profile.has_disability === null
-                    ? ""
-                    : profile.has_disability
-                      ? "sim"
-                      : "nao"
-                }
-                onChange={(event) =>
-                  update(
-                    "has_disability",
-                    event.target.value === ""
-                      ? null
-                      : event.target.value === "sim",
-                  )
-                }
-              >
-                <option value="">Não informado</option>
-                <option value="nao">Não</option>
-                <option value="sim">Sim</option>
-              </select>
-            </label>
-            <label className="block">
-              <span className="mb-1 block text-sm font-medium text-slate-700">
-                Observações sobre acessibilidade
-              </span>
-              <input
-                className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-emerald-700"
-                value={profile.disability_notes}
-                onChange={(event) =>
-                  update("disability_notes", event.target.value)
-                }
-              />
-            </label>
+            <AppSelect
+              label="Possui deficiência?"
+              value={
+                profile.has_disability === null
+                  ? ""
+                  : profile.has_disability
+                    ? "sim"
+                    : "nao"
+              }
+              onChange={(event) =>
+                update(
+                  "has_disability",
+                  event.target.value === ""
+                    ? null
+                    : event.target.value === "sim",
+                )
+              }
+            >
+              <option value="">Não informado</option>
+              <option value="nao">Não</option>
+              <option value="sim">Sim</option>
+            </AppSelect>
+            <AppInput
+              label="Observações sobre acessibilidade"
+              value={profile.disability_notes}
+              onChange={(event) =>
+                update("disability_notes", event.target.value)
+              }
+            />
           </div>
 
-          <label className="mt-4 block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">
-              Experiências, cursos, habilidades e observações
-            </span>
-            <textarea
-              className="min-h-32 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-emerald-700"
-              value={profile.notes}
-              onChange={(event) => update("notes", event.target.value)}
-              placeholder="Exemplo: atendimento ao público, informática, operador de caixa, cursos concluídos, experiências anteriores..."
-            />
-          </label>
+          <AppTextarea
+            label="Experiências, cursos, habilidades e observações"
+            className="mt-4 min-h-32"
+            value={profile.notes}
+            onChange={(event) => update("notes", event.target.value)}
+            placeholder="Exemplo: atendimento ao público, informática, operador de caixa, cursos concluídos, experiências anteriores..."
+          />
 
           <label className="mt-4 flex items-start gap-3 rounded-md bg-emerald-50 p-3 text-sm text-slate-700">
             <input
@@ -404,26 +386,23 @@ export function WorkerResumePage() {
           </label>
 
           {message && (
-            <div className="mt-4 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">
-              {message}
-            </div>
+            <AppAlert tone="info" className="mt-4">{message}</AppAlert>
           )}
 
           <div className="mt-5 flex justify-end">
-            <button
-              className="tenant-button rounded-md px-5 py-2 text-sm font-semibold disabled:opacity-70"
+            <AppButton
+              type="submit"
               disabled={saving || !selectedJobId}
             >
               {saving ? "Salvando..." : "Salvar e concorrer"}
-            </button>
+            </AppButton>
           </div>
         </form>
+        </AppCard>
 
         <aside className="space-y-5">
-          <form
-            onSubmit={uploadPdf}
-            className="rounded-md border border-slate-200 bg-white p-5"
-          >
+          <AppCard>
+          <form onSubmit={uploadPdf}>
             <h2 className="text-lg font-bold text-slate-950">
               2B. Enviar currículo em PDF
             </h2>
@@ -451,23 +430,23 @@ export function WorkerResumePage() {
               </div>
             )}
             {uploadMessage && (
-              <div className="mt-4 rounded-md bg-slate-100 px-3 py-2 text-sm text-slate-700">
-                {uploadMessage}
-              </div>
+              <AppAlert tone="info" className="mt-4">{uploadMessage}</AppAlert>
             )}
-            <button
-              className="tenant-button mt-5 w-full rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-70"
+            <AppButton
+              type="submit"
+              className="mt-5 w-full"
               disabled={uploading || !selectedJobId}
             >
               {uploading ? "Enviando..." : "Enviar PDF e concorrer"}
-            </button>
+            </AppButton>
             <p className="mt-4 text-xs leading-5 text-slate-500">
               A análise automática é apenas uma sugestão. A decisão final é do
               colaborador responsável.
             </p>
           </form>
+          </AppCard>
 
-          <section className="rounded-md border border-slate-200 bg-white p-5">
+          <AppCard>
             <h2 className="text-lg font-bold text-slate-950">
               3. Confirmar candidatura
             </h2>
@@ -475,38 +454,34 @@ export function WorkerResumePage() {
               Depois de atualizar seus dados ou enviar PDF, confirme a
               candidatura para que ela entre na triagem por vaga do SINE.
             </p>
-            <label className="mt-4 block">
-              <span className="mb-1 block text-sm font-medium text-slate-700">
-                Currículo para vincular
-              </span>
-              <select
-                className="h-11 w-full rounded-md border border-slate-300 px-3 text-sm"
-                value={selectedResumeId}
-                onChange={(event) => setSelectedResumeId(event.target.value)}
-              >
-                <option value="">Usar dados preenchidos no portal</option>
-                {resumes.map((resume) => (
-                  <option key={resume.id} value={resume.id}>
-                    {resume.original_filename}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button
+            <AppSelect
+              label="Currículo para vincular"
+              className="mt-4"
+              value={selectedResumeId}
+              onChange={(event) => setSelectedResumeId(event.target.value)}
+            >
+              <option value="">Usar dados preenchidos no portal</option>
+              {resumes.map((resume) => (
+                <option key={resume.id} value={resume.id}>
+                  {resume.original_filename}
+                </option>
+              ))}
+            </AppSelect>
+            <AppButton
               type="button"
               onClick={confirmApplication}
               disabled={applying || !selectedJobId}
-              className="tenant-button mt-4 w-full rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-70"
+              className="mt-4 w-full"
             >
               {applying ? "Confirmando..." : "Confirmar candidatura"}
-            </button>
+            </AppButton>
             <p className="mt-3 text-xs leading-5 text-slate-500">
               Sua candidatura será enviada ao SINE. A empresa só recebe seus
               dados se houver encaminhamento oficial.
             </p>
-          </section>
+          </AppCard>
 
-          <section className="rounded-md border border-slate-200 bg-white p-5">
+          <AppCard>
             <h2 className="text-lg font-bold text-slate-950">
               Minhas candidaturas
             </h2>
@@ -530,9 +505,9 @@ export function WorkerResumePage() {
                 </div>
               ))}
             </div>
-          </section>
+          </AppCard>
 
-          <section className="rounded-md border border-slate-200 bg-white p-5">
+          <AppCard>
             <h2 className="text-lg font-bold text-slate-950">PDFs enviados</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {resumes.length === 0 && (
@@ -546,7 +521,7 @@ export function WorkerResumePage() {
                     {resume.original_filename}
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
-                    {resume.status} ·{" "}
+                    {friendlyStatus(resume.status)} ·{" "}
                     {(resume.size_bytes / 1024 / 1024).toFixed(2)} MB ·{" "}
                     {new Date(resume.created_at).toLocaleDateString("pt-BR")}
                   </div>
@@ -571,7 +546,7 @@ export function WorkerResumePage() {
                 </div>
               ))}
             </div>
-          </section>
+          </AppCard>
         </aside>
       </div>
     </div>

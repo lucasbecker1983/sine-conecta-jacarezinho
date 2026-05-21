@@ -257,7 +257,7 @@ export function AppLayout() {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? "bg-emerald-50 text-emerald-900" : "text-slate-600 hover:bg-slate-100"}`
+                  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${isActive ? "bg-emerald-50 text-emerald-900" : "text-slate-600 hover:bg-slate-100"}`
                 }
               >
                 <Icon size={18} />
@@ -281,7 +281,7 @@ export function AppLayout() {
             </div>
             <button
               aria-label="Sair"
-              className="rounded-md p-2 text-slate-500 transition hover:bg-white hover:text-red-700"
+              className="rounded-md p-2 text-slate-500 transition hover:bg-white hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-600 focus-visible:ring-offset-2"
               onClick={handleLogout}
               title="Sair"
             >
@@ -308,7 +308,7 @@ export function AppLayout() {
               </div>
               <button
                 type="button"
-                className="rounded-md p-2 text-slate-500 hover:bg-slate-100"
+                className="rounded-md p-2 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                 onClick={() => setOpenMobileMenu(false)}
                 aria-label="Fechar menu"
               >
@@ -324,7 +324,7 @@ export function AppLayout() {
                     to={item.to}
                     onClick={() => setOpenMobileMenu(false)}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${isActive ? "bg-emerald-50 text-emerald-900" : "text-slate-600 hover:bg-slate-100"}`
+                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${isActive ? "bg-emerald-50 text-emerald-900" : "text-slate-600 hover:bg-slate-100"}`
                     }
                   >
                     <Icon size={18} />
@@ -341,9 +341,10 @@ export function AppLayout() {
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
-              className="rounded-md p-2 text-slate-600 hover:bg-slate-100 lg:hidden"
+              className="rounded-md p-2 text-slate-600 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 lg:hidden"
               onClick={() => setOpenMobileMenu(true)}
               aria-label="Abrir menu"
+              aria-expanded={openMobileMenu}
             >
               <Menu size={20} />
             </button>
@@ -352,8 +353,8 @@ export function AppLayout() {
               {tenant?.city ?? "Jacarezinho"} / {tenant?.state ?? "PR"}
             </div>
             <div className="hidden text-xs text-slate-500 sm:block">
-              A análise automática é apenas uma sugestão. A decisão final é do
-              colaborador responsável.
+              A tecnologia apoia a triagem; a decisão final continua com a
+              equipe do SINE.
             </div>
             </div>
           </div>
@@ -361,8 +362,9 @@ export function AppLayout() {
             <div className="relative">
               <button
                 aria-label="Notificações"
-                className="relative rounded-md p-2 text-slate-500 hover:bg-slate-100"
+                className="relative rounded-md p-2 text-slate-500 transition hover:bg-slate-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                 onClick={() => setOpenNotifications((value) => !value)}
+                aria-expanded={openNotifications}
               >
                 <Bell size={18} />
                 {unread > 0 && (
@@ -378,7 +380,7 @@ export function AppLayout() {
                       Notificações
                     </div>
                     <button
-                      className="text-xs font-semibold text-emerald-800"
+                      className="rounded px-2 py-1 text-xs font-semibold text-emerald-800 transition hover:bg-emerald-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
                       onClick={markNotificationsRead}
                     >
                       Marcar lidas
@@ -415,7 +417,9 @@ export function AppLayout() {
             <div className="relative">
               <button
                 onClick={() => setOpenProfile((value) => !value)}
-                className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 hover:border-emerald-300"
+                className="flex items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-700 transition hover:border-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+                aria-label="Abrir menu da conta"
+                aria-expanded={openProfile}
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-md bg-emerald-700 text-xs font-bold text-white">
                   {userInitials}

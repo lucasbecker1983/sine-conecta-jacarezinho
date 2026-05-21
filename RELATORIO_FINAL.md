@@ -1230,3 +1230,36 @@ Validações:
 
 - `cd /opt/saas_sine/frontend && npm run test`: 7 arquivos, 19 testes, todos passaram;
 - `cd /opt/saas_sine/frontend && npm run build`: OK.
+
+### Ajuste pós-Sprint 9 — Padronização UI/UX nos fluxos principais
+
+Objetivo:
+
+- revisar a UI do frontend sem alterar regras de negócio, endpoints, autenticação, permissões ou fluxos atuais;
+- aplicar progressivamente os componentes de `frontend/src/components/ui` nas telas principais do SINE, empresa e trabalhador.
+
+Arquivos refatorados nesta rodada:
+
+- `frontend/src/layouts/AppLayout.tsx`;
+- `frontend/src/pages/Dashboard.tsx`;
+- `frontend/src/pages/CompanyDashboard.tsx`;
+- `frontend/src/pages/WorkerResumePage.tsx`;
+- `frontend/src/pages/WorkerJobsPage.tsx`;
+- `frontend/src/pages/EntityPage.tsx`;
+- `frontend/src/components/ui/AppBadge.tsx`.
+
+Melhorias aplicadas:
+
+- headers migrados para `AppPageHeader` em dashboards e páginas de trabalhador/empresa;
+- cards e métricas migrados para `AppCard` e `AppMetricCard`;
+- alertas e estados técnicos migrados para `AppAlert`, `AppLoadingState` e `AppErrorState`;
+- tabelas genéricas migradas para `AppTable`;
+- formulários principais de empresa/trabalhador migrados para `AppInput`, `AppSelect`, `AppTextarea` e `AppButton`;
+- stepper do trabalhador migrado para `AppStepper`;
+- status técnicos expostos ao usuário passaram a usar `friendlyStatus` quando aplicável;
+- foco visível, `aria-expanded` e áreas clicáveis melhoradas no `AppLayout`;
+- `AppBadge` passou a suportar ícone + texto com espaçamento consistente.
+
+Validação:
+
+- `cd /opt/saas_sine/frontend && npm run build`: OK.

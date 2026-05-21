@@ -19,7 +19,14 @@ import { CandidateMatchCanvas } from "../canvas/CandidateMatchCanvas";
 import { ResumeInsightCanvas } from "../canvas/ResumeInsightCanvas";
 import { useAuthStore } from "../stores/auth";
 import { CompanyDashboard } from "./CompanyDashboard";
-import { AppStatusTimeline } from "../components/ui";
+import {
+  AppBadge,
+  AppCard,
+  AppMetricCard,
+  AppPageHeader,
+  AppSelect,
+  AppStatusTimeline,
+} from "../components/ui";
 import { OnboardingChecklist } from "../components/onboarding/OnboardingChecklist";
 import { friendlyStatus } from "../utils/statusLabels";
 
@@ -118,82 +125,59 @@ export function Dashboard() {
   if (isWorker) {
     return (
       <div className="space-y-5">
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <div className="max-w-4xl">
-              <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-                Portal do Trabalhador
-              </span>
-              <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">
-                Olá, {user?.full_name?.split(" ")[0] || "trabalhador"}. Vamos acompanhar suas oportunidades?
-              </h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                Atualize seus dados, escolha uma vaga e acompanhe os
-                encaminhamentos feitos pelo SINE.
-              </p>
-          </div>
-        </section>
+        <AppPageHeader
+          eyebrow="Portal do Trabalhador"
+          title={`Olá, ${user?.full_name?.split(" ")[0] || "trabalhador"}. Vamos acompanhar suas oportunidades?`}
+          description="Atualize seus dados, escolha uma vaga e acompanhe os encaminhamentos feitos pelo SINE."
+        />
         <OnboardingChecklist role="worker" />
         <div className="grid gap-3 md:grid-cols-5">
-          <Link
-            to="/vagas-abertas"
-            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-          >
-            <div className="text-sm font-semibold text-emerald-700">
-              Minhas candidaturas
-            </div>
-            <div className="mt-3 text-sm text-slate-600">
-              {workerApplications.length} candidatura(s) em acompanhamento.
-            </div>
-          </Link>
-          <Link
-            to="/meu-curriculo"
-            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-          >
-            <div className="text-sm font-semibold text-emerald-700">
-              Currículo
-            </div>
-            <div className="mt-3 text-sm text-slate-600">
-              {workerResumes.length > 0
-                ? `${workerResumes.length} currículo(s) enviado(s).`
-                : "Envie um currículo em PDF legível."}
-            </div>
-          </Link>
-          <Link
-            to="/vagas"
-            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-          >
-            <div className="text-sm font-semibold text-emerald-700">
-              Ver vagas abertas
-            </div>
-            <div className="mt-3 text-sm text-slate-600">
-              {workerJobs.length} oportunidade(s) publicadas para candidatura.
-            </div>
-          </Link>
-          <Link
-            to="/trabalhador/privacidade"
-            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-          >
-            <div className="text-sm font-semibold text-emerald-700">
-              Privacidade e meus dados
-            </div>
-            <div className="mt-3 text-sm text-slate-600">
-              Veja consentimentos e empresas que receberam seus dados.
-            </div>
-          </Link>
-          <Link
-            to="/vagas-abertas"
-            className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-          >
-            <div className="text-sm font-semibold text-emerald-700">
-              Encaminhamentos
-            </div>
-            <div className="mt-3 text-sm text-slate-600">
-              Acompanhe quando o SINE enviar seu perfil a uma empresa.
-            </div>
-          </Link>
+          {[
+            {
+              to: "/vagas-abertas",
+              title: "Minhas candidaturas",
+              body: `${workerApplications.length} candidatura(s) em acompanhamento.`,
+            },
+            {
+              to: "/meu-curriculo",
+              title: "Currículo",
+              body:
+                workerResumes.length > 0
+                  ? `${workerResumes.length} currículo(s) enviado(s).`
+                  : "Envie um currículo em PDF legível.",
+            },
+            {
+              to: "/vagas",
+              title: "Ver vagas abertas",
+              body: `${workerJobs.length} oportunidade(s) publicadas para candidatura.`,
+            },
+            {
+              to: "/trabalhador/privacidade",
+              title: "Privacidade e meus dados",
+              body: "Veja consentimentos e empresas que receberam seus dados.",
+            },
+            {
+              to: "/vagas-abertas",
+              title: "Encaminhamentos",
+              body: "Acompanhe quando o SINE enviar seu perfil a uma empresa.",
+            },
+          ].map((item) => (
+            <Link
+              key={`${item.to}-${item.title}`}
+              to={item.to}
+              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            >
+              <AppCard interactive className="h-full">
+                <div className="text-sm font-semibold text-emerald-700">
+                  {item.title}
+                </div>
+                <div className="mt-3 text-sm text-slate-600">{item.body}</div>
+              </AppCard>
+            </Link>
+          ))}
         </div>
         <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
-          <div className="rounded-md border border-slate-200 bg-white p-5">
+          <AppCard>
             <h2 className="font-bold text-slate-950">Minhas candidaturas</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {workerApplications.length === 0 && (
@@ -216,8 +200,8 @@ export function Dashboard() {
                 </div>
               ))}
             </div>
-          </div>
-          <aside className="rounded-md border border-emerald-100 bg-white p-5">
+          </AppCard>
+          <AppCard>
             <h2 className="font-bold text-slate-950">Orientações do SINE</h2>
             <AppStatusTimeline
               className="mt-4"
@@ -245,7 +229,7 @@ export function Dashboard() {
                 oficial.
               </p>
             </div>
-          </aside>
+          </AppCard>
         </section>
       </div>
     );
@@ -253,20 +237,11 @@ export function Dashboard() {
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-        <div className="max-w-4xl">
-            <span className="inline-flex rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-              Operação SINE
-            </span>
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950">
-              Painel operacional do SINE
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Organize vagas, candidaturas, triagens, encaminhamentos e
-              retornos das empresas em um só lugar.
-            </p>
-        </div>
-      </section>
+      <AppPageHeader
+        eyebrow="Operação SINE"
+        title="Painel operacional do SINE"
+        description="Organize vagas, candidaturas, triagens, encaminhamentos e retornos das empresas em um só lugar."
+      />
       <OnboardingChecklist role={roles.includes("sine_manager") ? "sine_manager" : "sine_staff"} />
       <div className="grid gap-3 md:grid-cols-4">
         {operationalCards.map(([key, label, Icon]) => {
@@ -278,40 +253,31 @@ export function Dashboard() {
             ? "/sine/triagem"
             : undefined;
           const content = (
-            <>
-              <div className="flex items-start justify-between gap-3">
-                <div className="text-sm text-slate-500">{String(label)}</div>
-                <Icon className="text-emerald-700" size={18} />
-              </div>
-              <div className="mt-2 text-3xl font-bold text-slate-950">
-                {summary[String(key)] ?? 0}
-              </div>
-            </>
+            <AppMetricCard
+              label={String(label)}
+              value={summary[String(key)] ?? 0}
+              icon={Icon}
+            />
           );
           return route ? (
             <Link
               key={String(key)}
               to={route}
-              className="rounded-md border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-400"
+              className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
             >
               {content}
             </Link>
           ) : (
-            <div
-              key={String(key)}
-              className="rounded-md border border-slate-200 bg-white p-4 shadow-sm"
-            >
-              {content}
-            </div>
+            <div key={String(key)}>{content}</div>
           );
         })}
       </div>
-      <section className="rounded-md border border-emerald-100 bg-white p-5 shadow-sm">
+      <AppCard>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-900">
+            <AppBadge tone="success">
               <Bot size={15} /> Assistente IA do SINE
-            </div>
+            </AppBadge>
             <h2 className="mt-3 text-lg font-bold text-slate-950">
               Apoio inteligente para triagem, sem substituir o colaborador
             </h2>
@@ -327,10 +293,10 @@ export function Dashboard() {
             </p>
           </div>
           <div className="w-full max-w-sm space-y-2">
-            <select
+            <AppSelect
+              label="Vaga para triagem"
               value={selectedAiJobId}
               onChange={(event) => setSelectedAiJobId(event.target.value)}
-              className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm"
             >
               {jobs.length === 0 && (
                 <option value="">Nenhuma vaga disponível</option>
@@ -340,21 +306,21 @@ export function Dashboard() {
                   {job.title}
                 </option>
               ))}
-            </select>
+            </AppSelect>
             <Link
               to={
                 selectedAiJobId
                   ? `/sine/triagem/${selectedAiJobId}`
                   : "/sine/triagem"
               }
-              className="tenant-button inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold"
+              className="inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg bg-[var(--tenant-primary)] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tenant-primary)] focus-visible:ring-offset-2"
             >
               <Sparkles size={17} /> Abrir triagem por vaga
             </Link>
           </div>
         </div>
-      </section>
-      <section className="rounded-md border border-slate-200 bg-white p-5 shadow-sm">
+      </AppCard>
+      <AppCard>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-bold text-slate-950">
@@ -365,9 +331,7 @@ export function Dashboard() {
               movimento.
             </p>
           </div>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-            Atualizada pelo painel operacional
-          </span>
+          <AppBadge tone="success">Atualizada pelo painel operacional</AppBadge>
         </div>
         <div className="space-y-2">
           {[
@@ -417,15 +381,15 @@ export function Dashboard() {
               <span className="text-sm text-slate-600">{title}</span>
               <Link
                 to={to}
-                className="rounded-md border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 hover:border-emerald-400"
+                className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:border-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
               >
                 {to === "/sine/triagem" ? "Triar candidatos" : "Abrir"}
               </Link>
             </div>
           ))}
         </div>
-      </section>
-      <section className="rounded-md border border-emerald-100 bg-white p-4">
+      </AppCard>
+      <AppCard>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="font-bold text-slate-950">
@@ -438,7 +402,7 @@ export function Dashboard() {
           </div>
           <Link
             to="/empresas"
-            className="tenant-button rounded-md px-3 py-2 text-sm font-semibold"
+            className="inline-flex min-h-10 items-center justify-center rounded-lg bg-[var(--tenant-primary)] px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--tenant-primary)] focus-visible:ring-offset-2"
           >
             Gerir empresas
           </Link>
@@ -467,9 +431,9 @@ export function Dashboard() {
             </div>
           )}
         </div>
-      </section>
+      </AppCard>
       <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-md border border-slate-200 bg-white p-4">
+        <AppCard>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold text-slate-950">
               Compatibilidade candidato/vaga
@@ -481,13 +445,13 @@ export function Dashboard() {
               setSelected(`${candidate.name} · ${candidate.score}%`)
             }
           />
-        </section>
-        <section className="rounded-md border border-slate-200 bg-white p-4">
+        </AppCard>
+        <AppCard>
           <h2 className="mb-3 font-bold text-slate-950">
             Leitura visual do currículo
           </h2>
           <ResumeInsightCanvas />
-        </section>
+        </AppCard>
       </div>
     </div>
   );

@@ -14,10 +14,20 @@ import {
 import { api } from "../services/api";
 import type { Company, Job } from "../types";
 import sineLogoFullHd from "../assets/logos/sine-logo-fullhd.png";
-import { ErrorState } from "../components/common/ErrorState";
-import { LoadingState } from "../components/common/LoadingState";
 import { OnboardingChecklist } from "../components/onboarding/OnboardingChecklist";
 import { friendlyStatus } from "../utils/statusLabels";
+import {
+  AppAlert,
+  AppButton,
+  AppCard,
+  AppErrorState,
+  AppInput,
+  AppLoadingState,
+  AppMetricCard,
+  AppPageHeader,
+  AppSelect,
+  AppTextarea,
+} from "../components/ui";
 
 const regionalCities = [
   "Jacarezinho",
@@ -221,13 +231,7 @@ function useCompanyPortal() {
 
 function PortalAlert({ message, error }: { message?: string; error?: string }) {
   if (!message && !error) return null;
-  return (
-    <div
-      className={`rounded-md border px-4 py-3 text-sm ${error ? "border-red-200 bg-red-50 text-red-800" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}
-    >
-      {error || message}
-    </div>
-  );
+  return <AppAlert tone={error ? "error" : "success"}>{error || message}</AppAlert>;
 }
 
 export function CompanyDashboard() {
@@ -236,21 +240,26 @@ export function CompanyDashboard() {
   const latestJobs = useMemo(() => jobs.slice(0, 3), [jobs]);
   const latestReferrals = useMemo(() => referrals.slice(0, 3), [referrals]);
 
-  if (loading) return <LoadingState />;
-  if (error) return <ErrorState message={error} />;
+  if (loading) return <AppLoadingState message="Carregando área da empresa..." />;
+  if (error) return <AppErrorState message={error} />;
 
   return (
     <div className="space-y-5">
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-        <div>
+      <AppPageHeader
+        eyebrow="Portal da Empresa"
+        title="Bem-vindo ao SINE Conecta Jacarezinho"
+        description="Solicite vagas, acompanhe candidatos encaminhados e mantenha o retorno em dia para fortalecer a empregabilidade local."
+        action={
+          <img
+            src={sineLogoFullHd}
+            alt="Logotipo do SINE Jacarezinho"
+            className="h-9 w-auto max-w-[150px] object-contain sm:h-10 sm:max-w-[170px]"
+            width={170}
+            height={59}
+          />
+        }
+      >
             <div className="flex flex-wrap items-start justify-between gap-4">
-              <img
-                src={sineLogoFullHd}
-                alt="Logotipo do SINE Jacarezinho"
-                className="h-9 w-auto max-w-[150px] object-contain sm:h-10 sm:max-w-[170px]"
-                width={170}
-                height={59}
-              />
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
                   <ShieldCheck size={14} /> Portal da Empresa
@@ -260,19 +269,12 @@ export function CompanyDashboard() {
                 </span>
               </div>
             </div>
-            <h1 className="mt-4 text-3xl font-bold text-slate-950">
-              Bem-vindo ao SINE Conecta Jacarezinho
-            </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Solicite vagas, acompanhe candidatos encaminhados e mantenha o
-              retorno em dia para fortalecer a empregabilidade local.
-            </p>
             <p className="mt-2 max-w-3xl text-xs font-semibold uppercase tracking-wide text-emerald-800">
               A empresa vê apenas candidatos encaminhados oficialmente. A IA é
               ferramenta interna do SINE.
             </p>
             <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <AppCard className="bg-slate-50 p-4">
                 <div className="text-xs font-semibold uppercase text-slate-500">
                   Cadastro
                 </div>
@@ -284,97 +286,75 @@ export function CompanyDashboard() {
                   )}
                   {status.profile_complete ? "Disponível ao SINE" : "Pendente"}
                 </div>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-xs font-semibold uppercase text-slate-500">
-                  Vagas solicitadas
-                </div>
-                <div className="mt-2 text-2xl font-bold text-slate-950">
-                  {jobs.length}
-                </div>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <div className="text-xs font-semibold uppercase text-slate-500">
-                  Retornos pendentes
-                </div>
-                <div className="mt-2 text-2xl font-bold text-slate-950">
-                  {status.pending_returns}
-                </div>
-              </div>
+              </AppCard>
+              <AppMetricCard label="Vagas solicitadas" value={jobs.length} />
+              <AppMetricCard
+                label="Retornos pendentes"
+                value={status.pending_returns}
+              />
             </div>
-        </div>
-      </section>
+      </AppPageHeader>
       <OnboardingChecklist role="company_user" />
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Link
-          to="/empresa/cadastro"
-          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-        >
-          <FileCheck2 className="text-emerald-700" size={22} />
-          <div className="mt-3 font-bold text-slate-950">
-            Cadastro da empresa
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            Dados legais, contatos, responsável pelo RH e aceite LGPD.
-          </p>
-        </Link>
-        <Link
-          to="/empresa/vagas"
-          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-        >
-          <BriefcaseBusiness className="text-emerald-700" size={22} />
-          <div className="mt-3 font-bold text-slate-950">Abrir vagas</div>
-          <p className="mt-1 text-sm text-slate-600">
-            {status.can_open_job
+        {[
+          {
+            to: "/empresa/cadastro",
+            title: "Cadastro da empresa",
+            body: "Dados legais, contatos, responsável pelo RH e aceite LGPD.",
+            icon: FileCheck2,
+          },
+          {
+            to: "/empresa/vagas",
+            title: "Abrir vagas",
+            body: status.can_open_job
               ? "Nova solicitação liberada."
-              : "Bloqueado até registrar contratação ou não contratação anterior."}
-          </p>
-        </Link>
-        <Link
-          to="/empresa/encaminhamentos"
-          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-        >
-          <UserRoundSearch className="text-emerald-700" size={22} />
-          <div className="mt-3 font-bold text-slate-950">Encaminhamentos</div>
-          <p className="mt-1 text-sm text-slate-600">
-            Veja candidatos enviados pelo SINE e registre o retorno.
-          </p>
-        </Link>
-        <Link
-          to="/empresa/privacidade"
-          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400"
-        >
-          <ShieldCheck className="text-emerald-700" size={22} />
-          <div className="mt-3 font-bold text-slate-950">
-            Privacidade e dados
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            Consulte termos, compartilhamentos recebidos e orientações LGPD.
-          </p>
-        </Link>
-        <Link
-          to="/empresa/comunicacao"
-          className="rounded-md border border-slate-200 bg-white p-5 hover:border-emerald-400 md:col-span-2"
-        >
-          <MessageSquareReply className="text-emerald-700" size={22} />
-          <div className="mt-3 font-bold text-slate-950">
-            Comunicação oficial com o SINE
-          </div>
-          <p className="mt-1 text-sm text-slate-600">
-            Mensagens vinculadas a vagas, encaminhamentos, currículos e
-            feedbacks com trilha de auditoria.
-          </p>
-        </Link>
+              : "Informe os retornos pendentes para abrir uma nova solicitação.",
+            icon: BriefcaseBusiness,
+          },
+          {
+            to: "/empresa/encaminhamentos",
+            title: "Encaminhamentos",
+            body: "Veja candidatos enviados pelo SINE e registre o retorno.",
+            icon: UserRoundSearch,
+          },
+          {
+            to: "/empresa/privacidade",
+            title: "Privacidade e dados",
+            body: "Consulte termos, compartilhamentos recebidos e orientações LGPD.",
+            icon: ShieldCheck,
+          },
+          {
+            to: "/empresa/comunicacao",
+            title: "Comunicação oficial com o SINE",
+            body: "Mensagens vinculadas a vagas, encaminhamentos, currículos e feedbacks com trilha de auditoria.",
+            icon: MessageSquareReply,
+            wide: true,
+          },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`block focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${item.wide ? "md:col-span-2" : ""}`}
+            >
+              <AppCard interactive className="h-full">
+                <Icon className="text-emerald-700" size={22} />
+                <div className="mt-3 font-bold text-slate-950">
+                  {item.title}
+                </div>
+                <p className="mt-1 text-sm text-slate-600">{item.body}</p>
+              </AppCard>
+            </Link>
+          );
+        })}
       </div>
 
       {!status.can_open_job && status.pending_returns > 0 && (
-        <section className="rounded-md border border-amber-200 bg-amber-50 p-5">
+        <AppAlert tone="warning" title="Precisamos do seu retorno para continuar o fluxo">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="font-bold text-amber-950">
-                Precisamos do seu retorno para continuar o fluxo
-              </h2>
               <p className="mt-1 text-sm text-amber-900">
                 {status.blocking_reason ??
                   "Para mantermos o processo justo com os trabalhadores e eficiente para sua empresa, informe o resultado dos candidatos encaminhados antes de abrir uma nova solicitação."}
@@ -382,7 +362,7 @@ export function CompanyDashboard() {
             </div>
             <Link
               to="/empresa/encaminhamentos"
-              className="rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white"
+              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-amber-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2"
             >
               Informar retorno agora
             </Link>
@@ -407,11 +387,11 @@ export function CompanyDashboard() {
               </div>
             ))}
           </div>
-        </section>
+        </AppAlert>
       )}
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        <AppCard>
           <h2 className="text-lg font-bold text-slate-950">Vagas recentes</h2>
           <div className="mt-3 space-y-2">
             {loading && <p className="text-sm text-slate-500">Carregando...</p>}
@@ -432,8 +412,8 @@ export function CompanyDashboard() {
               </div>
             ))}
           </div>
-        </section>
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        </AppCard>
+        <AppCard>
           <h2 className="text-lg font-bold text-slate-950">
             Últimos encaminhamentos
           </h2>
@@ -458,7 +438,7 @@ export function CompanyDashboard() {
               </div>
             ))}
           </div>
-        </section>
+        </AppCard>
       </div>
     </div>
   );
@@ -497,147 +477,32 @@ export function CompanyProfilePage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-950">
-          Cadastro da empresa
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Dados oficiais, contatos, região atendida e consentimento LGPD.
-        </p>
-      </div>
+      <AppPageHeader
+        title="Cadastro da empresa"
+        description="Dados oficiais, contatos, região atendida e consentimento LGPD."
+      />
       <PortalAlert message={message} error={error} />
-      <form
-        onSubmit={saveCompany}
-        className="rounded-md border border-slate-200 bg-white p-5"
-      >
+      <AppCard>
+      <form onSubmit={saveCompany}>
         <div className="grid gap-3 md:grid-cols-2">
-          <label className="text-sm font-medium text-slate-700">
-            Razão social
-            <input
-              required
-              value={form.legal_name}
-              onChange={(e) => setForm({ ...form, legal_name: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Nome fantasia
-            <input
-              value={form.trade_name}
-              onChange={(e) => setForm({ ...form, trade_name: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            CNPJ
-            <input
-              required
-              value={form.cnpj}
-              onChange={(e) => setForm({ ...form, cnpj: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Inscrição estadual
-            <input
-              value={form.state_registration}
-              onChange={(e) =>
-                setForm({ ...form, state_registration: e.target.value })
-              }
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Inscrição federal
-            <input
-              value={form.federal_registration}
-              onChange={(e) =>
-                setForm({ ...form, federal_registration: e.target.value })
-              }
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            CEP
-            <input
-              value={form.cep}
-              onChange={(e) => setForm({ ...form, cep: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Cidade
-            <select
-              value={form.city}
-              onChange={(e) => setForm({ ...form, city: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            >
-              {regionalCities.map((city) => (
-                <option key={city}>{city}</option>
-              ))}
-            </select>
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Estado
-            <input
-              value={form.state}
-              onChange={(e) =>
-                setForm({ ...form, state: e.target.value.toUpperCase() })
-              }
-              maxLength={2}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            E-mail
-            <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Telefone
-            <input
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            WhatsApp
-            <input
-              value={form.whatsapp}
-              onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
-          <label className="text-sm font-medium text-slate-700">
-            Responsável pelo RH
-            <input
-              required
-              value={form.hr_responsible_name}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  hr_responsible_name: e.target.value,
-                  responsible_name: e.target.value,
-                })
-              }
-              className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-            />
-          </label>
+          <AppInput required label="Razão social" value={form.legal_name} onChange={(e) => setForm({ ...form, legal_name: e.target.value })} />
+          <AppInput label="Nome fantasia" value={form.trade_name} onChange={(e) => setForm({ ...form, trade_name: e.target.value })} />
+          <AppInput required label="CNPJ" value={form.cnpj} onChange={(e) => setForm({ ...form, cnpj: e.target.value })} />
+          <AppInput label="Inscrição estadual" value={form.state_registration} onChange={(e) => setForm({ ...form, state_registration: e.target.value })} />
+          <AppInput label="Inscrição federal" value={form.federal_registration} onChange={(e) => setForm({ ...form, federal_registration: e.target.value })} />
+          <AppInput label="CEP" value={form.cep} onChange={(e) => setForm({ ...form, cep: e.target.value })} />
+          <AppSelect label="Cidade" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })}>
+            {regionalCities.map((city) => (
+              <option key={city}>{city}</option>
+            ))}
+          </AppSelect>
+          <AppInput label="Estado" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value.toUpperCase() })} maxLength={2} />
+          <AppInput label="E-mail" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <AppInput label="Telefone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <AppInput label="WhatsApp" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+          <AppInput required label="Responsável pelo RH" value={form.hr_responsible_name} onChange={(e) => setForm({ ...form, hr_responsible_name: e.target.value, responsible_name: e.target.value })} />
         </div>
-        <label className="mt-3 block text-sm font-medium text-slate-700">
-          Observações institucionais
-          <textarea
-            value={form.notes}
-            onChange={(e) => setForm({ ...form, notes: e.target.value })}
-            rows={3}
-            className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-          />
-        </label>
+        <AppTextarea label="Observações institucionais" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className="mt-3" />
         <label className="mt-4 flex items-start gap-3 rounded-md border border-emerald-100 bg-emerald-50 p-3 text-sm text-emerald-950">
           <input
             required
@@ -654,13 +519,16 @@ export function CompanyProfilePage() {
             Jacarezinho.
           </span>
         </label>
-        <button
+        <AppButton
+          type="submit"
           disabled={saving}
-          className="tenant-button mt-4 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60"
+          className="mt-4"
+          icon={<ShieldCheck size={17} />}
         >
-          <ShieldCheck size={17} /> {saving ? "Salvando..." : "Salvar cadastro"}
-        </button>
+          {saving ? "Salvando..." : "Salvar cadastro"}
+        </AppButton>
       </form>
+      </AppCard>
     </div>
   );
 }

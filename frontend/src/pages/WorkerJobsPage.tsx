@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
-import { EmptyState } from "../components/common/EmptyState";
+import {
+  AppAlert,
+  AppButton,
+  AppCard,
+  AppEmptyState,
+  AppPageHeader,
+  AppSelect,
+  AppStepper,
+} from "../components/ui";
+import { friendlyStatus } from "../utils/statusLabels";
 
 type Job = {
   id: string;
@@ -56,56 +65,39 @@ export function WorkerJobsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-950">Vagas abertas</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Escolha uma vaga disponível. Depois envie ou preencha seu currículo
-          para concluir a candidatura.
-        </p>
-      </div>
-      <section className="grid gap-3 md:grid-cols-4">
-        {[
+      <AppPageHeader
+        eyebrow="Portal do Trabalhador"
+        title="Vagas abertas"
+        description="Escolha uma vaga disponível. Depois envie ou preencha seu currículo para concluir a candidatura."
+      />
+      <AppStepper
+        current={selectedJobId ? 1 : 0}
+        steps={[
           "Escolha uma vaga aberta",
           "Preencha ou envie seu currículo",
           "Acompanhe sua candidatura",
           "Aguarde orientações do SINE",
-        ].map((step, index) => (
-          <div
-            key={step}
-            className="rounded-md border border-emerald-100 bg-white p-4 shadow-sm"
-          >
-            <div className="text-xs font-bold text-emerald-700">
-              Passo {index + 1}
-            </div>
-            <div className="mt-2 text-sm font-semibold text-slate-800">
-              {step}
-            </div>
-          </div>
-        ))}
-      </section>
+        ]}
+      />
 
       <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        <AppCard>
           <h2 className="font-bold text-slate-950">Selecionar vaga</h2>
-          <label className="mt-4 block">
-            <span className="mb-1 block text-sm font-medium text-slate-700">
-              Vaga
-            </span>
-            <select
-              className="h-11 w-full rounded-md border border-slate-300 px-3 outline-none focus:border-emerald-700"
-              value={selectedJobId}
-              onChange={(event) => setSelectedJobId(event.target.value)}
-            >
-              {jobs.length === 0 && (
-                <option value="">Nenhuma vaga aberta no momento</option>
-              )}
-              {jobs.map((job) => (
-                <option key={job.id} value={job.id}>
-                  {job.title}
-                </option>
-              ))}
-            </select>
-          </label>
+          <AppSelect
+            label="Vaga"
+            value={selectedJobId}
+            onChange={(event) => setSelectedJobId(event.target.value)}
+            className="mt-3"
+          >
+            {jobs.length === 0 && (
+              <option value="">Nenhuma vaga aberta no momento</option>
+            )}
+            {jobs.map((job) => (
+              <option key={job.id} value={job.id}>
+                {job.title}
+              </option>
+            ))}
+          </AppSelect>
           {selected && (
             <div className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-700">
               <div className="text-lg font-bold text-slate-950">
@@ -121,20 +113,18 @@ export function WorkerJobsPage() {
             </div>
           )}
           {message && (
-            <div className="mt-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-              {message}
-            </div>
+            <AppAlert tone="success" className="mt-4">{message}</AppAlert>
           )}
-          <button
-            className="tenant-button mt-5 w-full rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60"
+          <AppButton
+            className="mt-5 w-full"
             disabled={!selectedJobId}
             onClick={continueToResume}
           >
             Continuar para o currículo
-          </button>
-        </section>
+          </AppButton>
+        </AppCard>
 
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        <AppCard>
           <h2 className="font-bold text-slate-950">Minhas candidaturas</h2>
           <p className="mt-1 text-sm text-slate-600">
             Aqui você acompanha o status do encaminhamento e próximas
@@ -143,7 +133,7 @@ export function WorkerJobsPage() {
           <div className="mt-4 divide-y divide-slate-100">
             {applications.length === 0 && (
               <div className="py-3">
-                <EmptyState message="Você ainda não se candidatou a nenhuma vaga." />
+                <AppEmptyState message="Você ainda não se candidatou a nenhuma vaga." />
               </div>
             )}
             {applications.map((application) => (
@@ -152,13 +142,13 @@ export function WorkerJobsPage() {
                   {application.job_title}
                 </div>
                 <div className="mt-1 text-sm text-slate-500">
-                  {application.status} ·{" "}
+                  {friendlyStatus(application.status)} ·{" "}
                   {new Date(application.created_at).toLocaleDateString("pt-BR")}
                 </div>
               </div>
             ))}
           </div>
-        </section>
+        </AppCard>
       </div>
     </div>
   );
