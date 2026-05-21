@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+import { LgpdNotice } from "../components/lgpd/LgpdNotice";
 import {
   AppAlert,
   AppBadge,
@@ -9,6 +10,7 @@ import {
   AppEmptyState,
   AppInput,
   AppPageHeader,
+  AppSelect,
   AppStepper,
 } from "../components/ui";
 import { friendlyStatus } from "../utils/statusLabels";
@@ -54,7 +56,9 @@ export function WorkerJobsPage() {
       .get<Job[]>("/worker-portal/open-jobs")
       .then(({ data }) => {
         setJobs(data);
-        setSelectedJobId((current) => current || data[0]?.id || "");
+        setSelectedJobId((current) =>
+          data.some((job) => job.id === current) ? current : "",
+        );
       })
       .catch(() => setJobs([]));
     api
@@ -68,8 +72,12 @@ export function WorkerJobsPage() {
   }, []);
 
   function continueToResume() {
-    if (!selectedJobId) return;
-    navigate(`/meu-curriculo?vaga=${selectedJobId}`);
+    setMessage("");
+    if (!selected) {
+      setMessage("Escolha uma vaga antes de continuar para o currículo.");
+      return;
+    }
+    navigate(`/meu-curriculo?vaga=${selected.id}`);
   }
 
   return (
@@ -77,8 +85,9 @@ export function WorkerJobsPage() {
       <AppPageHeader
         eyebrow="Portal do Candidato"
         title="Vagas abertas"
-        description="Escolha uma vaga disponível. Depois envie ou preencha seu currículo para concluir a candidatura."
+        description="Escolha uma vaga disponível. Depois preencha ou envie seu currículo para concluir a candidatura."
       />
+      <LgpdNotice compact />
       <AppStepper
         current={selectedJobId ? 1 : 0}
         steps={[
@@ -95,23 +104,43 @@ export function WorkerJobsPage() {
             <div>
               <h2 className="font-bold text-slate-950">Escolha uma vaga</h2>
               <p className="mt-1 text-sm text-slate-600">
-                Toque em uma oportunidade e siga para o currículo.
+                Esta é sua vitrine de oportunidades. Toque em uma vaga e siga
+                para o currículo.
               </p>
             </div>
             <AppBadge tone="info">{filteredJobs.length} vaga(s)</AppBadge>
           </div>
-          <AppInput
-            label="Buscar vaga"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Cargo, local, modalidade ou requisito"
-            className="mt-4"
-          />
+          <div className="mt-4 grid gap-3 md:grid-cols-[1fr_0.9fr]">
+            <AppInput
+              label="Buscar vaga"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Cargo, local, modalidade ou requisito"
+            />
+            <AppSelect
+              label="Vaga selecionada"
+              value={selectedJobId}
+              onChange={(event) => setSelectedJobId(event.target.value)}
+            >
+              <option value="">Selecione uma vaga</option>
+              {jobs.map((job) => (
+                <option key={job.id} value={job.id}>
+                  {job.title}
+                </option>
+              ))}
+            </AppSelect>
+          </div>
           <div className="mt-4 space-y-3">
-            {filteredJobs.length === 0 && (
+            {jobs.length === 0 && (
+              <AppEmptyState
+                title="Nenhuma vaga aberta no momento"
+                message="Assim que o SINE publicar novas oportunidades, elas aparecerão aqui para candidatura."
+              />
+            )}
+            {jobs.length > 0 && filteredJobs.length === 0 && (
               <AppEmptyState
                 title="Nenhuma vaga encontrada"
-                message="Tente buscar por outro cargo, local ou requisito."
+                message="Tente buscar por outro cargo, local, modalidade ou requisito."
               />
             )}
             {filteredJobs.map((job) => {
@@ -136,16 +165,20 @@ export function WorkerJobsPage() {
                         {job.description}
                       </p>
                     </div>
-                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100">
-                      {job.vacancies} vaga(s)
-                    </span>
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <AppBadge tone="success">{job.vacancies} vaga(s)</AppBadge>
+                      <AppBadge tone={active ? "success" : "neutral"}>
+                        {active ? "Selecionada" : friendlyStatus(job.status)}
+                      </AppBadge>
+                    </div>
                   </div>
                   <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                    <span>Cargo: {job.title}</span>
                     <span>Local: {job.workplace || "Não informado"}</span>
                     <span>Modalidade: {friendlyStatus(job.modality)}</span>
                     <span>Salário: {job.salary_range || "A combinar"}</span>
                     <span>
-                      Requisito: {job.minimum_education || "Não informado"}
+                      Escolaridade: {job.minimum_education || "Não informado"}
                     </span>
                   </div>
                 </button>
@@ -153,15 +186,18 @@ export function WorkerJobsPage() {
             })}
           </div>
           {message && (
-            <AppAlert tone="success" className="mt-4">{message}</AppAlert>
+            <AppAlert tone="info" className="mt-4">{message}</AppAlert>
           )}
           <AppButton
             className="mt-5 w-full"
-            disabled={!selectedJobId}
             onClick={continueToResume}
           >
-            Tenho interesse
+            Quero me candidatar
           </AppButton>
+          <p className="mt-3 text-xs leading-5 text-slate-500">
+            A empresa só recebe seus dados se o SINE fizer o encaminhamento
+            oficial. Acompanhe sua candidatura pelo portal.
+          </p>
         </AppCard>
 
         <AppCard>

@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
-import { AppButton, AppEmptyState, AppPageHeader, AppTable } from '../components/ui'
+import {
+  AppButton,
+  AppCard,
+  AppEmptyState,
+  AppErrorState,
+  AppInput,
+  AppLoadingState,
+  AppPageHeader,
+  AppTable,
+} from '../components/ui'
 import { friendlyStatus } from '../utils/statusLabels'
 
 type Props = {
@@ -14,12 +23,42 @@ type Props = {
 export function EntityPage({ title, description, endpoint, actionLabel = 'Novo registro' }: Props) {
   const navigate = useNavigate()
   const [items, setItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(Boolean(endpoint))
+  const [error, setError] = useState("")
+  const [search, setSearch] = useState("")
   const context = contextForTitle(title)
   const actionTarget = actionTargetForTitle(title)
+  const filteredItems = items.filter((item) =>
+    [
+      item.legal_name,
+      item.full_name,
+      item.title,
+      item.original_filename,
+      item.status,
+      item.id,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  )
 
   useEffect(() => {
-    if (endpoint) api.get(endpoint).then(({ data }) => setItems(data)).catch(() => setItems([]))
+    if (!endpoint) return
+    setLoading(true)
+    setError("")
+    api
+      .get(endpoint)
+      .then(({ data }) => setItems(Array.isArray(data) ? data : []))
+      .catch(() => {
+        setItems([])
+        setError(context.errorMessage)
+      })
+      .finally(() => setLoading(false))
   }, [endpoint])
+
+  if (loading) return <AppLoadingState message={`Carregando ${title.toLowerCase()}...`} />
+  if (error) return <AppErrorState message={error} />
 
   return (
     <div className="space-y-4">
@@ -37,12 +76,26 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
           ) : undefined
         }
       />
+      {items.length > 0 && (
+        <AppCard>
+          <AppInput
+            label={`Buscar em ${title.toLowerCase()}`}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Digite nome, título, status ou identificador"
+          />
+        </AppCard>
+      )}
       <AppTable
-        rows={items}
+        rows={filteredItems}
         empty={
           <AppEmptyState
-            title={context.emptyTitle}
-            message={context.emptyMessage}
+            title={items.length > 0 ? "Nenhum resultado encontrado" : context.emptyTitle}
+            message={
+              items.length > 0
+                ? "Tente buscar por outro nome, status ou identificador."
+                : context.emptyMessage
+            }
           />
         }
         columns={[
@@ -85,6 +138,7 @@ function contextForTitle(title: string) {
       description: "Acompanhe candidatos cadastrados e currículos disponíveis para análise.",
       emptyTitle: "Nenhum candidato encontrado",
       emptyMessage: "Novos cadastros aparecerão aqui quando os candidatos se registrarem ou forem cadastrados pelo SINE.",
+      errorMessage: "Não foi possível carregar os candidatos agora.",
     };
   }
   if (normalized.includes("curr")) {
@@ -92,6 +146,7 @@ function contextForTitle(title: string) {
       description: "Consulte currículos recebidos e organize a análise do SINE.",
       emptyTitle: "Nenhum currículo recebido",
       emptyMessage: "Currículos enviados pelos candidatos aparecerão aqui para acompanhamento.",
+      errorMessage: "Não foi possível carregar os currículos agora.",
     };
   }
   if (normalized.includes("vaga")) {
@@ -99,6 +154,7 @@ function contextForTitle(title: string) {
       description: "Acompanhe vagas solicitadas, em triagem ou publicadas.",
       emptyTitle: "Nenhuma vaga encontrada",
       emptyMessage: "As solicitações das empresas aparecerão aqui quando forem registradas.",
+      errorMessage: "Não foi possível carregar as vagas agora.",
     };
   }
   if (normalized.includes("encaminh")) {
@@ -106,6 +162,7 @@ function contextForTitle(title: string) {
       description: "Acompanhe encaminhamentos oficiais e retornos das empresas.",
       emptyTitle: "Nenhum encaminhamento encontrado",
       emptyMessage: "Quando o SINE encaminhar candidatos para empresas, os registros aparecerão aqui.",
+      errorMessage: "Não foi possível carregar os encaminhamentos agora.",
     };
   }
   if (normalized.includes("lgpd") || normalized.includes("auditoria")) {
@@ -113,12 +170,14 @@ function contextForTitle(title: string) {
       description: "Acompanhe solicitações, registros e cuidados de privacidade.",
       emptyTitle: "Nenhum registro de conformidade encontrado",
       emptyMessage: "Registros de atendimento, auditoria ou LGPD aparecerão aqui quando houver movimentação.",
+      errorMessage: "Não foi possível carregar os registros de conformidade agora.",
     };
   }
   return {
     description: "Acompanhe registros importantes da operação do SINE.",
     emptyTitle: "Nenhum registro encontrado",
     emptyMessage: "Quando houver dados disponíveis, eles aparecerão aqui de forma organizada.",
+    errorMessage: "Não foi possível carregar os registros agora.",
   };
 }
 

@@ -10,7 +10,10 @@ export const statusLabels: Record<string, string> = {
   publicada: "Publicada para candidatos",
   em_triagem: "Em triagem pelo SINE",
   encaminhando_candidatos: "Encaminhando candidatos",
+  entrevista_agendada: "Entrevista agendada",
   aguardando_retorno_empresa: "Aguardando retorno da empresa",
+  aguardando_retorno: "Aguardando retorno",
+  retorno_registrado: "Retorno registrado",
   entrevistado: "Chamado para entrevista",
   encerrada: "Encerrada",
   cancelada: "Cancelada",
@@ -27,6 +30,7 @@ export const statusLabels: Record<string, string> = {
   banco_futuro: "Banco de talentos",
   banco_talentos: "Banco de talentos",
   sem_interesse: "Sem interesse",
+  nao_selecionado: "Não selecionado",
   aberta: "Aberta",
   concluida: "Concluída",
 };
@@ -38,9 +42,9 @@ export function friendlyStatus(status?: string | null) {
 
 export function statusTone(status?: string | null): "neutral" | "success" | "warning" | "danger" | "info" {
   if (!status) return "neutral";
-  if (["ativo", "contratado", "publicada", "aprovada", "concluida", "encerrada"].includes(status)) return "success";
-  if (["aguardando_retorno_empresa", "em_analise", "em_triagem", "candidatura_trabalhador", "aberta"].includes(status)) return "warning";
-  if (["cancelada", "dispensado", "nao_contratado", "nao_compareceu", "indeferida", "perfil_incompativel"].includes(status)) return "danger";
+  if (["ativo", "contratado", "publicada", "aprovada", "concluida", "encerrada", "retorno_registrado"].includes(status)) return "success";
+  if (["aguardando_retorno_empresa", "aguardando_retorno", "entrevista_agendada", "entrevistado", "em_analise", "em_triagem", "candidatura_trabalhador", "aberta"].includes(status)) return "warning";
+  if (["cancelada", "dispensado", "nao_contratado", "nao_compareceu", "nao_selecionado", "indeferida", "perfil_incompativel"].includes(status)) return "danger";
   return "info";
 }
 

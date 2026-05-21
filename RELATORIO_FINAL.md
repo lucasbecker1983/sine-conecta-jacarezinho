@@ -1264,6 +1264,42 @@ Validação:
 
 - `cd /opt/saas_sine/frontend && npm run build`: OK.
 
+### Rodada de fechamento — UX, candidatura e feedback da empresa
+
+Objetivo:
+
+- fechar pontas soltas no frontend sem alterar regras de negócio, endpoints, autenticação, RBAC, banco ou backend;
+- reforçar a separação entre vitrine de vagas do candidato, fluxo de candidatura e encaminhamento oficial do SINE;
+- auditar retornos finais da empresa para não oferecer status que o backend ainda trate como pendente.
+
+Melhorias aplicadas:
+
+- `WorkerJobsPage`: corrigido `continueToResume` para navegar para `/meu-curriculo?vaga={job.id}` quando houver vaga selecionada e mostrar mensagem amigável quando não houver; a tela passou a funcionar como vitrine de vagas, com busca, seleção explícita, cards mais completos, estado vazio e CTA `Quero me candidatar`;
+- `WorkerResumePage`: reforçada a página como fluxo de candidatura, destacando a vaga recebida por query string e usando linguagem simples sobre candidatura, acompanhamento e encaminhamento oficial;
+- `CompanyReferralsPage`: opções de feedback reduzidas aos status finais aceitos pelo backend (`contratado`, `dispensado`, `nao_compareceu`, `banco_futuro`, `sem_interesse`), com status amigáveis e mensagem de sucesso mais clara;
+- `CompanyDashboard`: modularizado em tipos, constantes, hook `useCompanyPortal` e páginas visuais menores, mantendo os exports compatíveis com `main.tsx` e os endpoints `/company-portal/profile`, `/company-portal/jobs`, `/company-portal/referrals` e `/company-portal/status`;
+- `EntityPage`: adicionados loading, erro, busca local, vazio contextual e proteção contra botão sem destino real;
+- `LgpdNotice`: criado componente reutilizável e aplicado em `WorkerJobsPage`, `WorkerResumePage`, `CompanyDashboard` e `CompanyReferralsPage`;
+- `statusLabels.ts`: ampliado para evitar exposição de status técnico em novos fluxos;
+- testes adicionados para navegação do candidato, mensagem sem seleção, status amigável, bloqueio por `pending_returns` e registro de feedback da empresa.
+
+Arquivos principais alterados:
+
+- `frontend/src/pages/WorkerJobsPage.tsx`;
+- `frontend/src/pages/WorkerResumePage.tsx`;
+- `frontend/src/pages/EntityPage.tsx`;
+- `frontend/src/pages/CompanyDashboard.tsx`;
+- `frontend/src/pages/company-portal/*`;
+- `frontend/src/components/lgpd/LgpdNotice.tsx`;
+- `frontend/src/utils/statusLabels.ts`;
+- `frontend/src/__tests__/PortalFlows.test.tsx`.
+
+Validação:
+
+- `cd /opt/saas_sine/frontend && npm run test`: 8 arquivos, 24 testes, todos passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK;
+- backend não foi alterado, portanto `python -m compileall app` e `pytest -q` não se aplicaram nesta rodada.
+
 ### Ajuste pós-Sprint 9 — Auditoria de botões e ações visíveis
 
 Objetivo:

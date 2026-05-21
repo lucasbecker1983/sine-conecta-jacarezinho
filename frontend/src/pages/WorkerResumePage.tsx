@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { api } from "../services/api";
+import { LgpdNotice } from "../components/lgpd/LgpdNotice";
 import {
   AppAlert,
   AppButton,
@@ -272,8 +273,8 @@ export function WorkerResumePage() {
     <div className="space-y-5">
       <AppPageHeader
         eyebrow="Portal do Candidato"
-        title="Concorrer a uma vaga"
-        description="Primeiro selecione a vaga aberta. Depois escolha preencher o currículo no portal ou enviar o PDF."
+        title="Quero me candidatar"
+        description="Confira a vaga selecionada, atualize seu currículo e confirme a candidatura pelo portal."
         action={
         <Link
           to="/vagas"
@@ -316,13 +317,15 @@ export function WorkerResumePage() {
               Confirmar candidatura
             </div>
             <p className="mt-1 text-xs text-slate-500">
-              A empresa só vê seus dados após encaminhamento oficial.
+              A empresa só recebe seus dados se o SINE fizer o encaminhamento oficial.
             </p>
           </AppCard>
         </div>
       </AppPageHeader>
 
-      <AppAlert tone="info" title="Vaga obrigatória">
+      <LgpdNotice />
+
+      <AppAlert tone="info" title={selectedJob ? "Vaga selecionada" : "Vaga obrigatória"}>
         <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
           <AppSelect
             label="1. Vaga obrigatória"
@@ -340,9 +343,11 @@ export function WorkerResumePage() {
             ))}
           </AppSelect>
           <div className="text-sm leading-6">
-            <strong>Como funciona:</strong> escolha a vaga, atualize seus dados
-            ou envie o PDF e confirme o interesse. O SINE fará a análise e
-            poderá encaminhar seu perfil para a empresa.
+            <strong>{selectedJob?.title ?? "Como funciona"}:</strong>{" "}
+            {selectedJob
+              ? `${selectedJob.vacancies} vaga(s), ${friendlyStatus(selectedJob.modality)} em ${selectedJob.workplace || "local a combinar"}.`
+              : "Escolha a vaga, atualize seus dados ou envie o PDF e confirme o interesse."}{" "}
+            O SINE fará a análise e poderá encaminhar seu perfil para a empresa.
           </div>
         </div>
       </AppAlert>
@@ -356,7 +361,7 @@ export function WorkerResumePage() {
             </h2>
             <p className="mt-1 text-sm text-slate-600">
               Use esta opção para manter seus dados atualizados diretamente no
-              sistema.
+              portal.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -437,7 +442,7 @@ export function WorkerResumePage() {
               type="submit"
               disabled={saving || !selectedJobId}
             >
-              {saving ? "Salvando..." : "Salvar e concorrer"}
+              {saving ? "Salvando..." : "Salvar e me candidatar"}
             </AppButton>
           </div>
         </form>
@@ -480,7 +485,7 @@ export function WorkerResumePage() {
               className="mt-5 w-full"
               disabled={uploading || !selectedJobId}
             >
-              {uploading ? "Enviando..." : "Enviar PDF e concorrer"}
+              {uploading ? "Enviando..." : "Enviar PDF e me candidatar"}
             </AppButton>
             <p className="mt-4 text-xs leading-5 text-slate-500">
               A análise automática é apenas uma sugestão. A decisão final é do
@@ -520,7 +525,8 @@ export function WorkerResumePage() {
             </AppButton>
             <p className="mt-3 text-xs leading-5 text-slate-500">
               Sua candidatura será enviada ao SINE. A empresa só recebe seus
-              dados se houver encaminhamento oficial.
+              dados se o SINE fizer o encaminhamento oficial. Acompanhe sua
+              candidatura pelo portal.
             </p>
             <AppStatusTimeline
               className="mt-4"
