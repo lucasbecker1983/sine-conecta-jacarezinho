@@ -196,14 +196,22 @@ class CompanyIn(BaseModel):
     phone: str | None = None
     whatsapp: str | None = None
     email: EmailStr | None = None
+    site: str | None = None
     address: str | None = None
+    address_number: str | None = None
+    address_complement: str | None = None
     district: str | None = None
     city: str | None = None
     state: str | None = None
     cep: str | None = None
     responsible_name: str | None = None
+    responsible_position: str | None = None
+    responsible_email: EmailStr | None = None
+    responsible_phone: str | None = None
     hr_responsible_name: str | None = None
     segment: str | None = None
+    company_size: str | None = None
+    cnae: str | None = None
     notes: str | None = None
     lgpd_accepted: bool = False
 
@@ -227,7 +235,122 @@ class CompanyOut(CompanyIn):
     id: UUID
     tenant_id: UUID
     created_at: datetime
+    updated_at: datetime
     lgpd_accepted_at: datetime | None = None
+    status: str = "ativa"
+    profile_complete: bool = False
+    approved_at: datetime | None = None
+    blocked_at: datetime | None = None
+    blocking_reason: str | None = None
+
+
+class CompanyListItem(CompanyOut):
+    open_jobs: int = 0
+    total_jobs: int = 0
+    pending_feedbacks: int = 0
+    referrals_count: int = 0
+    last_activity_at: datetime | None = None
+    blocked: bool = False
+
+
+class CompanyAdminUpdate(BaseModel):
+    legal_name: str | None = None
+    trade_name: str | None = None
+    state_registration: str | None = None
+    federal_registration: str | None = None
+    phone: str | None = None
+    whatsapp: str | None = None
+    email: EmailStr | None = None
+    site: str | None = None
+    address: str | None = None
+    address_number: str | None = None
+    address_complement: str | None = None
+    district: str | None = None
+    city: str | None = None
+    state: str | None = None
+    cep: str | None = None
+    responsible_name: str | None = None
+    responsible_position: str | None = None
+    responsible_email: EmailStr | None = None
+    responsible_phone: str | None = None
+    hr_responsible_name: str | None = None
+    segment: str | None = None
+    company_size: str | None = None
+    cnae: str | None = None
+    notes: str | None = None
+
+
+class CompanyStatusUpdate(BaseModel):
+    status: str
+    reason: str | None = None
+
+
+class CompanyInternalNoteCreate(BaseModel):
+    note: str = Field(min_length=2, max_length=4000)
+
+
+class CompanyJobSummary(BaseModel):
+    id: UUID
+    title: str
+    status: str
+    is_confidential: bool = False
+    vacancies: int
+    created_at: datetime
+    closing_deadline: date | None = None
+    pending_feedbacks: int = 0
+
+
+class CompanyReferralSummary(BaseModel):
+    id: UUID
+    job_id: UUID
+    job_title: str
+    worker_id: UUID
+    worker_name: str
+    status: str
+    feedback_status: str | None = None
+    created_at: datetime
+    referred_at: datetime | None = None
+
+
+class CompanyFeedbackSummary(BaseModel):
+    id: UUID | None = None
+    referral_id: UUID
+    job_title: str
+    worker_name: str
+    status: str
+    comments: str | None = None
+    pending: bool = False
+    created_at: datetime | None = None
+
+
+class CompanyAuditSummary(BaseModel):
+    id: UUID
+    action: str
+    user_id: UUID | None = None
+    details: dict | None = None
+    created_at: datetime
+
+
+class CompanySummary(BaseModel):
+    open_jobs: int = 0
+    closed_jobs: int = 0
+    referrals_received: int = 0
+    pending_feedbacks: int = 0
+    hires_reported: int = 0
+    days_since_last_return: int | None = None
+    regularity_status: str
+    blocking_reason: str | None = None
+
+
+class CompanyDetailRead(CompanyOut):
+    approved_by_user_id: UUID | None = None
+    blocked_by_user_id: UUID | None = None
+    internal_notes: str | None = None
+    summary: CompanySummary
+    jobs: list[CompanyJobSummary] = Field(default_factory=list)
+    referrals: list[CompanyReferralSummary] = Field(default_factory=list)
+    feedbacks: list[CompanyFeedbackSummary] = Field(default_factory=list)
+    audit: list[CompanyAuditSummary] = Field(default_factory=list)
 
 
 class WorkerIn(BaseModel):

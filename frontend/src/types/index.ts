@@ -33,18 +33,105 @@ export type Company = {
   phone?: string | null;
   whatsapp?: string | null;
   email?: string | null;
+  site?: string | null;
   address?: string | null;
+  address_number?: string | null;
+  address_complement?: string | null;
   district?: string | null;
   city?: string | null;
   state?: string | null;
   cep?: string | null;
   responsible_name?: string | null;
+  responsible_position?: string | null;
+  responsible_email?: string | null;
+  responsible_phone?: string | null;
   hr_responsible_name?: string | null;
   segment?: string | null;
+  company_size?: string | null;
+  cnae?: string | null;
   notes?: string | null;
   lgpd_accepted: boolean;
   lgpd_accepted_at?: string | null;
+  status?: string;
+  profile_complete?: boolean;
+  approved_at?: string | null;
+  blocked_at?: string | null;
+  blocking_reason?: string | null;
   created_at: string;
+  updated_at?: string;
+};
+
+export type CompanyListItem = Company & {
+  open_jobs: number;
+  total_jobs: number;
+  pending_feedbacks: number;
+  referrals_count: number;
+  last_activity_at?: string | null;
+  blocked: boolean;
+};
+
+export type CompanySummary = {
+  open_jobs: number;
+  closed_jobs: number;
+  referrals_received: number;
+  pending_feedbacks: number;
+  hires_reported: number;
+  days_since_last_return?: number | null;
+  regularity_status: string;
+  blocking_reason?: string | null;
+};
+
+export type CompanyJobSummary = {
+  id: string;
+  title: string;
+  status: string;
+  is_confidential: boolean;
+  vacancies: number;
+  created_at: string;
+  closing_deadline?: string | null;
+  pending_feedbacks: number;
+};
+
+export type CompanyReferralSummary = {
+  id: string;
+  job_id: string;
+  job_title: string;
+  worker_id: string;
+  worker_name: string;
+  status: string;
+  feedback_status?: string | null;
+  created_at: string;
+  referred_at?: string | null;
+};
+
+export type CompanyFeedbackSummary = {
+  id?: string | null;
+  referral_id: string;
+  job_title: string;
+  worker_name: string;
+  status: string;
+  comments?: string | null;
+  pending: boolean;
+  created_at?: string | null;
+};
+
+export type CompanyAuditSummary = {
+  id: string;
+  action: string;
+  user_id?: string | null;
+  details?: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type CompanyDetail = Company & {
+  approved_by_user_id?: string | null;
+  blocked_by_user_id?: string | null;
+  internal_notes?: string | null;
+  summary: CompanySummary;
+  jobs: CompanyJobSummary[];
+  referrals: CompanyReferralSummary[];
+  feedbacks: CompanyFeedbackSummary[];
+  audit: CompanyAuditSummary[];
 };
 
 export type Worker = {

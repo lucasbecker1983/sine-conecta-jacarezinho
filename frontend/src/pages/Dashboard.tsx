@@ -33,7 +33,10 @@ import { friendlyStatus } from "../utils/statusLabels";
 
 const operationalCards: Array<[string, string, LucideIcon]> = [
   ["vagas_solicitadas", "Novas solicitações de vagas", BriefcaseBusiness],
-  ["vagas_em_analise", "Empresas aguardando aprovação", Building2],
+  ["empresas_cadastradas", "Empresas cadastradas", Building2],
+  ["empresas_ativas", "Empresas ativas", CheckCircle2],
+  ["empresas_aguardando_aprovacao", "Empresas aguardando aprovação", Building2],
+  ["empresas_bloqueadas", "Empresas bloqueadas", AlertTriangle],
   ["curriculos_pendentes", "Candidatos pendentes de análise", FileText],
   ["candidatos_cadastrados", "Currículos recebidos", ClipboardList],
   ["vagas_ativas", "Vagas em triagem", UserRoundSearch],

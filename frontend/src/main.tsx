@@ -7,6 +7,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { AppLayout } from "./layouts/AppLayout";
 import { Dashboard } from "./pages/Dashboard";
 import { CompaniesPage } from "./pages/CompaniesPage";
+import { CompanyDetailPage } from "./pages/companies/CompanyDetailPage";
 import {
   CompanyJobsPage,
   CompanyProfilePage,
@@ -66,6 +67,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
             <Route
               path="empresas"
               element={only(sineRoles, <CompaniesPage />)}
+            />
+            <Route
+              path="empresas/:id"
+              element={only(sineRoles, <CompanyDetailPage />)}
             />
             <Route
               path="empresa/cadastro"

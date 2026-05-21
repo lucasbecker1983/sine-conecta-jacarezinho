@@ -4,6 +4,13 @@ import { AppBadge } from "../components/ui";
 
 export const statusLabels: Record<string, string> = {
   ativo: "Ativo",
+  ativa: "Empresa ativa",
+  aguardando_aprovacao: "Aguardando aprovação",
+  em_atencao: "Empresa em atenção",
+  bloqueada: "Abertura de novas vagas suspensa",
+  suspensa: "Empresa suspensa",
+  inativa: "Empresa inativa",
+  rejeitada: "Empresa rejeitada",
   solicitada: "Solicitada pela empresa",
   em_analise: "Em análise pelo SINE",
   aprovada: "Aprovada pelo SINE",
@@ -50,9 +57,9 @@ export function friendlyStatus(status?: string | null) {
 
 export function statusTone(status?: string | null): "neutral" | "success" | "warning" | "danger" | "info" {
   if (!status) return "neutral";
-  if (["ativo", "contratado", "publicada", "aprovada", "concluida", "encerrada", "retorno_registrado"].includes(status)) return "success";
-  if (["aguardando_retorno_empresa", "aguardando_retorno", "entrevista_agendada", "entrevistado", "em_analise", "em_triagem", "candidatura_trabalhador", "aberta"].includes(status)) return "warning";
-  if (["cancelada", "dispensado", "nao_contratado", "nao_compareceu", "nao_selecionado", "indeferida", "perfil_incompativel"].includes(status)) return "danger";
+  if (["ativo", "ativa", "contratado", "publicada", "aprovada", "concluida", "encerrada", "retorno_registrado"].includes(status)) return "success";
+  if (["aguardando_aprovacao", "em_atencao", "aguardando_retorno_empresa", "aguardando_retorno", "entrevista_agendada", "entrevistado", "em_analise", "em_triagem", "candidatura_trabalhador", "aberta"].includes(status)) return "warning";
+  if (["bloqueada", "suspensa", "inativa", "rejeitada", "cancelada", "dispensado", "nao_contratado", "nao_compareceu", "nao_selecionado", "indeferida", "perfil_incompativel"].includes(status)) return "danger";
   return "info";
 }
 

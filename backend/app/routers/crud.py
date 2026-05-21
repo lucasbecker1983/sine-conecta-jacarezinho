@@ -581,6 +581,12 @@ def create_company(
             status_code=400, detail="Aceite LGPD obrigatorio para cadastrar a empresa"
         )
     data["lgpd_accepted_at"] = datetime.now(timezone.utc)
+    data["profile_complete"] = bool(
+        data.get("legal_name")
+        and data.get("cnpj")
+        and (data.get("email") or data.get("phone") or data.get("whatsapp"))
+        and data.get("city")
+    )
     company = Company(tenant_id=tenant_scope(user, db), **data)
     db.add(company)
     db.flush()
@@ -885,6 +891,12 @@ def save_company_portal_profile(
         )
     if company.lgpd_accepted and not company.lgpd_accepted_at:
         company.lgpd_accepted_at = datetime.now(timezone.utc)
+    company.profile_complete = bool(
+        company.legal_name
+        and company.cnpj
+        and (company.email or company.phone or company.whatsapp)
+        and company.city
+    )
     db.flush()
     audit(
         db,
@@ -2010,6 +2022,38 @@ def reports_summary(
             .select_from(Job)
             .where(
                 Job.tenant_id == tenant_id, Job.status == "aguardando_retorno_empresa"
+            )
+        ),
+        "empresas_cadastradas": db.scalar(
+            select(func.count())
+            .select_from(Company)
+            .where(Company.tenant_id == tenant_id, Company.deleted_at.is_(None))
+        ),
+        "empresas_ativas": db.scalar(
+            select(func.count())
+            .select_from(Company)
+            .where(
+                Company.tenant_id == tenant_id,
+                Company.deleted_at.is_(None),
+                Company.status == "ativa",
+            )
+        ),
+        "empresas_aguardando_aprovacao": db.scalar(
+            select(func.count())
+            .select_from(Company)
+            .where(
+                Company.tenant_id == tenant_id,
+                Company.deleted_at.is_(None),
+                Company.status == "aguardando_aprovacao",
+            )
+        ),
+        "empresas_bloqueadas": db.scalar(
+            select(func.count())
+            .select_from(Company)
+            .where(
+                Company.tenant_id == tenant_id,
+                Company.deleted_at.is_(None),
+                Company.status.in_(["bloqueada", "suspensa"]),
             )
         ),
         "taxa_retorno_empresas": 0,

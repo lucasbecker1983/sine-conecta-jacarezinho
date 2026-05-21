@@ -1490,3 +1490,71 @@ Limitações conhecidas:
 
 - a IA usa a camada local existente de matching por regras quando não houver provedor externo configurado;
 - o endpoint `move-from-application` aceita vínculo operacional por `worker_id`, `resume_id`, `job_id` e `source_application_id`, mas o projeto ainda não possui uma tabela formal separada de candidaturas além dos encaminhamentos existentes.
+
+### Refatoração — Módulo Empresas administrativo completo
+
+Objetivo:
+
+- substituir a visão genérica de empresas por um módulo administrativo completo para o SINE;
+- garantir que, ao clicar em uma empresa, o SINE veja dados cadastrais, contatos, endereço, responsáveis, vagas, encaminhamentos, feedbacks, pendências, bloqueios, observações internas e auditoria;
+- manter a empresa restrita aos próprios dados no portal e manter candidatos sem acesso administrativo.
+
+Backend:
+
+- criada a migration Alembic `20260521_0011_company_admin_module.py`;
+- adicionados campos administrativos em `companies`: `site`, número/complemento de endereço, dados do responsável, porte, CNAE, `status`, `profile_complete`, aprovação, bloqueio, motivo de bloqueio e `internal_notes`;
+- refatorado o roteador `/companies` para respostas administrativas dedicadas ao SINE;
+- criados/ajustados endpoints:
+  - `GET /companies`;
+  - `GET /companies/{company_id}`;
+  - `PATCH /companies/{company_id}`;
+  - `PATCH /companies/{company_id}/status`;
+  - `POST /companies/{company_id}/notes`;
+  - `GET /companies/{company_id}/jobs`;
+  - `GET /companies/{company_id}/referrals`;
+  - `GET /companies/{company_id}/feedbacks`;
+  - `GET /companies/{company_id}/audit`;
+  - `GET /companies/{company_id}/summary`;
+- mantido `POST /companies/{company_id}/portal-user`;
+- adicionados schemas `CompanyListItem`, `CompanyDetailRead`, `CompanyAdminUpdate`, `CompanyStatusUpdate`, `CompanyInternalNoteCreate`, `CompanyJobSummary`, `CompanyReferralSummary`, `CompanyFeedbackSummary`, `CompanyAuditSummary` e `CompanySummary`;
+- adicionados eventos de auditoria `company_viewed_by_sine`, `company_updated_by_sine`, `company_status_changed`, `company_blocked`, `company_unblocked`, `company_note_created`, `company_approved` e `company_rejected`;
+- preservada a regra existente de bloqueio por feedback pendente.
+
+Frontend:
+
+- criada tela dedicada `/empresas` com busca, filtros, métricas e ação `Ver detalhes`;
+- criada tela `/empresas/:id` com topo operacional, cards de resumo, alteração de status, observação interna e abas:
+  - Dados cadastrais;
+  - Responsável e contatos;
+  - Endereço;
+  - Vagas;
+  - Encaminhamentos;
+  - Feedbacks;
+  - Pendências e bloqueios;
+  - Observações internas;
+  - Auditoria;
+- criados componentes do módulo em `frontend/src/components/companies`;
+- adicionado badge `Confidencial para candidatos` nas vagas da empresa para visualização do SINE;
+- atualizados labels de status para evitar termos técnicos na interface;
+- atualizado Dashboard do SINE com métricas de empresas cadastradas, ativas, aguardando aprovação e bloqueadas.
+
+Regras de acesso e proteção de dados:
+
+- endpoints administrativos seguem protegidos por `companies:manage`;
+- empresa continua usando apenas `/company-portal/*` e não acessa `/companies/{id}`;
+- trabalhador não acessa módulo administrativo de empresas;
+- observações internas e auditoria administrativa só aparecem para SINE/Admin/Master;
+- vagas confidenciais continuam mascaradas para trabalhador/candidato.
+
+Validação:
+
+- `cd /opt/saas_sine/backend && .venv/bin/alembic upgrade head`: OK;
+- `cd /opt/saas_sine/backend && .venv/bin/python -m compileall app`: OK;
+- `cd /opt/saas_sine/backend && .venv/bin/pytest -q`: 51 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run test`: 10 arquivos, 36 testes passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK.
+
+Limitações conhecidas:
+
+- o histórico de observações internas usa `internal_notes` da empresa e eventos de auditoria, sem tabela própria de notas;
+- o histórico de bloqueio é reconstruído pela auditoria de status e pelos campos atuais `blocked_at`, `blocked_by_user_id` e `blocking_reason`.
