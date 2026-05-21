@@ -86,10 +86,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               element={only(
                 sineRoles,
                 <EntityPage
-                  title="Trabalhadores"
+                  title="Candidatos"
                   description="Cadastro, LGPD, histórico e busca de candidatos."
                   endpoint="/workers"
-                  actionLabel="Cadastrar trabalhador"
+                  actionLabel="Cadastrar candidato"
                 />,
               )}
             />

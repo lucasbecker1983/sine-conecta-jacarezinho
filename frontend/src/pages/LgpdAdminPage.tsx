@@ -123,7 +123,7 @@ export function LgpdAdminPage() {
     <div className="space-y-6">
       <div>
         <p className="text-sm font-semibold uppercase text-emerald-700">Governança LGPD</p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-950">Painel do encarregado</h1>
+        <h1 className="mt-1 text-2xl font-bold text-slate-950">Painel do Gestor</h1>
       </div>
       <div className="flex gap-2 overflow-x-auto border-b border-slate-200 pb-2">
         {tabs.map((tab) => (
@@ -183,7 +183,7 @@ export function LgpdAdminPage() {
       ) : null}
       {activeTab === "Atividades de tratamento" ? <section className="grid gap-3 md:grid-cols-2">{activities.map((activity) => <article key={activity.id} className="rounded-md border border-slate-200 bg-white p-4"><h2 className="font-semibold text-slate-950">{activity.name}</h2><p className="mt-2 text-sm text-slate-600">{activity.purpose}</p></article>)}</section> : null}
       {activeTab === "Termos e versões" ? <section className="grid gap-3 md:grid-cols-2">{terms.map((term) => <article key={term.id} className="rounded-md border border-slate-200 bg-white p-4"><h2 className="font-semibold text-slate-950">{term.title}</h2><p className="mt-1 text-sm text-slate-500">{term.term_type} v{term.version}</p><p className="mt-2 text-sm text-slate-600">{term.summary}</p></article>)}</section> : null}
-      {activeTab === "Consentimentos" ? <p className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600">Consentimentos versionados aparecem nos perfis de trabalhador e empresa; os agregados estão na visão geral.</p> : null}
+      {activeTab === "Consentimentos" ? <p className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600">Consentimentos versionados aparecem nos perfis de candidato e empresa; os agregados estão na visão geral.</p> : null}
       {activeTab === "Auditoria LGPD" ? <p className="rounded-md border border-slate-200 bg-white p-4 text-sm text-slate-600">Alterações, exportações, correções, anonimizações e incidentes registram audit_log no backend.</p> : null}
     </div>
   );

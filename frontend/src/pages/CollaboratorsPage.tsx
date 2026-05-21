@@ -88,7 +88,7 @@ export function CollaboratorsPage() {
           Colaboradores do SINE
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          Gestão de acessos internos. Empresas e trabalhadores nunca criam
+          Gestão de acessos internos. Empresas e candidatos nunca criam
           usuários do SINE.
         </p>
       </div>

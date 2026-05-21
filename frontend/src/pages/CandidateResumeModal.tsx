@@ -65,7 +65,7 @@ export function CandidateResumeModal({ jobId, candidate, onClose }: Props) {
               <aside className="space-y-3">
                 <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
                   <div className="text-sm font-bold text-slate-950">
-                    Dados do trabalhador
+                    Dados do candidato
                   </div>
                   <div className="mt-3 space-y-1 text-sm text-slate-600">
                     <div>

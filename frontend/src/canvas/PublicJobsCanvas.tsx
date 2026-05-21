@@ -28,7 +28,7 @@ export function PublicJobsCanvas({ className = "" }: { className?: string }) {
       const nodes = [
         { label: "SINE", x: center.x, y: center.y, r: 46, color: "#047857" },
         {
-          label: "Trabalhadores",
+          label: "Candidatos",
           x: width * 0.22,
           y: height * 0.3,
           r: 30,

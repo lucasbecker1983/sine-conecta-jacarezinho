@@ -68,16 +68,16 @@ function contextForTitle(title: string) {
   const normalized = title.toLowerCase();
   if (normalized.includes("trabalh")) {
     return {
-      description: "Acompanhe trabalhadores cadastrados e currículos disponíveis para análise.",
-      emptyTitle: "Nenhum trabalhador encontrado",
-      emptyMessage: "Novos cadastros aparecerão aqui quando os trabalhadores se registrarem ou forem cadastrados pelo SINE.",
+      description: "Acompanhe candidatos cadastrados e currículos disponíveis para análise.",
+      emptyTitle: "Nenhum candidato encontrado",
+      emptyMessage: "Novos cadastros aparecerão aqui quando os candidatos se registrarem ou forem cadastrados pelo SINE.",
     };
   }
   if (normalized.includes("curr")) {
     return {
       description: "Consulte currículos recebidos e organize a análise do SINE.",
       emptyTitle: "Nenhum currículo recebido",
-      emptyMessage: "Currículos enviados pelos trabalhadores aparecerão aqui para acompanhamento.",
+      emptyMessage: "Currículos enviados pelos candidatos aparecerão aqui para acompanhamento.",
     };
   }
   if (normalized.includes("vaga")) {
@@ -91,7 +91,7 @@ function contextForTitle(title: string) {
     return {
       description: "Acompanhe encaminhamentos oficiais e retornos das empresas.",
       emptyTitle: "Nenhum encaminhamento encontrado",
-      emptyMessage: "Quando o SINE encaminhar trabalhadores para empresas, os registros aparecerão aqui.",
+      emptyMessage: "Quando o SINE encaminhar candidatos para empresas, os registros aparecerão aqui.",
     };
   }
   if (normalized.includes("lgpd") || normalized.includes("auditoria")) {

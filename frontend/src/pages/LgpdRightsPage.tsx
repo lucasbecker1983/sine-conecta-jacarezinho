@@ -9,7 +9,7 @@ export function LgpdRightsPage() {
           <p className="text-sm font-semibold uppercase text-emerald-700">Privacidade e LGPD</p>
           <h1 className="mt-2 text-3xl font-bold text-slate-950">Direitos do titular de dados</h1>
           <p className="mt-3 max-w-3xl text-slate-600">
-            O SINE Conecta Jacarezinho trata dados para cadastrar trabalhadores, receber currículos, registrar candidaturas, fazer triagem humana e encaminhar candidatos para empresas quando houver vínculo com uma vaga.
+            O SINE Conecta Jacarezinho trata dados para cadastrar candidatos, receber currículos, registrar candidaturas, fazer triagem humana e encaminhar candidatos para empresas quando houver vínculo com uma vaga.
           </p>
         </div>
 

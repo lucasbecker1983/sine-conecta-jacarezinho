@@ -7,9 +7,9 @@ export const statusLabels: Record<string, string> = {
   solicitada: "Solicitada pela empresa",
   em_analise: "Em análise pelo SINE",
   aprovada: "Aprovada pelo SINE",
-  publicada: "Publicada para trabalhadores",
+  publicada: "Publicada para candidatos",
   em_triagem: "Em triagem pelo SINE",
-  encaminhando_candidatos: "Encaminhando trabalhadores",
+  encaminhando_candidatos: "Encaminhando candidatos",
   aguardando_retorno_empresa: "Aguardando retorno da empresa",
   entrevistado: "Chamado para entrevista",
   encerrada: "Encerrada",
@@ -50,7 +50,7 @@ export const roleLabels: Record<string, string> = {
   sine_manager: "Gestor do SINE",
   sine_staff: "Colaborador do SINE",
   company_user: "Empresa",
-  worker: "Trabalhador",
+  worker: "Candidato",
 };
 
 export function roleLabel(role?: string | null) {

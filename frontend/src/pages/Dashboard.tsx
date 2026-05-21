@@ -62,7 +62,7 @@ export function Dashboard() {
     string,
     unknown
   > | null>(null);
-  const [selected, setSelected] = useState("Clique em um trabalhador no mapa");
+  const [selected, setSelected] = useState("Clique em um candidato no mapa");
   const [selectedAiJobId, setSelectedAiJobId] = useState("");
   const roles = user?.roles ?? [];
   const isCompany = roles.includes("company_user");
@@ -127,8 +127,8 @@ export function Dashboard() {
     return (
       <div className="space-y-5">
         <AppPageHeader
-          eyebrow="Portal do Trabalhador"
-          title={`Olá, ${user?.full_name?.split(" ")[0] || "trabalhador"}. Esta é sua trajetória.`}
+          eyebrow="Portal do Candidato"
+          title={`Olá, ${user?.full_name?.split(" ")[0] || "candidato"}. Esta é sua trajetória.`}
           description="Acompanhe currículo, vagas de interesse e próximos passos com uma linguagem simples."
         >
           <div className="grid gap-3 md:grid-cols-3">
@@ -259,7 +259,7 @@ export function Dashboard() {
           items={[
             {
               title: "Receber currículos e candidaturas",
-              description: "Organizar dados enviados pelos trabalhadores.",
+              description: "Organizar dados enviados pelos candidatos.",
               status: "done",
             },
             {
@@ -319,7 +319,7 @@ export function Dashboard() {
             </h2>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-600">
               A IA pode resumir currículo, extrair habilidades, comparar
-              currículo com vaga, sugerir trabalhadores compatíveis, explicar
+              currículo com vaga, sugerir candidatos compatíveis, explicar
               aderência, sugerir perguntas para entrevista e apontar dados
               faltantes no cadastro.
             </p>
@@ -419,7 +419,7 @@ export function Dashboard() {
                 to={to}
                 className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-center text-xs font-semibold text-slate-700 transition hover:border-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
               >
-                {to === "/sine/triagem" ? "Triar trabalhadores" : "Abrir"}
+                {to === "/sine/triagem" ? "Triar candidatos" : "Abrir"}
               </Link>
             </div>
           ))}
@@ -472,7 +472,7 @@ export function Dashboard() {
         <AppCard>
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-bold text-slate-950">
-              Compatibilidade trabalhador/vaga
+              Compatibilidade candidato/vaga
             </h2>
             <span className="text-sm text-slate-500">{selected}</span>
           </div>

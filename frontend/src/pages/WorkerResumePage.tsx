@@ -271,7 +271,7 @@ export function WorkerResumePage() {
   return (
     <div className="space-y-5">
       <AppPageHeader
-        eyebrow="Portal do Trabalhador"
+        eyebrow="Portal do Candidato"
         title="Concorrer a uma vaga"
         description="Primeiro selecione a vaga aberta. Depois escolha preencher o currículo no portal ou enviar o PDF."
         action={

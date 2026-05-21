@@ -274,7 +274,7 @@ export function CompanyDashboard() {
       <AppPageHeader
         eyebrow="Portal da Empresa"
         title="Bem-vindo ao SINE Conecta Jacarezinho"
-        description="Solicite vagas, acompanhe trabalhadores encaminhados e mantenha o retorno em dia para fortalecer a empregabilidade local."
+        description="Solicite vagas, acompanhe candidatos encaminhados e mantenha o retorno em dia para fortalecer a empregabilidade local."
         action={
           <img
             src={sineLogoFullHd}
@@ -296,7 +296,7 @@ export function CompanyDashboard() {
               </div>
             </div>
             <p className="mt-2 max-w-3xl text-xs font-semibold uppercase tracking-wide text-emerald-800">
-              A empresa vê apenas trabalhadores encaminhados oficialmente. A IA é
+              A empresa vê apenas candidatos encaminhados oficialmente. A IA é
               ferramenta interna do SINE.
             </p>
             <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -358,7 +358,7 @@ export function CompanyDashboard() {
           {
             to: "/empresa/encaminhamentos",
             title: "Encaminhamentos",
-            body: "Veja trabalhadores enviados pelo SINE e registre o retorno.",
+            body: "Veja candidatos enviados pelo SINE e registre o retorno.",
             icon: UserRoundSearch,
           },
           {
@@ -400,7 +400,7 @@ export function CompanyDashboard() {
             <div>
               <p className="mt-1 text-sm text-amber-900">
                 {status.blocking_reason ??
-                  "Para mantermos o processo justo com os trabalhadores e eficiente para sua empresa, informe o resultado dos encaminhamentos antes de abrir uma nova solicitação."}
+                  "Para mantermos o processo justo com os candidatos e eficiente para sua empresa, informe o resultado dos encaminhamentos antes de abrir uma nova solicitação."}
               </p>
             </div>
             <Link
@@ -411,7 +411,7 @@ export function CompanyDashboard() {
             </Link>
           </div>
           <p className="mt-3 text-sm leading-6 text-amber-900">
-            Para mantermos o processo justo com os trabalhadores e eficiente
+            Para mantermos o processo justo com os candidatos e eficiente
             para sua empresa, informe o resultado dos encaminhamentos
             antes de abrir uma nova solicitação.
           </p>
@@ -464,7 +464,7 @@ export function CompanyDashboard() {
             {loading && <p className="text-sm text-slate-500">Carregando...</p>}
             {!loading && latestReferrals.length === 0 && (
               <p className="text-sm text-slate-500">
-                Ainda não há trabalhadores encaminhados.
+                Ainda não há candidatos encaminhados.
               </p>
             )}
             {latestReferrals.map((referral) => (
@@ -739,7 +739,7 @@ export function CompanyReferralsPage() {
       <AppPageHeader
         eyebrow="Portal da Empresa"
         title="Encaminhamentos recebidos"
-        description="Avalie os trabalhadores encaminhados pelo SINE e registre o retorno para manter o atendimento em dia."
+        description="Avalie os candidatos encaminhados pelo SINE e registre o retorno para manter o atendimento em dia."
         action={
           <Link
             to="/empresa/comunicacao"
@@ -856,7 +856,7 @@ export function CompanyReferralsPage() {
           {referrals.length === 0 && (
             <div className="lg:col-span-2">
               <AppEmptyState
-                title="Nenhum trabalhador encaminhado ainda"
+                title="Nenhum candidato encaminhado ainda"
                 message="Quando o SINE encaminhar currículos para uma vaga da empresa, eles aparecerão aqui para avaliação."
               />
             </div>

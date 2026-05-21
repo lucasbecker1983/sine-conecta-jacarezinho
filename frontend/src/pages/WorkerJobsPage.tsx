@@ -75,7 +75,7 @@ export function WorkerJobsPage() {
   return (
     <div className="space-y-5">
       <AppPageHeader
-        eyebrow="Portal do Trabalhador"
+        eyebrow="Portal do Candidato"
         title="Vagas abertas"
         description="Escolha uma vaga disponível. Depois envie ou preencha seu currículo para concluir a candidatura."
       />

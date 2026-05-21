@@ -17,7 +17,7 @@ describe("CompanyDashboard", () => {
             profile_complete: true,
             pending_returns: 1,
             can_open_job: false,
-            blocking_reason: "Feedback pendente",
+            blocking_reason: "Retorno pendente",
             ai_scope: "A IA é exclusiva do SINE",
           },
         });
@@ -31,7 +31,7 @@ describe("CompanyDashboard", () => {
   it("mostra IA exclusiva do SINE e bloqueio amigavel", async () => {
     render(<CompanyDashboard />, { wrapper: MemoryRouter });
     expect(await screen.findByText(/ferramenta interna do SINE/i)).toBeInTheDocument();
-    expect(screen.getByText(/bloqueado até registrar/i)).toBeInTheDocument();
+    expect(screen.getByText(/abertura de vagas temporariamente suspensa/i)).toBeInTheDocument();
     expect(screen.getByText(/precisamos do seu retorno/i)).toBeInTheDocument();
     expect(screen.getByText(/informar retorno agora/i)).toBeInTheDocument();
   });

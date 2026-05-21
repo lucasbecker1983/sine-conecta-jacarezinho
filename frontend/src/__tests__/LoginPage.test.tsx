@@ -16,7 +16,7 @@ describe("LoginPage", () => {
     expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/senha/i)).toBeInTheDocument();
     expect(screen.getByText(/ver vagas abertas/i)).toBeInTheDocument();
-    expect(screen.getByText(/sou trabalhador e quero me cadastrar/i)).toBeInTheDocument();
+    expect(screen.getByText(/sou candidato e quero me cadastrar/i)).toBeInTheDocument();
     expect(screen.getByText(/sou empresa e quero solicitar vagas/i)).toBeInTheDocument();
   });
 

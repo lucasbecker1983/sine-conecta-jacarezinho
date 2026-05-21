@@ -25,13 +25,13 @@ const profiles = {
     title: "Sou empresa",
     eyebrow: "Portal da Empresa",
     description:
-      "Solicite vagas, acompanhe trabalhadores encaminhados e registre retornos.",
+      "Solicite vagas, acompanhe candidatos encaminhados e registre retornos.",
     email: "empresa@sine.jacarezinho.cloud",
   },
   worker: {
     icon: UserRound,
-    title: "Sou trabalhador",
-    eyebrow: "Portal do Trabalhador",
+    title: "Sou candidato",
+    eyebrow: "Portal do Candidato",
     description:
       "Atualize seu cadastro, envie currículo e acompanhe encaminhamentos.",
     email: "candidato@sine.jacarezinho.cloud",
@@ -41,7 +41,7 @@ const profiles = {
     title: "Sou colaborador do SINE",
     eyebrow: "Painel do SINE",
     description:
-      "Gerencie empresas, trabalhadores, vagas, currículos e relatórios.",
+      "Gerencie empresas, candidatos, vagas, currículos e relatórios.",
     email: "colaborador@sine.jacarezinho.cloud",
   },
 };
@@ -121,8 +121,8 @@ export function Login() {
               </div>
               <div className="login-badges grid gap-2 text-sm text-emerald-50/90 sm:grid-cols-3">
                 <HeroBadge title="SINE" text="triagem humana" />
-                <HeroBadge title="Empresas" text="trabalhadores encaminhados" />
-                <HeroBadge title="Trabalhadores" text="dados protegidos" />
+                <HeroBadge title="Empresas" text="candidatos encaminhados" />
+                <HeroBadge title="Candidatos" text="dados protegidos" />
               </div>
             </div>
           </section>
@@ -265,7 +265,7 @@ export function Login() {
                   to="/trabalhador/cadastro"
                   className="font-semibold text-emerald-800 hover:text-emerald-950"
                 >
-                  Sou trabalhador e quero me cadastrar
+                  Sou candidato e quero me cadastrar
                 </Link>
                 <Link
                   to="/login?role=company"
@@ -282,7 +282,7 @@ export function Login() {
                 </Link>
               </div>
               <p className="login-lgpd mt-4 text-xs leading-5 text-slate-500">
-                Ambiente seguro para empresas, trabalhadores e equipe do SINE.
+                Ambiente seguro para empresas, candidatos e equipe do SINE.
                 Dados pessoais são tratados conforme LGPD e auditados por
                 finalidade de atendimento público.
               </p>

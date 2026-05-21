@@ -18,7 +18,7 @@ export const defaultTenantTheme: TenantTheme = {
   tenantName: "SINE Jacarezinho",
   visibleName: "SINE Conecta Jacarezinho",
   portalName: "SINE Conecta",
-  tagline: "Conectando trabalhadores, empresas e oportunidades com cuidado e transparência.",
+  tagline: "Conectando candidatos, empresas e oportunidades com cuidado e transparência.",
   logoUrl: sineLogo,
   primaryColor: "#14532d",
   secondaryColor: "#0f766e",

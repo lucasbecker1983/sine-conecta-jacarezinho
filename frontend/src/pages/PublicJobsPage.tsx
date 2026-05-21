@@ -99,14 +99,14 @@ export function PublicJobsPage() {
               </h1>
               <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
                 Vagas acompanhadas pelo SINE, com orientação, segurança e
-                transparência para trabalhadores e empresas.
+                transparência para candidatos e empresas.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   to="/trabalhador/cadastro"
                   className="tenant-button inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
                 >
-                  <Send size={16} /> Sou trabalhador
+                  <Send size={16} /> Sou candidato
                 </Link>
                 <Link
                   to="/login?role=company"
@@ -309,7 +309,7 @@ function PublicHeader() {
             to="/trabalhador/cadastro"
             className="rounded-md bg-emerald-700 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-800"
           >
-            Sou trabalhador
+            Sou candidato
           </Link>
         </div>
       </div>

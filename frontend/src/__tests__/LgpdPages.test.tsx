@@ -46,7 +46,7 @@ describe("LGPD pages", () => {
             id: "1",
             consent_type: "worker_privacy_notice",
             consent_status: "accepted",
-            term_title: "Aviso de Privacidade do Trabalhador",
+            term_title: "Aviso de Privacidade do Candidato",
             term_version: "1.0",
             purpose: "Cadastro e candidatura",
             accepted_at: new Date().toISOString(),
@@ -56,7 +56,7 @@ describe("LGPD pages", () => {
       .mockResolvedValueOnce({ data: [] })
       .mockResolvedValueOnce({ data: [] });
     render(withRouter(<WorkerPrivacyPage />));
-    expect(await screen.findByText(/Aviso de Privacidade do Trabalhador/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Aviso de Privacidade do Candidato/i)).toBeInTheDocument();
   });
 
   it("CompanyPrivacyPage mostra orientação de uso de dados", async () => {
@@ -79,7 +79,7 @@ describe("LGPD pages", () => {
       .mockResolvedValueOnce({ data: [] })
       .mockResolvedValueOnce({ data: [] });
     render(<LgpdAdminPage />);
-    expect(await screen.findByText(/Painel do encarregado/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Painel do Gestor/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Solicitações dos titulares/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Incidentes/i })).toBeInTheDocument();
   });

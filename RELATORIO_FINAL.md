@@ -1264,6 +1264,20 @@ Validação:
 
 - `cd /opt/saas_sine/frontend && npm run build`: OK.
 
+### Ajuste textual — LGPD e Candidato
+
+Objetivo:
+
+- na área LGPD do colaborador, alterar o título `Painel do encarregado` para `Painel do Gestor`;
+- substituir a linguagem visível de `Trabalhador` por `Candidato` no frontend;
+- deixar `Vagas abertas` acima de `Meu Currículo` no menu do perfil candidato;
+- preservar rotas, roles, status técnicos e endpoints existentes, como `/trabalhador/...`, `worker` e `candidatura_trabalhador`, para não quebrar fluxos.
+
+Validação:
+
+- `cd /opt/saas_sine/frontend && npm run test`: 7 arquivos, 19 testes, todos passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK.
+
 ### Ajuste pós-Sprint 9 — GovTech premium por perfil
 
 Objetivo:

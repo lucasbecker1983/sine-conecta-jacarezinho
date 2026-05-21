@@ -73,15 +73,15 @@ const items = [
     roles: ["company_user"],
   },
   {
-    to: "/meu-curriculo",
-    label: "Meu Currículo",
-    icon: UserRound,
-    roles: ["worker"],
-  },
-  {
     to: "/vagas-abertas",
     label: "Vagas abertas",
     icon: BriefcaseBusiness,
+    roles: ["worker"],
+  },
+  {
+    to: "/meu-curriculo",
+    label: "Meu Currículo",
+    icon: UserRound,
     roles: ["worker"],
   },
   {
@@ -98,7 +98,7 @@ const items = [
   },
   {
     to: "/trabalhadores",
-    label: "Trabalhadores",
+    label: "Candidatos",
     icon: UsersRound,
     roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
   },
@@ -183,9 +183,9 @@ const navGroups = [
     items: ["/empresa/cadastro", "/empresa/vagas", "/empresa/encaminhamentos", "/empresa/comunicacao", "/empresa/privacidade"],
   },
   {
-    title: "Trabalhador",
+    title: "Candidato",
     roles: ["worker"],
-    items: ["/meu-curriculo", "/vagas-abertas", "/trabalhador/privacidade"],
+    items: ["/vagas-abertas", "/meu-curriculo", "/trabalhador/privacidade"],
   },
   {
     title: "Operação SINE",

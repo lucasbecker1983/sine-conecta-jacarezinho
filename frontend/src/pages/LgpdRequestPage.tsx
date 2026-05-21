@@ -64,7 +64,7 @@ export function LgpdRequestPage() {
             <label className="block text-sm font-medium text-slate-700">
               Tipo de solicitante
               <select name="requester_type" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2">
-                <option value="worker">Trabalhador</option>
+                <option value="worker">Candidato</option>
                 <option value="company_user">Empresa</option>
                 <option value="public">Outro</option>
               </select>

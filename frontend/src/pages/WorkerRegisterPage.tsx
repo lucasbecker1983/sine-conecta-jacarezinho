@@ -111,7 +111,7 @@ export function WorkerRegisterPage() {
       <main className="mx-auto max-w-5xl px-5 py-8">
         <section className="rounded-md border border-emerald-100 bg-white p-5 shadow-sm">
           <div className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-800">
-            <UserRoundPlus size={15} /> Cadastro do trabalhador
+            <UserRoundPlus size={15} /> Cadastro do candidato
           </div>
           <h1 className="mt-4 text-3xl font-bold text-slate-950">
             Crie seu acesso para se candidatar
@@ -119,7 +119,7 @@ export function WorkerRegisterPage() {
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
             {jobTitle
               ? `Você está se cadastrando para continuar a candidatura na vaga ${jobTitle}.`
-              : "Informe seus dados para acompanhar vagas e candidaturas pelo Portal do Trabalhador."}
+              : "Informe seus dados para acompanhar vagas e candidaturas pelo Portal do Candidato."}
           </p>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
             Essas informações ajudam o SINE a encontrar oportunidades mais
