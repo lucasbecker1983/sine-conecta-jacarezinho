@@ -62,6 +62,7 @@ export function Login() {
   const [email, setEmail] = useState(profiles[initialProfile].email);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
   const selected = profiles[selectedProfile];
 
@@ -76,11 +77,13 @@ export function Login() {
     setEmail(profiles[profile].email);
     setPassword("");
     setError("");
+    setNotice("");
   }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     setError("");
+    setNotice("");
     setLoading(true);
     try {
       const data = await login(email, password);
@@ -91,6 +94,15 @@ export function Login() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function recoverPassword() {
+    setError("");
+    setNotice(
+      selectedProfile === "worker"
+        ? "Para recuperar seu acesso, atualize seu cadastro em Primeiro acesso ou procure o atendimento do SINE Jacarezinho."
+        : "Para recuperar o acesso da empresa, fale com o atendimento do SINE Jacarezinho. A equipe confirma os dados e orienta a troca com segurança.",
+    );
   }
 
   return (
@@ -227,6 +239,11 @@ export function Login() {
                 </span>
               </label>
               {error && <AppAlert tone="error" title={error} className="mb-4" />}
+              {notice && (
+                <AppAlert tone="info" title="Recuperação de acesso" className="mb-4">
+                  {notice}
+                </AppAlert>
+              )}
               <AppButton
                 type="submit"
                 className="w-full"
@@ -248,6 +265,7 @@ export function Login() {
                   </Link>
                   <button
                     type="button"
+                    onClick={recoverPassword}
                     className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                   >
                     Recuperar senha

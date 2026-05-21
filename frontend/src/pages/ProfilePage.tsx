@@ -86,7 +86,10 @@ export function ProfilePage() {
             <ShieldCheck size={16} className="mr-1 inline text-emerald-700" />{" "}
             Perfil ativo: {profile?.roles.join(", ")}
           </div>
-          <button className="tenant-button mt-4 rounded-md px-4 py-2 text-sm font-semibold">
+          <button
+            type="submit"
+            className="tenant-button mt-4 rounded-md px-4 py-2 text-sm font-semibold"
+          >
             Salvar perfil
           </button>
         </form>

@@ -269,6 +269,7 @@ export function WorkerRegisterPage() {
           {error && <AppAlert tone="error" title={error} className="mt-4" />}
           <div className="mt-5 flex justify-end">
             <button
+              type="submit"
               disabled={loading}
               className="tenant-button rounded-md px-5 py-2 text-sm font-semibold disabled:opacity-70"
             >

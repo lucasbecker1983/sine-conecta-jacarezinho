@@ -97,7 +97,10 @@ export function ChangePasswordPage() {
           <ShieldCheck size={16} className="mr-1 inline" /> A alteração é
           registrada em auditoria e o hash permanece protegido em Argon2id.
         </div>
-        <button className="tenant-button mt-4 rounded-md px-4 py-2 text-sm font-semibold">
+        <button
+          type="submit"
+          className="tenant-button mt-4 rounded-md px-4 py-2 text-sm font-semibold"
+        >
           Alterar senha
         </button>
       </form>

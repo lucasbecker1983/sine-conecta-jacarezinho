@@ -1264,6 +1264,26 @@ Validação:
 
 - `cd /opt/saas_sine/frontend && npm run build`: OK.
 
+### Ajuste pós-Sprint 9 — Auditoria de botões e ações visíveis
+
+Objetivo:
+
+- verificar botões visíveis nas áreas públicas, SINE, empresa e candidato;
+- remover ações decorativas ou ambíguas sem alterar regras de negócio, endpoints, autenticação, permissões ou backend.
+
+Melhorias aplicadas:
+
+- `Login`: o botão `Recuperar senha` agora exibe orientação contextual para candidato ou empresa, sem sugerir fluxo inexistente de backend;
+- `EntityPage`: botões de ação genéricos agora navegam para telas existentes quando há fluxo seguro (`Cadastrar candidato` para cadastro público e ações de currículos/vagas/encaminhamentos para triagem do SINE);
+- `EntityPage`: botões sem fluxo real em páginas genéricas administrativas deixam de ser renderizados;
+- formulários de comunicação, perfil, senha, colaboradores, empresas, cadastro de candidato e triagem passaram a declarar `type="submit"` explicitamente;
+- botões de seleção, menu, modal, feedback, filtros, candidaturas e navegação foram revisados e preservados por já terem ação direta ou envio de formulário.
+
+Validação:
+
+- `cd /opt/saas_sine/frontend && npm run test`: 7 arquivos, 19 testes, todos passaram;
+- `cd /opt/saas_sine/frontend && npm run build`: OK.
+
 ### Ajuste textual — LGPD e Candidato
 
 Objetivo:

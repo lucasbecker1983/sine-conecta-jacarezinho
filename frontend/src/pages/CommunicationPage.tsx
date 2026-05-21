@@ -284,7 +284,10 @@ export function CommunicationPage({ mode }: Props) {
                 className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
               />
             </label>
-            <button className="tenant-button mt-3 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold">
+            <button
+              type="submit"
+              className="tenant-button mt-3 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
+            >
               <Send size={16} /> Criar
             </button>
           </form>
@@ -461,6 +464,7 @@ export function CommunicationPage({ mode }: Props) {
                   />
                 </label>
                 <button
+                  type="submit"
                   disabled={!body.trim()}
                   className="tenant-button mt-3 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-50"
                 >

@@ -132,7 +132,7 @@ export function CompaniesPage() {
             <input required type="checkbox" checked={form.lgpd_accepted} onChange={(e) => setForm({ ...form, lgpd_accepted: e.target.checked })} className="mt-1" />
             <span><ShieldCheck size={16} className="mr-1 inline" /> Consentimento LGPD registrado para tratamento dos dados da empresa e do responsável pelo RH.</span>
           </label>
-          <button disabled={saving} className="tenant-button mt-4 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60"><Plus size={17} /> {saving ? 'Cadastrando...' : 'Cadastrar empresa'}</button>
+          <button type="submit" disabled={saving} className="tenant-button mt-4 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-60"><Plus size={17} /> {saving ? 'Cadastrando...' : 'Cadastrar empresa'}</button>
         </form>
 
         <div className="space-y-5">
@@ -149,7 +149,7 @@ export function CompaniesPage() {
               <label className="block text-sm font-medium text-slate-700">Nome do usuário<input required value={userName} onChange={(e) => setUserName(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2" /></label>
               <label className="block text-sm font-medium text-slate-700">E-mail de login<input required type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2" /></label>
             </div>
-            <button className="tenant-button mt-4 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold"><KeyRound size={17} /> Gerar acesso</button>
+            <button type="submit" className="tenant-button mt-4 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold"><KeyRound size={17} /> Gerar acesso</button>
             {lastCredential && (
               <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
                 <div className="font-bold">{lastCredential.email}</div>

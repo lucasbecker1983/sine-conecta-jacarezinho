@@ -343,7 +343,10 @@ export function SineJobTriagePage() {
                 rows={4}
                 className="mt-2 w-full rounded-md border border-amber-200 px-3 py-2 text-sm"
               />
-              <button className="mt-3 rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white">
+              <button
+                type="submit"
+                className="mt-3 rounded-md bg-amber-700 px-3 py-2 text-sm font-semibold text-white"
+              >
                 Enviar solicitação
               </button>
             </form>
@@ -451,6 +454,7 @@ export function SineJobTriagePage() {
                 className="min-w-[280px] flex-1 rounded-md border border-slate-200 px-3 py-2 text-sm"
               />
               <button
+                type="submit"
                 disabled={selectedWorkers.size === 0}
                 className="tenant-button inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold disabled:opacity-50"
               >

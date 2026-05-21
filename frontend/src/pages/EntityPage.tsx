@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 import { AppButton, AppEmptyState, AppPageHeader, AppTable } from '../components/ui'
 import { friendlyStatus } from '../utils/statusLabels'
@@ -11,17 +12,30 @@ type Props = {
 }
 
 export function EntityPage({ title, description, endpoint, actionLabel = 'Novo registro' }: Props) {
+  const navigate = useNavigate()
   const [items, setItems] = useState<any[]>([])
   const context = contextForTitle(title)
+  const actionTarget = actionTargetForTitle(title)
+
   useEffect(() => {
     if (endpoint) api.get(endpoint).then(({ data }) => setItems(data)).catch(() => setItems([]))
   }, [endpoint])
+
   return (
     <div className="space-y-4">
       <AppPageHeader
         title={title}
         description={description || context.description}
-        action={<AppButton aria-label={actionLabel}>{actionLabel}</AppButton>}
+        action={
+          actionTarget ? (
+            <AppButton
+              aria-label={actionLabel}
+              onClick={() => navigate(actionTarget)}
+            >
+              {actionLabel}
+            </AppButton>
+          ) : undefined
+        }
       />
       <AppTable
         rows={items}
@@ -66,7 +80,7 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
 
 function contextForTitle(title: string) {
   const normalized = title.toLowerCase();
-  if (normalized.includes("trabalh")) {
+  if (normalized.includes("trabalh") || normalized.includes("candidat")) {
     return {
       description: "Acompanhe candidatos cadastrados e currículos disponíveis para análise.",
       emptyTitle: "Nenhum candidato encontrado",
@@ -106,4 +120,19 @@ function contextForTitle(title: string) {
     emptyTitle: "Nenhum registro encontrado",
     emptyMessage: "Quando houver dados disponíveis, eles aparecerão aqui de forma organizada.",
   };
+}
+
+function actionTargetForTitle(title: string) {
+  const normalized = title.toLowerCase();
+  if (normalized.includes("candidat") || normalized.includes("trabalh")) {
+    return "/trabalhador/cadastro";
+  }
+  if (
+    normalized.includes("curr") ||
+    normalized.includes("vaga") ||
+    normalized.includes("encaminh")
+  ) {
+    return "/sine/triagem";
+  }
+  return "";
 }
