@@ -1263,3 +1263,28 @@ Melhorias aplicadas:
 Validação:
 
 - `cd /opt/saas_sine/frontend && npm run build`: OK.
+
+### Ajuste pós-Sprint 9 — GovTech premium por perfil
+
+Objetivo:
+
+- aprofundar a revisão visual das telas prioritárias com foco GovTech premium;
+- manter regras de negócio, endpoints, autenticação, permissões, RBAC e backend sem alteração;
+- melhorar clareza operacional para SINE, empresas e trabalhadores.
+
+Melhorias aplicadas:
+
+- `AppLayout`: navegação agrupada por perfil, rótulos administrativos mais humanos, perfil do usuário na topbar sem expor nomes técnicos de papel;
+- `Login`: opções de acesso com foco visível, botão padronizado e linguagem institucional mais clara;
+- `Dashboard`: central operacional do SINE com fluxo de trabalho, métricas e linguagem orientada a trabalhadores, não termos técnicos;
+- `CompanyDashboard`: bloco forte de situação da empresa (`Empresa regular`, `Empresa em atenção`, `Abertura de vagas temporariamente suspensa`) e CTA para retornos pendentes;
+- `CompanyJobsPage`: formulário de vagas padronizado com componentes UI, bloqueio humanizado e histórico com status amigáveis;
+- `CompanyReferralsPage`: cartões de encaminhamento mais claros, data do encaminhamento, status padronizado, indicação de retorno pendente e ação principal `Registrar feedback`;
+- `WorkerJobsPage`: busca simples local, cards de vaga mobile-first e CTA `Tenho interesse`;
+- `WorkerResumePage`: resumo de currículo/vaga/próximo passo, linha do tempo da candidatura e estados vazios mais orientativos;
+- `EntityPage`: estados vazios contextuais para trabalhadores, currículos, vagas, encaminhamentos, relatórios e LGPD;
+- `statusLabels.ts`: ampliado com `roleLabel`, `primaryRoleLabel`, novos status amigáveis e tons padronizados.
+
+Validação:
+
+- `cd /opt/saas_sine/frontend && npm run build`: OK.

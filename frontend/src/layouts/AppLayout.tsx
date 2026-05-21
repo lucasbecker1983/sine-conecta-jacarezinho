@@ -26,6 +26,7 @@ import { api, getCurrentTenant } from "../services/api";
 import { useAuthStore } from "../stores/auth";
 import type { NotificationItem } from "../types";
 import jmbLogo from "../assets/logos/jmb-tecnologia-logo.png";
+import { primaryRoleLabel } from "../utils/statusLabels";
 
 const items = [
   {
@@ -103,7 +104,7 @@ const items = [
   },
   {
     to: "/curriculos",
-    label: "Curriculos",
+    label: "Currículos",
     icon: FileText,
     roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
   },
@@ -151,29 +152,80 @@ const items = [
   },
   {
     to: "/relatorios",
-    label: "Relatorios",
+    label: "Relatórios",
     icon: BarChart3,
     roles: ["super_admin", "tenant_admin", "sine_manager"],
   },
   {
     to: "/sistema/status",
-    label: "Status",
+    label: "Saúde do sistema",
     icon: ServerCog,
     roles: ["super_admin", "tenant_admin"],
   },
   {
     to: "/admin",
-    label: "White label",
+    label: "Identidade visual",
     icon: Settings,
     roles: ["super_admin", "tenant_admin"],
   },
   {
     to: "/master",
-    label: "Master SaaS",
+    label: "Administração geral",
     icon: ShieldCheck,
     roles: ["super_admin"],
   },
 ];
+
+const navGroups = [
+  {
+    title: "Empresa",
+    roles: ["company_user"],
+    items: ["/empresa/cadastro", "/empresa/vagas", "/empresa/encaminhamentos", "/empresa/comunicacao", "/empresa/privacidade"],
+  },
+  {
+    title: "Trabalhador",
+    roles: ["worker"],
+    items: ["/meu-curriculo", "/vagas-abertas", "/trabalhador/privacidade"],
+  },
+  {
+    title: "Operação SINE",
+    roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
+    items: ["/empresas", "/trabalhadores", "/curriculos", "/sine/vagas", "/sine/triagem", "/encaminhamentos", "/comunicacao"],
+  },
+  {
+    title: "Gestão e conformidade",
+    roles: ["super_admin", "tenant_admin", "sine_manager", "sine_staff"],
+    items: ["/colaboradores", "/auditoria-lgpd", "/lgpd", "/relatorios", "/sistema/status", "/admin", "/master"],
+  },
+];
+
+type NavigationItem = (typeof items)[number];
+
+function SidebarLink({
+  item,
+  onNavigate,
+}: {
+  item: NavigationItem;
+  onNavigate?: () => void;
+}) {
+  const Icon = item.icon;
+  return (
+    <NavLink
+      to={item.to}
+      onClick={onNavigate}
+      className={({ isActive }) =>
+        `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+          isActive
+            ? "bg-emerald-50 text-emerald-900 shadow-sm ring-1 ring-emerald-100"
+            : "text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+        }`
+      }
+    >
+      <Icon size={18} aria-hidden="true" />
+      {item.label}
+    </NavLink>
+  );
+}
 
 export function AppLayout() {
   const { user, tenant, logout, setSession } = useAuthStore();
@@ -182,6 +234,20 @@ export function AppLayout() {
   const visibleItems = items.filter((item) =>
     item.roles.some((role) => userRoles.includes(role)),
   );
+  const visibleGroups = navGroups
+    .map((group) => ({
+      ...group,
+      links: visibleItems.filter((item) => group.items.includes(item.to)),
+    }))
+    .filter(
+      (group) =>
+        group.links.length > 0 &&
+        group.roles.some((role) => userRoles.includes(role)),
+    );
+  const uncategorizedItems = visibleItems.filter(
+    (item) => item.to === "/" || !navGroups.some((group) => group.items.includes(item.to)),
+  );
+  const profileLabel = primaryRoleLabel(user?.roles);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unread, setUnread] = useState(0);
   const [openNotifications, setOpenNotifications] = useState(false);
@@ -249,22 +315,24 @@ export function AppLayout() {
             {tenant?.name ?? "SINE Jacarezinho"}
           </div>
         </div>
-        <nav className="flex-1 space-y-1 overflow-y-auto pr-1">
-          {visibleItems.map((item) => {
-            const Icon = item.icon;
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${isActive ? "bg-emerald-50 text-emerald-900" : "text-slate-600 hover:bg-slate-100"}`
-                }
-              >
-                <Icon size={18} />
-                {item.label}
-              </NavLink>
-            );
-          })}
+        <nav className="flex-1 space-y-5 overflow-y-auto pr-1" aria-label="Navegação principal">
+          <div className="space-y-1">
+            {uncategorizedItems.map((item) => (
+              <SidebarLink key={item.to} item={item} />
+            ))}
+          </div>
+          {visibleGroups.map((group) => (
+            <div key={group.title}>
+              <div className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                {group.title}
+              </div>
+              <div className="space-y-1">
+                {group.links.map((item) => (
+                  <SidebarLink key={item.to} item={item} />
+                ))}
+              </div>
+            </div>
+          ))}
         </nav>
         <div className="mt-5 border-t border-slate-200 pt-4">
           <div className="flex items-center gap-3 rounded-md bg-slate-50 p-3">
@@ -276,7 +344,7 @@ export function AppLayout() {
                 {user?.full_name ?? "Usuário"}
               </div>
               <div className="truncate text-xs text-slate-500">
-                {user?.roles?.join(", ")}
+                {profileLabel}
               </div>
             </div>
             <button
@@ -315,23 +383,24 @@ export function AppLayout() {
                 <X size={20} />
               </button>
             </div>
-            <nav className="space-y-1">
-              {visibleItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setOpenMobileMenu(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${isActive ? "bg-emerald-50 text-emerald-900" : "text-slate-600 hover:bg-slate-100"}`
-                    }
-                  >
-                    <Icon size={18} />
-                    {item.label}
-                  </NavLink>
-                );
-              })}
+            <nav className="space-y-5" aria-label="Navegação principal">
+              <div className="space-y-1">
+                {uncategorizedItems.map((item) => (
+                  <SidebarLink key={item.to} item={item} onNavigate={() => setOpenMobileMenu(false)} />
+                ))}
+              </div>
+              {visibleGroups.map((group) => (
+                <div key={group.title}>
+                  <div className="mb-2 px-3 text-[11px] font-bold uppercase tracking-wide text-slate-400">
+                    {group.title}
+                  </div>
+                  <div className="space-y-1">
+                    {group.links.map((item) => (
+                      <SidebarLink key={item.to} item={item} onNavigate={() => setOpenMobileMenu(false)} />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </nav>
           </aside>
         </div>
@@ -350,7 +419,7 @@ export function AppLayout() {
             </button>
             <div className="min-w-0">
             <div className="text-sm font-semibold text-slate-950">
-              {tenant?.city ?? "Jacarezinho"} / {tenant?.state ?? "PR"}
+              {profileLabel} · {tenant?.city ?? "Jacarezinho"} / {tenant?.state ?? "PR"}
             </div>
             <div className="hidden text-xs text-slate-500 sm:block">
               A tecnologia apoia a triagem; a decisão final continua com a

@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
 import {
   AppAlert,
+  AppBadge,
   AppButton,
   AppCard,
   AppEmptyState,
+  AppInput,
   AppPageHeader,
-  AppSelect,
   AppStepper,
 } from "../components/ui";
 import { friendlyStatus } from "../utils/statusLabels";
@@ -37,7 +38,15 @@ export function WorkerJobsPage() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedJobId, setSelectedJobId] = useState("");
+  const [search, setSearch] = useState("");
   const [message, setMessage] = useState("");
+  const filteredJobs = jobs.filter((job) =>
+    [job.title, job.description, job.workplace, job.modality, job.minimum_education]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
   const selected = jobs.find((job) => job.id === selectedJobId);
 
   function load() {
@@ -80,38 +89,69 @@ export function WorkerJobsPage() {
         ]}
       />
 
-      <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+      <div className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
         <AppCard>
-          <h2 className="font-bold text-slate-950">Selecionar vaga</h2>
-          <AppSelect
-            label="Vaga"
-            value={selectedJobId}
-            onChange={(event) => setSelectedJobId(event.target.value)}
-            className="mt-3"
-          >
-            {jobs.length === 0 && (
-              <option value="">Nenhuma vaga aberta no momento</option>
-            )}
-            {jobs.map((job) => (
-              <option key={job.id} value={job.id}>
-                {job.title}
-              </option>
-            ))}
-          </AppSelect>
-          {selected && (
-            <div className="mt-4 rounded-md bg-slate-50 p-4 text-sm text-slate-700">
-              <div className="text-lg font-bold text-slate-950">
-                {selected.title}
-              </div>
-              <p className="mt-2 leading-6">{selected.description}</p>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <span>Vagas: {selected.vacancies}</span>
-                <span>Modalidade: {selected.modality}</span>
-                <span>Salário: {selected.salary_range || "A combinar"}</span>
-                <span>Local: {selected.workplace || "Não informado"}</span>
-              </div>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="font-bold text-slate-950">Escolha uma vaga</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Toque em uma oportunidade e siga para o currículo.
+              </p>
             </div>
-          )}
+            <AppBadge tone="info">{filteredJobs.length} vaga(s)</AppBadge>
+          </div>
+          <AppInput
+            label="Buscar vaga"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Cargo, local, modalidade ou requisito"
+            className="mt-4"
+          />
+          <div className="mt-4 space-y-3">
+            {filteredJobs.length === 0 && (
+              <AppEmptyState
+                title="Nenhuma vaga encontrada"
+                message="Tente buscar por outro cargo, local ou requisito."
+              />
+            )}
+            {filteredJobs.map((job) => {
+              const active = job.id === selectedJobId;
+              return (
+                <button
+                  key={job.id}
+                  type="button"
+                  onClick={() => setSelectedJobId(job.id)}
+                  className={`w-full rounded-xl border p-4 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${
+                    active
+                      ? "border-emerald-500 bg-emerald-50"
+                      : "border-slate-200 bg-white hover:border-emerald-300"
+                  }`}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <div className="text-lg font-bold text-slate-950">
+                        {job.title}
+                      </div>
+                      <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-600">
+                        {job.description}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100">
+                      {job.vacancies} vaga(s)
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+                    <span>Local: {job.workplace || "Não informado"}</span>
+                    <span>Modalidade: {friendlyStatus(job.modality)}</span>
+                    <span>Salário: {job.salary_range || "A combinar"}</span>
+                    <span>
+                      Requisito: {job.minimum_education || "Não informado"}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
           {message && (
             <AppAlert tone="success" className="mt-4">{message}</AppAlert>
           )}
@@ -120,7 +160,7 @@ export function WorkerJobsPage() {
             disabled={!selectedJobId}
             onClick={continueToResume}
           >
-            Continuar para o currículo
+            Tenho interesse
           </AppButton>
         </AppCard>
 

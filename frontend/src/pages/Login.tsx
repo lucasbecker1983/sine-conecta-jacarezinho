@@ -14,7 +14,7 @@ import { useAuthStore } from "../stores/auth";
 import { applyTenantTheme } from "../white-label/theme";
 import { Logo } from "../components/Logo";
 import { LoginNetworkCanvas } from "../canvas/LoginNetworkCanvas";
-import { AppAlert } from "../components/ui";
+import { AppAlert, AppButton } from "../components/ui";
 import { defaultTenantTheme } from "../white-label/tenantTheme";
 
 type AccessProfile = "company" | "worker" | "staff";
@@ -22,15 +22,15 @@ type AccessProfile = "company" | "worker" | "staff";
 const profiles = {
   company: {
     icon: Building2,
-    title: "Sou Empresa",
+    title: "Sou empresa",
     eyebrow: "Portal da Empresa",
     description:
-      "Solicite vagas, acompanhe candidatos encaminhados e registre retornos.",
+      "Solicite vagas, acompanhe trabalhadores encaminhados e registre retornos.",
     email: "empresa@sine.jacarezinho.cloud",
   },
   worker: {
     icon: UserRound,
-    title: "Sou Trabalhador",
+    title: "Sou trabalhador",
     eyebrow: "Portal do Trabalhador",
     description:
       "Atualize seu cadastro, envie currículo e acompanhe encaminhamentos.",
@@ -38,7 +38,7 @@ const profiles = {
   },
   staff: {
     icon: BriefcaseBusiness,
-    title: "Sou Colaborador",
+    title: "Sou colaborador do SINE",
     eyebrow: "Painel do SINE",
     description:
       "Gerencie empresas, trabalhadores, vagas, currículos e relatórios.",
@@ -121,7 +121,7 @@ export function Login() {
               </div>
               <div className="login-badges grid gap-2 text-sm text-emerald-50/90 sm:grid-cols-3">
                 <HeroBadge title="SINE" text="triagem humana" />
-                <HeroBadge title="Empresas" text="candidatos encaminhados" />
+                <HeroBadge title="Empresas" text="trabalhadores encaminhados" />
                 <HeroBadge title="Trabalhadores" text="dados protegidos" />
               </div>
             </div>
@@ -153,7 +153,8 @@ export function Login() {
                     key={key}
                     type="button"
                     onClick={() => chooseProfile(key)}
-                    className={`login-profile-card flex min-h-[72px] items-center gap-3 rounded-xl border p-3 text-left transition ${active ? "border-emerald-700 bg-emerald-50 shadow-sm" : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-slate-50"}`}
+                    aria-pressed={active}
+                    className={`login-profile-card flex min-h-[72px] items-center gap-3 rounded-xl border p-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 ${active ? "border-emerald-700 bg-emerald-50 shadow-sm" : "border-slate-200 bg-white hover:border-emerald-300 hover:bg-slate-50"}`}
                   >
                     <span
                       className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-lg ${active ? "bg-emerald-800 text-white" : "bg-slate-100 text-slate-600"}`}
@@ -189,7 +190,7 @@ export function Login() {
                 <button
                   type="button"
                   aria-label="Voltar para colaborador"
-                  className="rounded-md p-2 text-slate-500 hover:bg-white"
+                  className="rounded-md p-2 text-slate-500 transition hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                   onClick={() => chooseProfile("staff")}
                 >
                   <ArrowLeft size={18} />
@@ -226,12 +227,13 @@ export function Login() {
                 </span>
               </label>
               {error && <AppAlert tone="error" title={error} className="mb-4" />}
-              <button
-                className="tenant-button h-11 w-full rounded-md font-semibold disabled:opacity-70"
+              <AppButton
+                type="submit"
+                className="w-full"
                 disabled={loading}
               >
                 {loading ? "Entrando..." : "Entrar"}
-              </button>
+              </AppButton>
               {selectedProfile !== "staff" && (
                 <div className="mt-4 grid gap-2 sm:grid-cols-2">
                   <Link
@@ -240,13 +242,13 @@ export function Login() {
                         ? "/trabalhador/cadastro"
                         : "/login?role=company"
                     }
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-700 hover:border-emerald-400"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-center text-sm font-semibold text-slate-700 transition hover:border-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                   >
                     Primeiro acesso
                   </Link>
                   <button
                     type="button"
-                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:border-emerald-400"
+                    className="rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-emerald-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
                   >
                     Recuperar senha
                   </button>

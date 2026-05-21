@@ -5,11 +5,14 @@ import {
   AppAlert,
   AppButton,
   AppCard,
+  AppEmptyState,
   AppInput,
   AppPageHeader,
   AppSelect,
+  AppStatusTimeline,
   AppTextarea,
 } from "../components/ui";
+import { friendlyStatus } from "../utils/statusLabels";
 
 type WorkerProfile = {
   cpf: string;
@@ -116,6 +119,8 @@ export function WorkerResumePage() {
   const [applying, setApplying] = useState(false);
   const [message, setMessage] = useState("");
   const [uploadMessage, setUploadMessage] = useState("");
+  const latestResume = resumes[0];
+  const selectedJob = jobs.find((job) => job.id === selectedJobId);
 
   useEffect(() => {
     api
@@ -277,7 +282,45 @@ export function WorkerResumePage() {
           Ver vagas abertas no portal público
         </Link>
         }
-      />
+      >
+        <div className="grid gap-3 md:grid-cols-3">
+          <AppCard className="p-4">
+            <div className="text-xs font-bold uppercase text-slate-500">
+              Currículo
+            </div>
+            <div className="mt-2 font-semibold text-slate-950">
+              {latestResume ? "PDF enviado" : "Dados do portal"}
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              {latestResume
+                ? `Último envio em ${new Date(latestResume.created_at).toLocaleDateString("pt-BR")}`
+                : "Você pode preencher seus dados ou enviar um PDF."}
+            </p>
+          </AppCard>
+          <AppCard className="p-4">
+            <div className="text-xs font-bold uppercase text-slate-500">
+              Vaga escolhida
+            </div>
+            <div className="mt-2 font-semibold text-slate-950">
+              {selectedJob?.title ?? "Escolha uma vaga"}
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              O SINE recebe sua candidatura vinculada a essa oportunidade.
+            </p>
+          </AppCard>
+          <AppCard className="p-4">
+            <div className="text-xs font-bold uppercase text-slate-500">
+              Próximo passo
+            </div>
+            <div className="mt-2 font-semibold text-slate-950">
+              Confirmar candidatura
+            </div>
+            <p className="mt-1 text-xs text-slate-500">
+              A empresa só vê seus dados após encaminhamento oficial.
+            </p>
+          </AppCard>
+        </div>
+      </AppPageHeader>
 
       <AppAlert tone="info" title="Vaga obrigatória">
         <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
@@ -297,9 +340,9 @@ export function WorkerResumePage() {
             ))}
           </AppSelect>
           <div className="text-sm leading-6">
-            <strong>Fluxo correto:</strong> o currículo só pode ser salvo ou
-            enviado em PDF depois que a vaga for selecionada. Assim o SINE
-            recebe a candidatura já vinculada à oportunidade desejada.
+            <strong>Como funciona:</strong> escolha a vaga, atualize seus dados
+            ou envie o PDF e confirme o interesse. O SINE fará a análise e
+            poderá encaminhar seu perfil para a empresa.
           </div>
         </div>
       </AppAlert>
@@ -479,6 +522,15 @@ export function WorkerResumePage() {
               Sua candidatura será enviada ao SINE. A empresa só recebe seus
               dados se houver encaminhamento oficial.
             </p>
+            <AppStatusTimeline
+              className="mt-4"
+              items={[
+                { title: "Currículo atualizado", status: latestResume || profile.full_name ? "done" : "current" },
+                { title: "Interesse confirmado", status: applications.length > 0 ? "done" : "current" },
+                { title: "Análise do SINE" },
+                { title: "Encaminhamento para empresa" },
+              ]}
+            />
           </AppCard>
 
           <AppCard>
@@ -487,9 +539,10 @@ export function WorkerResumePage() {
             </h2>
             <div className="mt-4 divide-y divide-slate-100">
               {applications.length === 0 && (
-                <div className="py-4 text-sm text-slate-500">
-                  Nenhuma candidatura registrada ainda.
-                </div>
+                <AppEmptyState
+                  title="Nenhuma candidatura registrada ainda"
+                  message="Depois de confirmar interesse em uma vaga, seu acompanhamento aparece aqui."
+                />
               )}
               {applications.map((application) => (
                 <div key={application.id} className="py-3">
@@ -511,9 +564,10 @@ export function WorkerResumePage() {
             <h2 className="text-lg font-bold text-slate-950">PDFs enviados</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {resumes.length === 0 && (
-                <div className="py-4 text-sm text-slate-500">
-                  Nenhum PDF enviado até agora.
-                </div>
+                <AppEmptyState
+                  title="Nenhum PDF enviado até agora"
+                  message="Você pode usar o formulário do portal ou anexar um currículo em PDF."
+                />
               )}
               {resumes.map((resume) => (
                 <div key={resume.id} className="py-3">
@@ -551,19 +605,4 @@ export function WorkerResumePage() {
       </div>
     </div>
   );
-}
-
-function friendlyStatus(status: string) {
-  const map: Record<string, string> = {
-    candidatura_trabalhador: "Candidatura enviada ao SINE",
-    em_analise: "Em análise pelo SINE",
-    encaminhado: "Encaminhado para empresa",
-    aguardando_retorno_empresa: "Aguardando retorno da empresa",
-    encerrado: "Processo encerrado",
-    nao_selecionado: "Não selecionado",
-    nao_contratado: "Não selecionado",
-    contratado: "Contratado",
-    banco_talentos: "Banco de talentos",
-  };
-  return map[status] ?? status;
 }

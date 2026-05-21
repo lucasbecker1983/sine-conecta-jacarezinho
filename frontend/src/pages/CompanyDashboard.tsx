@@ -15,17 +15,20 @@ import { api } from "../services/api";
 import type { Company, Job } from "../types";
 import sineLogoFullHd from "../assets/logos/sine-logo-fullhd.png";
 import { OnboardingChecklist } from "../components/onboarding/OnboardingChecklist";
-import { friendlyStatus } from "../utils/statusLabels";
+import { friendlyStatus, StatusBadge } from "../utils/statusLabels";
 import {
   AppAlert,
+  AppBadge,
   AppButton,
   AppCard,
+  AppEmptyState,
   AppErrorState,
   AppInput,
   AppLoadingState,
   AppMetricCard,
   AppPageHeader,
   AppSelect,
+  AppStatusTimeline,
   AppTextarea,
 } from "../components/ui";
 
@@ -239,6 +242,29 @@ export function CompanyDashboard() {
     useCompanyPortal();
   const latestJobs = useMemo(() => jobs.slice(0, 3), [jobs]);
   const latestReferrals = useMemo(() => referrals.slice(0, 3), [referrals]);
+  const companySituation = !status.profile_complete
+    ? {
+        label: "Empresa em atenção",
+        tone: "warning" as const,
+        title: "Complete o cadastro para operar com o SINE",
+        description:
+          "Finalize os dados da empresa e aceite os termos para solicitar vagas.",
+      }
+    : status.can_open_job
+      ? {
+          label: "Empresa regular",
+          tone: "success" as const,
+          title: "A empresa pode abrir novas vagas",
+          description:
+            "O cadastro está disponível ao SINE e não há retornos obrigatórios pendentes.",
+        }
+      : {
+          label: "Abertura de vagas temporariamente suspensa",
+          tone: "warning" as const,
+          title: "Responda os encaminhamentos pendentes",
+          description:
+            "Para manter o atendimento organizado, novas vagas ficam pausadas até a empresa registrar os retornos.",
+        };
 
   if (loading) return <AppLoadingState message="Carregando área da empresa..." />;
   if (error) return <AppErrorState message={error} />;
@@ -248,7 +274,7 @@ export function CompanyDashboard() {
       <AppPageHeader
         eyebrow="Portal da Empresa"
         title="Bem-vindo ao SINE Conecta Jacarezinho"
-        description="Solicite vagas, acompanhe candidatos encaminhados e mantenha o retorno em dia para fortalecer a empregabilidade local."
+        description="Solicite vagas, acompanhe trabalhadores encaminhados e mantenha o retorno em dia para fortalecer a empregabilidade local."
         action={
           <img
             src={sineLogoFullHd}
@@ -270,7 +296,7 @@ export function CompanyDashboard() {
               </div>
             </div>
             <p className="mt-2 max-w-3xl text-xs font-semibold uppercase tracking-wide text-emerald-800">
-              A empresa vê apenas candidatos encaminhados oficialmente. A IA é
+              A empresa vê apenas trabalhadores encaminhados oficialmente. A IA é
               ferramenta interna do SINE.
             </p>
             <div className="mt-5 grid gap-3 md:grid-cols-3">
@@ -296,6 +322,23 @@ export function CompanyDashboard() {
       </AppPageHeader>
       <OnboardingChecklist role="company_user" />
 
+      <AppAlert tone={companySituation.tone} title={companySituation.title}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <AppBadge tone={companySituation.tone}>{companySituation.label}</AppBadge>
+            <p className="mt-3 max-w-3xl">{companySituation.description}</p>
+          </div>
+          {!status.can_open_job && status.pending_returns > 0 ? (
+            <Link
+              to="/empresa/encaminhamentos"
+              className="inline-flex min-h-10 items-center justify-center rounded-lg bg-amber-700 px-3 py-2 text-sm font-semibold text-white transition hover:bg-amber-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-700 focus-visible:ring-offset-2"
+            >
+              Responder encaminhamentos
+            </Link>
+          ) : null}
+        </div>
+      </AppAlert>
+
       <div className="grid gap-3 md:grid-cols-3">
         {[
           {
@@ -315,7 +358,7 @@ export function CompanyDashboard() {
           {
             to: "/empresa/encaminhamentos",
             title: "Encaminhamentos",
-            body: "Veja candidatos enviados pelo SINE e registre o retorno.",
+            body: "Veja trabalhadores enviados pelo SINE e registre o retorno.",
             icon: UserRoundSearch,
           },
           {
@@ -357,7 +400,7 @@ export function CompanyDashboard() {
             <div>
               <p className="mt-1 text-sm text-amber-900">
                 {status.blocking_reason ??
-                  "Para mantermos o processo justo com os trabalhadores e eficiente para sua empresa, informe o resultado dos candidatos encaminhados antes de abrir uma nova solicitação."}
+                  "Para mantermos o processo justo com os trabalhadores e eficiente para sua empresa, informe o resultado dos encaminhamentos antes de abrir uma nova solicitação."}
               </p>
             </div>
             <Link
@@ -369,7 +412,7 @@ export function CompanyDashboard() {
           </div>
           <p className="mt-3 text-sm leading-6 text-amber-900">
             Para mantermos o processo justo com os trabalhadores e eficiente
-            para sua empresa, informe o resultado dos candidatos encaminhados
+            para sua empresa, informe o resultado dos encaminhamentos
             antes de abrir uma nova solicitação.
           </p>
           <div className="mt-4 grid gap-2 md:grid-cols-2">
@@ -421,7 +464,7 @@ export function CompanyDashboard() {
             {loading && <p className="text-sm text-slate-500">Carregando...</p>}
             {!loading && latestReferrals.length === 0 && (
               <p className="text-sm text-slate-500">
-                Ainda não há candidatos encaminhados.
+                Ainda não há trabalhadores encaminhados.
               </p>
             )}
             {latestReferrals.map((referral) => (
@@ -542,7 +585,7 @@ export function CompanyJobsPage() {
     ? "Complete o cadastro e aceite os termos da LGPD para solicitar vagas."
     : status.pending_returns > 0
       ? (status.blocking_reason ??
-        "Empresa bloqueada: registre se houve contratação, dispensa, não comparecimento, banco futuro ou sem interesse antes de abrir nova vaga.")
+        "Abertura de vagas temporariamente suspensa: registre os retornos pendentes antes de abrir uma nova vaga.")
       : "";
 
   async function createJob(event: FormEvent<HTMLFormElement>) {
@@ -571,23 +614,19 @@ export function CompanyJobsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-950">Vagas da empresa</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Solicite vagas com datas e requisitos detalhados. A IA atua apenas do
-          lado do SINE.
-        </p>
-      </div>
+      <AppPageHeader
+        eyebrow="Portal da Empresa"
+        title="Vagas da empresa"
+        description="Solicite vagas com datas e requisitos detalhados. O SINE acompanha a triagem e os encaminhamentos."
+      />
       <PortalAlert message={message} error={error} />
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <form
-          onSubmit={createJob}
-          className="rounded-md border border-slate-200 bg-white p-5"
-        >
+        <AppCard>
+        <form onSubmit={createJob}>
           {lockedReason && (
-            <div className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <AppAlert tone="warning" title="Abertura de vagas temporariamente suspensa" className="mb-4">
               {lockedReason}
-            </div>
+            </AppAlert>
           )}
           {status.pending_returns > 0 && (
             <div className="mb-4 space-y-2">
@@ -596,185 +635,53 @@ export function CompanyJobsPage() {
                   key={item.referral_id}
                   className="rounded-md border border-amber-200 bg-white px-3 py-2 text-sm text-amber-950"
                 >
-                  Feedback pendente: <strong>{item.worker_name}</strong> em{" "}
+                  Retorno pendente: <strong>{item.worker_name}</strong> em{" "}
                   <strong>{item.job_title}</strong>
                 </div>
               ))}
             </div>
           )}
           <div className="grid gap-3 md:grid-cols-2">
-            <label className="text-sm font-medium text-slate-700 md:col-span-2">
-              Cargo
-              <input
-                required
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Data de início
-              <input
-                type="date"
-                value={form.start_date}
-                onChange={(e) =>
-                  setForm({ ...form, start_date: e.target.value })
-                }
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Data final
-              <input
-                type="date"
-                value={form.closing_deadline}
-                onChange={(e) =>
-                  setForm({ ...form, closing_deadline: e.target.value })
-                }
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Vagas
-              <input
-                type="number"
-                min={1}
-                value={form.vacancies}
-                onChange={(e) =>
-                  setForm({ ...form, vacancies: Number(e.target.value) })
-                }
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Modalidade
-              <select
-                value={form.modality}
-                onChange={(e) => setForm({ ...form, modality: e.target.value })}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              >
-                <option value="presencial">Presencial</option>
-                <option value="hibrido">Híbrido</option>
-                <option value="remoto">Remoto</option>
-              </select>
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Local de trabalho
-              <input
-                value={form.workplace}
-                onChange={(e) =>
-                  setForm({ ...form, workplace: e.target.value })
-                }
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Jornada
-              <input
-                value={form.workday}
-                onChange={(e) => setForm({ ...form, workday: e.target.value })}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Horário
-              <input
-                value={form.schedule}
-                onChange={(e) => setForm({ ...form, schedule: e.target.value })}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Salário ou faixa
-              <input
-                value={form.salary_range}
-                onChange={(e) =>
-                  setForm({ ...form, salary_range: e.target.value })
-                }
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700 md:col-span-2">
-              Descrição detalhada
-              <textarea
-                required
-                value={form.description}
-                onChange={(e) =>
-                  setForm({ ...form, description: e.target.value })
-                }
-                rows={3}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700 md:col-span-2">
-              Requisitos detalhados
-              <textarea
-                required
-                value={form.required_experience}
-                onChange={(e) =>
-                  setForm({ ...form, required_experience: e.target.value })
-                }
-                rows={3}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              Escolaridade mínima
-              <input
-                value={form.minimum_education}
-                onChange={(e) =>
-                  setForm({ ...form, minimum_education: e.target.value })
-                }
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700">
-              CNH exigida
-              <input
-                value={form.cnh_required}
-                onChange={(e) =>
-                  setForm({ ...form, cnh_required: e.target.value })
-                }
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700 md:col-span-2">
-              Cursos desejados
-              <textarea
-                value={form.desired_courses}
-                onChange={(e) =>
-                  setForm({ ...form, desired_courses: e.target.value })
-                }
-                rows={2}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
-            <label className="text-sm font-medium text-slate-700 md:col-span-2">
-              Benefícios e observações
-              <textarea
-                value={form.benefits}
-                onChange={(e) => setForm({ ...form, benefits: e.target.value })}
-                rows={2}
-                className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
-              />
-            </label>
+            <AppInput required label="Cargo" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="md:col-span-2" />
+            <AppInput label="Data de início" type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+            <AppInput label="Data final" type="date" value={form.closing_deadline} onChange={(e) => setForm({ ...form, closing_deadline: e.target.value })} />
+            <AppInput label="Vagas" type="number" min={1} value={form.vacancies} onChange={(e) => setForm({ ...form, vacancies: Number(e.target.value) })} />
+            <AppSelect label="Modalidade" value={form.modality} onChange={(e) => setForm({ ...form, modality: e.target.value })}>
+              <option value="presencial">Presencial</option>
+              <option value="hibrido">Híbrido</option>
+              <option value="remoto">Remoto</option>
+            </AppSelect>
+            <AppInput label="Local de trabalho" value={form.workplace} onChange={(e) => setForm({ ...form, workplace: e.target.value })} />
+            <AppInput label="Jornada" value={form.workday} onChange={(e) => setForm({ ...form, workday: e.target.value })} />
+            <AppInput label="Horário" value={form.schedule} onChange={(e) => setForm({ ...form, schedule: e.target.value })} />
+            <AppInput label="Salário ou faixa" value={form.salary_range} onChange={(e) => setForm({ ...form, salary_range: e.target.value })} />
+            <AppTextarea required label="Descrição detalhada" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} className="md:col-span-2" />
+            <AppTextarea required label="Requisitos detalhados" value={form.required_experience} onChange={(e) => setForm({ ...form, required_experience: e.target.value })} rows={3} className="md:col-span-2" />
+            <AppInput label="Escolaridade mínima" value={form.minimum_education} onChange={(e) => setForm({ ...form, minimum_education: e.target.value })} />
+            <AppInput label="CNH exigida" value={form.cnh_required} onChange={(e) => setForm({ ...form, cnh_required: e.target.value })} />
+            <AppTextarea label="Cursos desejados" value={form.desired_courses} onChange={(e) => setForm({ ...form, desired_courses: e.target.value })} rows={2} className="md:col-span-2" />
+            <AppTextarea label="Benefícios e observações" value={form.benefits} onChange={(e) => setForm({ ...form, benefits: e.target.value })} rows={2} className="md:col-span-2" />
           </div>
-          <button
+          <AppButton
+            type="submit"
             disabled={!status.can_open_job || saving}
-            className="tenant-button mt-4 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            className="mt-4"
+            icon={<Send size={17} />}
           >
-            <Send size={17} /> {saving ? "Enviando..." : "Enviar vaga ao SINE"}
-          </button>
+            {saving ? "Enviando..." : "Enviar vaga ao SINE"}
+          </AppButton>
         </form>
-        <section className="rounded-md border border-slate-200 bg-white p-5">
+        </AppCard>
+        <AppCard>
           <h2 className="text-lg font-bold text-slate-950">
             Histórico de vagas
           </h2>
           <div className="mt-3 space-y-2">
             {jobs.length === 0 && (
-              <p className="text-sm text-slate-500">
-                Nenhuma vaga solicitada ainda.
-              </p>
+              <AppEmptyState
+                title="Nenhuma vaga solicitada ainda"
+                message="Quando a empresa enviar a primeira solicitação, ela aparecerá aqui com o acompanhamento do SINE."
+              />
             )}
             {jobs.map((job) => (
               <div
@@ -783,7 +690,7 @@ export function CompanyJobsPage() {
               >
                 <div className="font-semibold text-slate-950">{job.title}</div>
                 <div className="mt-1 text-xs text-slate-500">
-                  {job.status} ·{" "}
+                  {friendlyStatus(job.status)} ·{" "}
                   {job.start_date
                     ? new Date(job.start_date).toLocaleDateString("pt-BR")
                     : "início a combinar"}
@@ -791,7 +698,7 @@ export function CompanyJobsPage() {
               </div>
             ))}
           </div>
-        </section>
+        </AppCard>
       </div>
     </div>
   );
@@ -803,6 +710,9 @@ export function CompanyReferralsPage() {
     Record<string, { status: string; comments: string }>
   >({});
   const [message, setMessage] = useState("");
+  const pendingCount = referrals.filter((referral) =>
+    ["encaminhado", "aguardando_retorno_empresa"].includes(referral.status),
+  ).length;
 
   async function sendFeedback(referralId: string) {
     const item = feedback[referralId] ?? {
@@ -826,21 +736,30 @@ export function CompanyReferralsPage() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-950">Encaminhamentos</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Currículos enviados formalmente pelo SINE, com feedback obrigatório
-          para liberar novas vagas.
-        </p>
-      </div>
-      <Link
-        to="/empresa/comunicacao"
-        className="inline-flex items-center gap-2 rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900"
+      <AppPageHeader
+        eyebrow="Portal da Empresa"
+        title="Encaminhamentos recebidos"
+        description="Avalie os trabalhadores encaminhados pelo SINE e registre o retorno para manter o atendimento em dia."
+        action={
+          <Link
+            to="/empresa/comunicacao"
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-900 transition hover:border-emerald-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+          >
+            <MessageSquareReply size={16} /> Comunicação oficial
+          </Link>
+        }
       >
-        <MessageSquareReply size={16} /> Abrir comunicação oficial
-      </Link>
+        <div className="grid gap-3 md:grid-cols-3">
+          <AppMetricCard label="Encaminhamentos" value={referrals.length} />
+          <AppMetricCard label="Aguardando retorno" value={pendingCount} />
+          <AppMetricCard
+            label="Retornos registrados"
+            value={Math.max(referrals.length - pendingCount, 0)}
+          />
+        </div>
+      </AppPageHeader>
       <PortalAlert message={message} error={error} />
-      <section className="rounded-md border border-slate-200 bg-white p-5">
+      <AppCard>
         <div className="grid gap-3 lg:grid-cols-2">
           {referrals.map((referral) => {
             const current = feedback[referral.id] ?? {
@@ -850,10 +769,11 @@ export function CompanyReferralsPage() {
                   : referral.status,
               comments: "",
             };
+            const isPending = ["encaminhado", "aguardando_retorno_empresa"].includes(referral.status);
             return (
-              <div
+              <article
                 key={referral.id}
-                className="rounded-md border border-slate-200 bg-slate-50 p-4"
+                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -863,10 +783,15 @@ export function CompanyReferralsPage() {
                     <div className="mt-1 text-sm text-slate-600">
                       {referral.job_title}
                     </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                      Encaminhado em{" "}
+                      {new Date(referral.created_at).toLocaleDateString("pt-BR")}
+                    </div>
                   </div>
-                  <span className="rounded-full bg-white px-2 py-1 text-xs font-semibold text-emerald-800">
-                    {referral.status}
-                  </span>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <StatusBadge status={referral.status} />
+                    {isPending ? <AppBadge tone="warning">Retorno pendente</AppBadge> : null}
+                  </div>
                 </div>
                 <div className="mt-3 grid gap-2 text-sm text-slate-600 md:grid-cols-2">
                   <div>{referral.worker_email ?? "E-mail não informado"}</div>
@@ -882,12 +807,13 @@ export function CompanyReferralsPage() {
                   </div>
                   <div>
                     {referral.match_score
-                      ? `Compatibilidade sugerida: ${referral.match_score}%`
+                      ? `Sugestão de compatibilidade da IA: ${referral.match_score}%`
                       : "Triagem acompanhada pelo SINE"}
                   </div>
                 </div>
                 <div className="mt-4 grid gap-2 md:grid-cols-[180px_1fr]">
-                  <select
+                  <AppSelect
+                    label="Retorno"
                     value={current.status}
                     onChange={(e) =>
                       setFeedback({
@@ -895,16 +821,17 @@ export function CompanyReferralsPage() {
                         [referral.id]: { ...current, status: e.target.value },
                       })
                     }
-                    className="rounded-md border border-slate-200 px-3 py-2 text-sm"
                   >
-                    <option value="entrevistado">Entrevistado</option>
+                    <option value="entrevistado">Chamado para entrevista</option>
                     <option value="contratado">Contratado</option>
-                    <option value="dispensado">Dispensado</option>
+                    <option value="dispensado">Não selecionado</option>
                     <option value="nao_compareceu">Não compareceu</option>
-                    <option value="banco_futuro">Banco futuro</option>
-                    <option value="sem_interesse">Sem interesse</option>
-                  </select>
-                  <input
+                    <option value="perfil_incompativel">Perfil incompatível</option>
+                    <option value="vaga_preenchida">Vaga preenchida</option>
+                    <option value="outro_motivo">Outro motivo</option>
+                  </AppSelect>
+                  <AppInput
+                    label="Comentário para o SINE"
                     value={current.comments}
                     onChange={(e) =>
                       setFeedback({
@@ -913,26 +840,29 @@ export function CompanyReferralsPage() {
                       })
                     }
                     placeholder="Comentário para o SINE"
-                    className="rounded-md border border-slate-200 px-3 py-2 text-sm"
                   />
                 </div>
-                <button
+                <AppButton
                   type="button"
                   onClick={() => sendFeedback(referral.id)}
-                  className="tenant-button mt-3 inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-semibold"
+                  className="mt-3"
+                  icon={<MessageSquareReply size={16} />}
                 >
-                  <MessageSquareReply size={16} /> Retornar feedback
-                </button>
-              </div>
+                  Registrar feedback
+                </AppButton>
+              </article>
             );
           })}
           {referrals.length === 0 && (
-            <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-500 lg:col-span-2">
-              Ainda não há currículos encaminhados pelo SINE para esta empresa.
+            <div className="lg:col-span-2">
+              <AppEmptyState
+                title="Nenhum trabalhador encaminhado ainda"
+                message="Quando o SINE encaminhar currículos para uma vaga da empresa, eles aparecerão aqui para avaliação."
+              />
             </div>
           )}
         </div>
-      </section>
+      </AppCard>
     </div>
   );
 }

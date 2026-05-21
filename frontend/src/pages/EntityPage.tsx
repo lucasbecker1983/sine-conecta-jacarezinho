@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../services/api'
-import { AppButton, AppPageHeader, AppTable } from '../components/ui'
+import { AppButton, AppEmptyState, AppPageHeader, AppTable } from '../components/ui'
 import { friendlyStatus } from '../utils/statusLabels'
 
 type Props = {
@@ -12,6 +12,7 @@ type Props = {
 
 export function EntityPage({ title, description, endpoint, actionLabel = 'Novo registro' }: Props) {
   const [items, setItems] = useState<any[]>([])
+  const context = contextForTitle(title)
   useEffect(() => {
     if (endpoint) api.get(endpoint).then(({ data }) => setItems(data)).catch(() => setItems([]))
   }, [endpoint])
@@ -19,12 +20,17 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
     <div className="space-y-4">
       <AppPageHeader
         title={title}
-        description={description}
+        description={description || context.description}
         action={<AppButton aria-label={actionLabel}>{actionLabel}</AppButton>}
       />
       <AppTable
         rows={items}
-        empty="Nenhum registro encontrado."
+        empty={
+          <AppEmptyState
+            title={context.emptyTitle}
+            message={context.emptyMessage}
+          />
+        }
         columns={[
           {
             key: "name",
@@ -56,4 +62,48 @@ export function EntityPage({ title, description, endpoint, actionLabel = 'Novo r
       />
     </div>
   )
+}
+
+function contextForTitle(title: string) {
+  const normalized = title.toLowerCase();
+  if (normalized.includes("trabalh")) {
+    return {
+      description: "Acompanhe trabalhadores cadastrados e currículos disponíveis para análise.",
+      emptyTitle: "Nenhum trabalhador encontrado",
+      emptyMessage: "Novos cadastros aparecerão aqui quando os trabalhadores se registrarem ou forem cadastrados pelo SINE.",
+    };
+  }
+  if (normalized.includes("curr")) {
+    return {
+      description: "Consulte currículos recebidos e organize a análise do SINE.",
+      emptyTitle: "Nenhum currículo recebido",
+      emptyMessage: "Currículos enviados pelos trabalhadores aparecerão aqui para acompanhamento.",
+    };
+  }
+  if (normalized.includes("vaga")) {
+    return {
+      description: "Acompanhe vagas solicitadas, em triagem ou publicadas.",
+      emptyTitle: "Nenhuma vaga encontrada",
+      emptyMessage: "As solicitações das empresas aparecerão aqui quando forem registradas.",
+    };
+  }
+  if (normalized.includes("encaminh")) {
+    return {
+      description: "Acompanhe encaminhamentos oficiais e retornos das empresas.",
+      emptyTitle: "Nenhum encaminhamento encontrado",
+      emptyMessage: "Quando o SINE encaminhar trabalhadores para empresas, os registros aparecerão aqui.",
+    };
+  }
+  if (normalized.includes("lgpd") || normalized.includes("auditoria")) {
+    return {
+      description: "Acompanhe solicitações, registros e cuidados de privacidade.",
+      emptyTitle: "Nenhum registro de conformidade encontrado",
+      emptyMessage: "Registros de atendimento, auditoria ou LGPD aparecerão aqui quando houver movimentação.",
+    };
+  }
+  return {
+    description: "Acompanhe registros importantes da operação do SINE.",
+    emptyTitle: "Nenhum registro encontrado",
+    emptyMessage: "Quando houver dados disponíveis, eles aparecerão aqui de forma organizada.",
+  };
 }
